@@ -2,6 +2,7 @@
 
 CLASSPATH := \
 	/usr/share/java/junit.jar \
+	/usr/share/java/mongo-1.2.jar \
 	.
 
 # Convert spaces to colons.
