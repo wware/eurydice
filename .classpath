@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/usr/share/java/junit4.jar"/>
+	<classpathentry kind="lib" path="/opt/appengine-java-sdk-1.5.0.1/lib/impl/appengine-api.jar"/>
+	<classpathentry kind="lib" path="/usr/share/java/mysql-connector-java-5.1.16-bin.jar"/>
+	<classpathentry kind="lib" path="/usr/share/java/mongo-1.2.jar"/>
+	<classpathentry kind="lib" path="/usr/share/java/servlet-api.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
