@@ -12,58 +12,58 @@ CLASSPATH:=$(subst $(SPACE),:,$(CLASSPATH))
 
 JFLAGS=-cp $(CLASSPATH)
 
-# BEGINCLASSLIST
+# BEGINSRCLIST
 SOURCES = \
-	net/willware/eurydice/core/Atom.class \
-	net/willware/eurydice/core/Bond.class \
-	net/willware/eurydice/core/Jig.class \
-	net/willware/eurydice/core/NanocadStyleStructure.class \
-	net/willware/eurydice/core/Region.class \
-	net/willware/eurydice/core/SmallStructure.class \
-	net/willware/eurydice/core/Structure.class \
-	net/willware/eurydice/core/Substructure.class \
-	net/willware/eurydice/db/IStructureDatabase.class \
-	net/willware/eurydice/db/MongoInterface.class \
-	net/willware/eurydice/db/MysqlInterface.class \
-	net/willware/eurydice/drawing/AWTApplet.class \
-	net/willware/eurydice/drawing/AWTEngine.class \
-	net/willware/eurydice/drawing/DrawingEngine.class \
-	net/willware/eurydice/drawing/Entry.class \
-	net/willware/eurydice/drawing/IDrawingEngine.class \
-	net/willware/eurydice/drawing/Orientation.class \
-	net/willware/eurydice/drawing/RasmolDrawing.class \
-	net/willware/eurydice/elements/Carbon.class \
-	net/willware/eurydice/elements/Hydrogen.class \
-	net/willware/eurydice/elements/Nitrogen.class \
-	net/willware/eurydice/elements/Oxygen.class \
-	net/willware/eurydice/forcefields/ForceField.class \
-	net/willware/eurydice/forcefields/mm2/AngleTerm.class \
-	net/willware/eurydice/forcefields/mm2/LengthTerm.class \
-	net/willware/eurydice/forcefields/mm2/LongRangeTerm.class \
-	net/willware/eurydice/forcefields/mm2/NanocadStyleMM2.class \
-	net/willware/eurydice/forcefields/mm2/Term.class \
-	net/willware/eurydice/forcefields/mm2/TorsionTerm.class \
-	net/willware/eurydice/library/Aspirin.class \
-	net/willware/eurydice/library/Buckyball.class \
-	net/willware/eurydice/library/Diamond.class \
-	net/willware/eurydice/library/DiamondRod.class \
-	net/willware/eurydice/library/Propane.class \
-	net/willware/eurydice/library/TwoRings.class \
-	net/willware/eurydice/library/Water.class \
-	net/willware/eurydice/math/Matrix.class \
-	net/willware/eurydice/math/PhysicalUnit.class \
-	net/willware/eurydice/math/Quaternion.class \
-	net/willware/eurydice/math/Vector.class \
-	net/willware/eurydice/serialization/Filetype.class \
-	net/willware/eurydice/serialization/InputStreamFromString.class \
-	net/willware/eurydice/serialization/NanocadNativeFormat.class \
-	net/willware/eurydice/serialization/OutputStreamToString.class \
-	net/willware/eurydice/serialization/PdbFile.class \
-	net/willware/eurydice/serialization/XyzFile.class \
-	net/willware/eurydice/tests/DatabaseTests.class \
-	net/willware/eurydice/tests/LinearAlgebraTests.class \
+	net/willware/eurydice/core/Atom.java \
+	net/willware/eurydice/core/Bond.java \
+	net/willware/eurydice/core/Jig.java \
+	net/willware/eurydice/core/NanocadStyleStructure.java \
+	net/willware/eurydice/core/Region.java \
+	net/willware/eurydice/core/SmallStructure.java \
+	net/willware/eurydice/core/Structure.java \
+	net/willware/eurydice/core/Substructure.java \
+	net/willware/eurydice/db/IStructureDatabase.java \
+	net/willware/eurydice/db/MongoInterface.java \
+	net/willware/eurydice/db/MysqlInterface.java \
+	net/willware/eurydice/drawing/AWTApplet.java \
+	net/willware/eurydice/drawing/AWTEngine.java \
+	net/willware/eurydice/drawing/DrawingEngine.java \
+	net/willware/eurydice/drawing/Entry.java \
+	net/willware/eurydice/drawing/IDrawingEngine.java \
+	net/willware/eurydice/drawing/Orientation.java \
+	net/willware/eurydice/drawing/RasmolDrawing.java \
+	net/willware/eurydice/elements/Carbon.java \
+	net/willware/eurydice/elements/Hydrogen.java \
+	net/willware/eurydice/elements/Nitrogen.java \
+	net/willware/eurydice/elements/Oxygen.java \
+	net/willware/eurydice/forcefields/ForceField.java \
+	net/willware/eurydice/forcefields/mm2/AngleTerm.java \
+	net/willware/eurydice/forcefields/mm2/LengthTerm.java \
+	net/willware/eurydice/forcefields/mm2/LongRangeTerm.java \
+	net/willware/eurydice/forcefields/mm2/NanocadStyleMM2.java \
+	net/willware/eurydice/forcefields/mm2/Term.java \
+	net/willware/eurydice/forcefields/mm2/TorsionTerm.java \
+	net/willware/eurydice/library/Aspirin.java \
+	net/willware/eurydice/library/Buckyball.java \
+	net/willware/eurydice/library/Diamond.java \
+	net/willware/eurydice/library/DiamondRod.java \
+	net/willware/eurydice/library/Propane.java \
+	net/willware/eurydice/library/TwoRings.java \
+	net/willware/eurydice/library/Water.java \
+	net/willware/eurydice/math/Matrix.java \
+	net/willware/eurydice/math/PhysicalUnit.java \
+	net/willware/eurydice/math/Quaternion.java \
+	net/willware/eurydice/math/Vector.java \
+	net/willware/eurydice/serialization/Filetype.java \
+	net/willware/eurydice/serialization/InputStreamFromString.java \
+	net/willware/eurydice/serialization/NanocadNativeFormat.java \
+	net/willware/eurydice/serialization/OutputStreamToString.java \
+	net/willware/eurydice/serialization/PdbFile.java \
+	net/willware/eurydice/serialization/XyzFile.java \
+	net/willware/eurydice/tests/DatabaseTests.java \
+	net/willware/eurydice/tests/LinearAlgebraTests.java \
 
-# ENDCLASSLIST
+# ENDSRCLIST
 
 CLASSES = $(SOURCES:.java=.class)
 
@@ -84,11 +84,11 @@ jar: $(JARFILE)
 
 # I keep needing to do this...
 update-java-list:
-	head -$$(grep -n BEGINCLASSLIST Makefile | head -1 | sed 's/:.*//') Makefile
+	head -$$(grep -n BEGINSRCLIST Makefile | head -1 | sed 's/:.*//') Makefile
 	echo SOURCES = \\
-	make --quiet ls-java | sed 's/\.java/.class/' | sed 's/^/\t/' | sed 's/$$/ \\/'
+	make --quiet ls-java | sed 's/^/\t/' | sed 's/$$/ \\/'
 	echo
-	tail --lines=+$$(grep -n ENDCLASSLIST Makefile | head -1 | sed 's/:.*//') Makefile
+	tail --lines=+$$(grep -n ENDSRCLIST Makefile | head -1 | sed 's/:.*//') Makefile
 
 ls-java:
 	git ls-files | egrep '\.java$$' | sort
@@ -97,11 +97,11 @@ zip: $(ZIPFILE)
 
 $(ZIPFILE): $(CLASSES)
 	rm -f $(ZIPFILE)
-	zip $(ZIPFILE) $$(find . -name "*.class")
+	zip $(ZIPFILE) $(CLASSES)
 
 $(JARFILE): $(CLASSES)
 	rm -f $(JARFILE)
-	jar cvf $(JARFILE) $$(find . -name "*.class")
+	jar cvf $(JARFILE) $(SOURCES) $(CLASSES)
 
 classes:
 	make $(CLASSES)
@@ -127,13 +127,13 @@ PACKAGE_DESCRIPTIONS = net/willware/eurydice/core/package.html \
 	net/willware/eurydice/serialization/package.html \
 	net/willware/eurydice/tests/package.html
 
-show-doc: ../html/index.html
+show-doc: html/index.html
 	x-www-browser ../html/index.html &
 
-doc: ../html/index.html
+doc: html/index.html
 
-../html/index.html: overview.html $(PACKAGE_DESCRIPTIONS)
-	javadoc -overview overview.html -d ../html $$(find . -name '*.java')
+html/index.html: overview.html $(PACKAGE_DESCRIPTIONS)
+	javadoc -overview overview.html -d html $$(find . -name '*.java')
 
 doc-tarball: overview.html $(PACKAGE_DESCRIPTIONS)
 	rm -rf nc2-javadoc
@@ -145,7 +145,7 @@ clean:
 	rm -f *~ $$(find . -name "*.class") $(JARFILE) $(ZIPFILE)
 	rm -f *~ $$(find . -name "package.html")
 	rm -f *~ $$(find . -name "*.java.orig")
-	rm -rf ../html overview.html $(PACKAGE_DESCRIPTIONS)
+	rm -rf html overview.html $(PACKAGE_DESCRIPTIONS)
 
 rsthtml = \
 	rst2html $(2) /tmp/rst.html; \
@@ -175,5 +175,5 @@ net/willware/eurydice/serialization/package.html: net/willware/eurydice/serializ
 net/willware/eurydice/tests/package.html: net/willware/eurydice/tests/README.rst
 	$(call rsthtml, net/willware/eurydice/tests/package.html, net/willware/eurydice/tests/README.rst)
 
-overview.html: ../README.rst
-	$(call rsthtml, overview.html, ../README.rst)
+overview.html: README.rst
+	$(call rsthtml, overview.html, README.rst)
