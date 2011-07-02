@@ -11,8 +11,28 @@ import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
 
-public class TorsionTerm extends Term {
-    private double v1, v2, v3;
+/**
+ * An energy term involving the torsion angle described by four atoms bonded in a linear chain.
+ * Please see Section 3.3.2.c and Table 3.5 of <i>Nanosystems: Molecular Machinery, Manufacturing,
+ * and Computation</i> by K. Eric Drexler, copyright 1992, published by John Wiley and Sons.
+ */
+public class TorsionTerm extends TermImpl {
+
+    /** Something to do with potential energy which I've forgotten. */
+    private double v1;
+    /** Something to do with potential energy which I've forgotten. */
+    private double v2;
+    /** Something to do with potential energy which I've forgotten. */
+    private double v3;
+
+    /**
+     * Constructor.
+     *
+     * @param a1 the first atom
+     * @param a2 the second atom
+     * @param a3 the third atom
+     * @param a4 the fourth atom
+     */
     public TorsionTerm(Atom a1, Atom a2, Atom a3, Atom a4) {
         int i;
         boolean found;
@@ -50,6 +70,9 @@ public class TorsionTerm extends Term {
             v1 = v2 = v3 = 0.0;
     }
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
+     */
     protected void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
         TorsionTerm t = new TorsionTerm(v.get(0),
                                         v.get(1),
@@ -61,9 +84,17 @@ public class TorsionTerm extends Term {
             termList.add(t);
         }
     }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#termLength()
+     */
     public int termLength() {
         return 4;
     }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#toStringHelper()
+     */
     protected String toStringHelper() {
         return " torsion " +
                (new Double(v1)).toString() + " " +
@@ -76,6 +107,9 @@ public class TorsionTerm extends Term {
     // forces for years! How embarassing. Now I've decided to just steal the
     // correct torsion code from the NAMD program and translate it from C++
     // to Java.
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.Term#computeForces(net.willware.eurydice.core.Structure)
+     */
     public void computeForces(Structure struc) {
         double rA, rB, rC;    //  Length of vectors A, B, and C
         double phi;    //  angle between the plans
@@ -236,6 +270,8 @@ public class TorsionTerm extends Term {
             }
         }
     }
+
+    /** Table of torsion term coefficients. */
     private final static double[][] torsionCoeffs = {
         {
             C, Atom.SP3, C, Atom.SP3, C, Atom.SP3, C, Atom.SP3, 0.200, 0.270, 0.093

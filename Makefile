@@ -14,14 +14,16 @@ JFLAGS=-cp $(CLASSPATH)
 
 # BEGINSRCLIST
 SOURCES = \
+	net/willware/eurydice/core/AtomImpl.java \
 	net/willware/eurydice/core/Atom.java \
+	net/willware/eurydice/core/BondImpl.java \
 	net/willware/eurydice/core/Bond.java \
+	net/willware/eurydice/core/JigImpl.java \
 	net/willware/eurydice/core/Jig.java \
 	net/willware/eurydice/core/NanocadStyleStructure.java \
-	net/willware/eurydice/core/Region.java \
-	net/willware/eurydice/core/SmallStructure.java \
+	net/willware/eurydice/core/Settings.java \
+	net/willware/eurydice/core/StructureImpl.java \
 	net/willware/eurydice/core/Structure.java \
-	net/willware/eurydice/core/Substructure.java \
 	net/willware/eurydice/db/IStructureDatabase.java \
 	net/willware/eurydice/db/MongoInterface.java \
 	net/willware/eurydice/db/MysqlInterface.java \
@@ -41,6 +43,7 @@ SOURCES = \
 	net/willware/eurydice/forcefields/mm2/LengthTerm.java \
 	net/willware/eurydice/forcefields/mm2/LongRangeTerm.java \
 	net/willware/eurydice/forcefields/mm2/NanocadStyleMM2.java \
+	net/willware/eurydice/forcefields/mm2/TermImpl.java \
 	net/willware/eurydice/forcefields/mm2/Term.java \
 	net/willware/eurydice/forcefields/mm2/TorsionTerm.java \
 	net/willware/eurydice/library/Aspirin.java \
@@ -52,7 +55,9 @@ SOURCES = \
 	net/willware/eurydice/library/Water.java \
 	net/willware/eurydice/math/Matrix.java \
 	net/willware/eurydice/math/PhysicalUnit.java \
+	net/willware/eurydice/math/Quantity.java \
 	net/willware/eurydice/math/Quaternion.java \
+	net/willware/eurydice/math/Region.java \
 	net/willware/eurydice/math/Vector.java \
 	net/willware/eurydice/serialization/Filetype.java \
 	net/willware/eurydice/serialization/InputStreamFromString.java \
@@ -96,11 +101,9 @@ ls-java:
 zip: $(ZIPFILE)
 
 $(ZIPFILE): $(CLASSES)
-	rm -f $(ZIPFILE)
 	zip $(ZIPFILE) $(CLASSES)
 
 $(JARFILE): $(CLASSES)
-	rm -f $(JARFILE)
 	jar cvf $(JARFILE) $(SOURCES) $(CLASSES)
 
 classes:
@@ -128,7 +131,7 @@ PACKAGE_DESCRIPTIONS = net/willware/eurydice/core/package.html \
 	net/willware/eurydice/tests/package.html
 
 show-doc: html/index.html
-	x-www-browser ../html/index.html &
+	x-www-browser html/index.html &
 
 doc: html/index.html
 

@@ -1,5 +1,5 @@
 /**
- * LongRangeTerm.java - MM2-style long-range (electrostatic and vdw) energy term
+ * LongRangeTerm.java - MM2-style long-range (electrostatic and Van der Waals) energy term
  * Copyright (c) 1997 Will Ware, all rights reserved.
  */
 
@@ -9,14 +9,32 @@ import java.util.List;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.BondImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
 
-public class LongRangeTerm extends Term {
+/**
+ * An energy term involving long-range electrostatic and Van der Waals interactions.
+ * Please see Sections 3.3.2.d and 3.3.2.e of <i>Nanosystems: Molecular Machinery, Manufacturing,
+ * and Computation</i> by K. Eric Drexler, copyright 1992, published by John Wiley and Sons.
+ */
+public class LongRangeTerm extends TermImpl {
+
+    /** The structure to which this energy term applies. */
     private Structure struc;
+
+    /** The bonds. */
     List<Bond> bonds;
+
+    /** The exclusions. */
     private int[][] exclusions;
 
+    /**
+     * Constructor.
+     *
+     * @param a1 the first atom
+     * @param a2 the second atom
+     */
     public LongRangeTerm(Atom a1, Atom a2) {
         myAtoms = new Atom[2];
         myAtoms[0] = a1;
@@ -25,8 +43,13 @@ public class LongRangeTerm extends Term {
     }
 
     // TODO figure out correct constant for dipole charge assignments
+    /** The Constant dontKnowCorrectUnits. */
     private final static double dontKnowCorrectUnits = 1.0;
 
+    /**
+     * Step through pairs of atoms, converting dipole moments into fractional electrostatic charges
+     * on each atom.
+     */
     private void hackCharges() {
         int i, j, k;
         final int n = (int) struc.size();
@@ -62,29 +85,53 @@ public class LongRangeTerm extends Term {
         }
     }
 
+    /**
+     * Bond chain.
+     *
+     * @param a1 the a1
+     * @param a2 the a2
+     * @param depth the depth
+     * @return true, if successful
+     */
     private boolean bondChain(Atom a1, Atom a2, int depth) {
         if (a1 == a2)
             return true;
         if (depth == 0)
             return false;
-        List<Bond> a1bonds = Bond.filterList(a1, bonds);
+        List<Bond> a1bonds = BondImpl.filterList(a1, bonds);
         if (a1bonds == null)
             return false;
         if (depth == 1)
-            return Bond.touchesAtom(a1bonds, a2);
+            return BondImpl.touchesAtom(a1bonds, a2);
         for (Bond b: a1bonds)
             if (bondChain(b.otherAtom(a1), a2, depth - 1))
                 return true;
         return false;
     }
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#termLength()
+     */
     public int termLength() {
         return 2;
     }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
+     */
     public void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
     }
+
+    /** The Constant maxNumChained. */
     private final static int maxNumChained = 50;
-    public void enumerate(Structure struc, List<Term> termList) {
+
+    /**
+     * Enumerate.
+     *
+     * @param struc the struc
+     * @param termList the term list
+     */
+    public void enumerate(Structure struc, List<TermImpl> termList) {
         int i, j, n;
         this.struc = struc;
         bonds = struc.inferBonds();
@@ -108,6 +155,9 @@ public class LongRangeTerm extends Term {
         termList.add(this);
     }
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.Term#computeForces(net.willware.eurydice.core.Structure)
+     */
     public void computeForces(Structure struc) {
         int i, j, k, n = (int) struc.size();
         for (i = 0; i < n; i++) {
@@ -137,6 +187,14 @@ public class LongRangeTerm extends Term {
     // should be negative, -1.0 is too big, -1.0e-12 is too small
     // -1e-6 too small, -1.0e-3 is in the ballpark
 
+    /**
+     * Compute force contributions on a pair of atoms due to electrostatic
+     * and Van der Waals forces.
+     *
+     * @param a1 the first atom
+     * @param a2 the second atom
+     * @param struc the structure the atoms belong to
+     */
     private void computeForces(Atom a1, Atom a2, Structure struc) {
         double rvdw = a1.vdwRadius() + a2.vdwRadius();
         double evdw = (a1.vdwEnergy() + a2.vdwEnergy()) / 2;
@@ -163,6 +221,9 @@ public class LongRangeTerm extends Term {
         myAtoms[1].addForce(f);
     }
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.forcefields.mm2.TermImpl#toStringHelper()
+     */
     protected String toStringHelper() {
         return " torsion";
     }
@@ -171,6 +232,7 @@ public class LongRangeTerm extends Term {
     // differences in electronegativity. Actually, these
     // are dipoleMoments divided by bondLengths, which
     // gives fractionalCharges
+    /** The Constant dipoleMoments. */
     private final static double[][] dipoleMoments = {
         {C, Atom.SP3, C, Atom.SP2, 0.300 / 1.497},
         {C, Atom.SP3, C, Atom.SP, 0.750 / 1.470},

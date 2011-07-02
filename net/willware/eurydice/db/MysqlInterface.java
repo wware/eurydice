@@ -9,10 +9,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Jig;
-import net.willware.eurydice.core.Region;
-import net.willware.eurydice.core.SmallStructure;
+import net.willware.eurydice.core.JigImpl;
+import net.willware.eurydice.core.StructureImpl;
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.serialization.XyzFile;
 
@@ -126,14 +128,14 @@ public class MysqlInterface implements IStructureDatabase {
      */
     private class AddAtomHandler implements ResultSetHandler {
 
-        private SmallStructure struc;
+        private StructureImpl struc;
 
         /**
          * Constructor
          *
          * @param struc the structure to which atoms will be added
          */
-        public AddAtomHandler(SmallStructure struc) {
+        public AddAtomHandler(StructureImpl struc) {
             this.struc = struc;
         }
 
@@ -141,7 +143,7 @@ public class MysqlInterface implements IStructureDatabase {
          * @see net.willware.eurydice.db.MysqlInterface.ResultSetHandler#handleResult(java.sql.ResultSet)
          */
         public void handleResult(ResultSet rs) throws SQLException {
-            Atom a = Atom.getElement(rs.getString("element"));    // C, H, O, N, etc
+            Atom a = AtomImpl.getElement(rs.getString("element"));    // C, H, O, N, etc
             a.setId(rs.getLong("id"));
             String hyb = rs.getString("hybridization");
             if      ("NONE".equals(hyb)) a.setHybridization(Atom.NONE);
@@ -160,14 +162,14 @@ public class MysqlInterface implements IStructureDatabase {
      */
     private class AddJigHandler implements ResultSetHandler {
 
-        private SmallStructure struc;
+        private StructureImpl struc;
 
         /**
          * Constructor
          *
          * @param struc the structure to which jigs will be added
          */
-        public AddJigHandler(SmallStructure struc) {
+        public AddJigHandler(StructureImpl struc) {
             this.struc = struc;
         }
 
@@ -175,7 +177,7 @@ public class MysqlInterface implements IStructureDatabase {
          * @see net.willware.eurydice.db.MysqlInterface.ResultSetHandler#handleResult(java.sql.ResultSet)
          */
         public void handleResult(ResultSet rs) throws SQLException {
-            Jig j = Jig.getJig(struc, rs.getString("jigtype"));
+            Jig j = JigImpl.getJig(struc, rs.getString("jigtype"));
             j.loadProperties(rs.getString("properties"));
             struc.addJig(j);
         }
@@ -207,7 +209,7 @@ public class MysqlInterface implements IStructureDatabase {
     public Structure fetch(UUID uuid) {
         // if you're calling fetch(), you expect the whole structure to fit in RAM
         // so that would be a SmallStructure
-        SmallStructure struc = new SmallStructure(uuid);
+        StructureImpl struc = new StructureImpl(uuid);
         StructureIdFetchHandler fetcher = new StructureIdFetchHandler();
         sqlQuery("SELECT * FROM structures WHERE uuid=\"" + uuid + "\"",
                  fetcher, false);
@@ -226,7 +228,7 @@ public class MysqlInterface implements IStructureDatabase {
     public Structure fetchByRegion(UUID uuid, Region r) {
         Vector vmin = r.getMinCorner();
         Vector vmax = r.getMaxCorner();
-        SmallStructure struc = new SmallStructure(uuid);
+        StructureImpl struc = new StructureImpl(uuid);
         StructureIdFetchHandler fetcher = new StructureIdFetchHandler();
         sqlQuery("SELECT * FROM structures WHERE uuid=" + uuid, fetcher, false);
         long strucId = fetcher.getId();

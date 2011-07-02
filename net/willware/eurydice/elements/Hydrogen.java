@@ -5,12 +5,12 @@
 
 package net.willware.eurydice.elements;
 
-import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.drawing.DrawingEngine;
 import net.willware.eurydice.drawing.DrawingEngine.Color;
 import net.willware.eurydice.math.Vector;
 
-public class Hydrogen extends Atom {
+public class Hydrogen extends AtomImpl {
     public Hydrogen() {
         setHybridization(NONE);
     }

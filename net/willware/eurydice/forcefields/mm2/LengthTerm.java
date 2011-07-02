@@ -13,9 +13,11 @@ import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.*;
 
 /**
- * An energy term associated with bond length.
+ * An energy term associated with bond length. Please see Section 3.3.2.a and Table 3.2 of
+ * <i>Nanosystems: Molecular Machinery, Manufacturing, and Computation</i> by K. Eric Drexler,
+ * copyright 1992, published by John Wiley and Sons.
  */
-public class LengthTerm extends Term {
+public class LengthTerm extends TermImpl {
 
     /**
      * The spring constant coefficient. Force is measured in attoJoules per Angstroms, so this

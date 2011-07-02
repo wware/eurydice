@@ -1,13 +1,8 @@
 package net.willware.eurydice.core;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-//import net.willware.eurydice.forcefields.mm2.NanocadStyleMM2;
-import net.willware.eurydice.serialization.InputStreamFromString;
-
-// TODO: Auto-generated Javadoc
 /**
  * A jig can be used to apply external forces to the atoms in a structure, or to perform
  * measurements on the structure. Examples of external forces would be anchors that hold
@@ -15,43 +10,14 @@ import net.willware.eurydice.serialization.InputStreamFromString;
  * forces to some of the atoms in a structure. Examples of measurements could be temperature
  * (averaging Brownian motion over a few time steps), or lengths or angles.
  */
-public abstract class Jig {
-
-    private Properties properties;
-    /** The structure to which this jig applies. */
-    private Structure struc;
-
-    /**
-     * Gets the jig.
-     *
-     * @param struc the struc
-     * @param jigName the jig name
-     * @return the jig
-     */
-    public static Jig getJig(Structure struc, String jigName) {
-        // handle simple jigs
-        // handle force fields
-        try {
-            // The newInstance() call is a work around for some broken Java implementations
-            // I think we just instantiate it and forget it, only need to do that once
-            // It's a bad idea to do imports of com.mysql.jdbc things for some reason
-            Jig j = (Jig) Class.forName(jigName).newInstance();
-            j.properties = new Properties();
-            j.struc = struc;
-            return j;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        //if ("NanocadStyleMM2".equals(jigName))
-        //    return new NanocadStyleMM2((NanocadStyleStructure) struc);
-    }
+public interface Jig {
 
     /**
      * Return a list of indices for the atoms this jig is connected to.
      *
      * @return the list
      */
-    public abstract List<Long> atomIndices();
+    public List<Long> atomIndices();
 
     /**
      * Compute a map of force vector based on atom positions. The keys are atom indices
@@ -59,27 +25,21 @@ public abstract class Jig {
      *
      * @param struc the struc
      */
-    public abstract void computeForces(Structure struc);
+    public void computeForces(Structure struc);
 
     /**
      * Jigs have properties.
      *
      * @param str a stringified Properties instance to import stuff from
      */
-    public void loadProperties(String str) {
-        try {
-            properties.load(new InputStreamFromString(str));
-        } catch (IOException ex) { }
-    }
+    public void loadProperties(String str);
 
     /**
      * Set all the properties of this jig.
      *
      * @param p the new Properties for this jig
      */
-    public void setProperties(Properties p) {
-        properties = p;
-    }
+    public void setProperties(Properties p);
 
     /**
      * Set a property of this jig.
@@ -87,9 +47,7 @@ public abstract class Jig {
      * @param key the key of the property
      * @param value the value of the property
      */
-    public void setProperty(String key, String value) {
-        properties.setProperty(key, value);
-    }
+    public void setProperty(String key, String value);
 
     /**
      * Jigs have properties.
@@ -97,9 +55,7 @@ public abstract class Jig {
      * @return the properties
      * @returns the properties of this jig
      */
-    public Properties getProperties() {
-        return properties;
-    }
+    public Properties getProperties();
 
     /**
      * Jigs refer to specific Structures.
@@ -107,7 +63,5 @@ public abstract class Jig {
      * @return the struc
      * @returns the structure to which this jig applies
      */
-    public Structure getStruc() {
-        return struc;
-    }
+    public Structure getStruc();
 }

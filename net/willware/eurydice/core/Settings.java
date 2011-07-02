@@ -13,6 +13,7 @@ public class Settings extends Properties {
     /** The Constant serialVersionUID. */
     public static final long serialVersionUID = 1;
 
+    /** The global settings. */
     private static Settings globalSettings = null;
 
     /**
@@ -37,7 +38,6 @@ public class Settings extends Properties {
      *
      * @param key the key
      * @return the non-null settings value
-     * @throws IOException Signals that an I/O exception has occurred.
      */
     public String getNonNull(String key) {
         String value = this.getProperty(key);

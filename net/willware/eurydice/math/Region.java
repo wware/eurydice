@@ -1,8 +1,5 @@
-package net.willware.eurydice.core;
+package net.willware.eurydice.math;
 
-import net.willware.eurydice.math.Vector;
-
-// TODO: Auto-generated Javadoc
 /**
  * A rectangular region of 3-space, delineated by two Vectors at opposing corners.
  */
@@ -10,7 +7,7 @@ public class Region {
     private Vector minCorner, maxCorner;
 
     /**
-     * Instantiates a new region.
+     * Constructor.
      *
      * @param x1 an x coordinate of one corner of the region
      * @param y1 an y coordinate of one corner of the region

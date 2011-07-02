@@ -7,14 +7,13 @@ package net.willware.eurydice.elements;
 
 import java.util.List;
 
-import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
-//import net.willware.eurydice.basics.Vector;
 import net.willware.eurydice.drawing.DrawingEngine;
 import net.willware.eurydice.drawing.DrawingEngine.Color;
 import net.willware.eurydice.math.Vector;
 
-public class Oxygen extends Atom {
+public class Oxygen extends AtomImpl {
     public static String ename = "Oxygen";
     public static String symbol = "O";
     public static int atomicNumber = 8;

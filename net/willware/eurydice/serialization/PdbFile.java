@@ -53,8 +53,8 @@ public class PdbFile extends Filetype {
         for (i = 0; i < bondList.size(); i++) {
             Bond b = bondList.get(i);
             ps.print("CONECT");
-            ps.print(formatInt((int)b.a1.getId() + 1, 5, RIGHT));
-            ps.print(formatInt((int)b.a2.getId() + 1, 5, RIGHT));
+            ps.print(formatInt((int)b.getFirstAtom().getId() + 1, 5, RIGHT));
+            ps.print(formatInt((int)b.getSecondAtom().getId() + 1, 5, RIGHT));
             ps.print("\n");
         }
         ps.print("END\n");

@@ -7,13 +7,13 @@ package net.willware.eurydice.elements;
 
 import java.util.List;
 
-import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.drawing.DrawingEngine;
 import net.willware.eurydice.drawing.DrawingEngine.Color;
 import net.willware.eurydice.math.Vector;
 
-public class Nitrogen extends Atom {
+public class Nitrogen extends AtomImpl {
     public Nitrogen() {
         setHybridization(SP3);
     }

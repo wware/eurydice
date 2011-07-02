@@ -10,23 +10,23 @@ import java.util.UUID;
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.math.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
  * NanoCAD was a Java applet I wrote in 1997, hoping that I'd find the time and energy
- * to make it a useful tool for nanotechnological design. Since you haven't heard of it,
- * that obviously didn't happen. This structure type is a little piece of history,
- * still useful for very small structures.
+ * to make it a useful tool for nanotechnological design.
  */
-public class NanocadStyleStructure extends SmallStructure {
+public class NanocadStyleStructure extends StructureImpl {
 
-    /** flag indicating the structure has changed since the last time it was saved */
+    /** flag indicating the structure has changed since the last time it was saved. */
     private boolean changedSinceLastSave = false;
 
-    /** flag indicating whether force vectors should be included in display */
+    /** flag indicating whether force vectors should be included in display. */
     private boolean showForces = false;
 
-    /** arbitrary multiplier for length of force vectors, chosen for visual clarity */
+    /** arbitrary multiplier for length of force vectors, chosen for visual clarity. */
     private double forceMultiplier = 100.0;
+
+    /** the center of gravity of this structure in 3-space */
+    private Vector centerOfGravity;
 
     /**
      * Instantiates a new nanocad style structure.
@@ -51,8 +51,8 @@ public class NanocadStyleStructure extends SmallStructure {
      */
     public void empty() {
         changedSinceLastSave = true;
-        setForceField((ForceField) Jig.getJig(this,
-                                              "net.willware.eurydice.forcefields.mm2.NanocadStyleMM2"));
+        setForceField((ForceField) JigImpl.getJig(this,
+                      "net.willware.eurydice.forcefields.mm2.NanocadStyleMM2"));
     }
 
     /**
@@ -64,56 +64,6 @@ public class NanocadStyleStructure extends SmallStructure {
         setShowForceVectors(sf);
     }
 
-    /*
-    class SelectionAtomProcessor implements AtomProcessor {
-        DrawingEngine de;
-        Vector scrPos;
-        boolean picky;
-        Structure struc;
-        double minDist;
-        Atom amin;
-        public SelectionAtomProcessor(DrawingEngine de, Vector scrPos, boolean picky, Structure struc) {
-            this.de = de;
-            this.scrPos = scrPos;
-            this.picky = picky;
-            this.struc = struc;
-            minDist = 1.0e20;
-            amin = null;
-        }
-        public void process(Atom a) {
-            Vector atomPos = de.xyzToScreen(a.getPosition());
-            double dist = atomPos.subtract(scrPos).length();
-            if (dist < minDist) {
-                minDist = dist;
-                amin = a;
-            }
-        }
-        public double getMinDistance() {
-            return minDist;
-        }
-        public Atom getResult() {
-            return amin;
-        }
-    }
-    */
-
-    /**
-     * Selected atom.
-     *
-     * @param a the a
-     * @return the atom
-     * public Atom selectedAtom(DrawingEngine de, Vector scrPos, boolean picky) {
-     * SelectionAtomProcessor sap = new SelectionAtomProcessor(de, scrPos, picky, this);
-     * process(sap);
-     * Atom amin = sap.getResult();
-     * // if we're picky, we need to be right on top of the atom
-     * if (!picky || sap.getMinDistance() < 0.25 * de.zoomFactor)
-     * return amin;
-     * else
-     * return null;
-     * }
-     */
-
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.SmallStructure#addAtom(net.willware.eurydice.core.Atom)
      */
@@ -122,39 +72,20 @@ public class NanocadStyleStructure extends SmallStructure {
         changedSinceLastSave = true;
     }
 
-    /*
-     * This was how I used to add atoms when the user placed them on the screen.
-     * That needs to be reconsidered because the screen stuff is no longer impinging on
-     * the definition of Group, which deals with physical atoms and angstrom distances,
-     * not with drawings of atoms and pixel distances.
-     *
-    public void addAtom(Atom a, double[] scrPos) {
-    needToEnumerateTerms = true;
-    changedSinceLastSave = true;
-    a.position = v.screenToXyz(scrPos);
-    atomList.add(a);
-    a.setGroup(this);
-    }
-     */
-
-    private class CoG {
-        public Vector v;
-    }
-
     /**
      * Center the atoms in this structure around the point (0,0,0) in 3-space.
      */
     public void centerAtoms() {
-        final CoG centerOfGravity = new CoG();
+        centerOfGravity = new Vector();   // start at (0,0,0)
         process(new AtomProcessor() {
             public void process(Atom a) {
-                centerOfGravity.v = centerOfGravity.v.add(a.getPosition());
+                centerOfGravity = centerOfGravity.add(a.getPosition());
             }
         });
-        centerOfGravity.v = centerOfGravity.v.scale(1.0 / size()).negate();
+        centerOfGravity = centerOfGravity.scale(-1.0 / size());
         process(new AtomProcessor() {
             public void process(Atom a) {
-                a.move(centerOfGravity.v);
+                a.move(centerOfGravity);
             }
         });
     }

@@ -10,10 +10,13 @@ import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
 
+// TODO: Auto-generated Javadoc
 /**
- * A MM2 energy term for the angle formed by three atoms.
+ * A MM2 energy term for the angle formed by three atoms. Please see Section 3.3.2.b and Table 3.3
+ * of <i>Nanosystems: Molecular Machinery, Manufacturing, and Computation</i> by K. Eric Drexler,
+ * copyright 1992, published by John Wiley and Sons.
  */
-public class AngleTerm extends Term {
+public class AngleTerm extends TermImpl {
 
     /** A conversion constant from degrees to radians. */
     private static final double radiansPerDegree = 3.1415926 / 180;    // degrees to radians

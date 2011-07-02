@@ -15,6 +15,9 @@ import net.willware.eurydice.math.Vector;
 public class LinearAlgebraTests extends TestCase {
 
     // @Test
+    /**
+     * Test matrix inverse.
+     */
     public void testMatrixInverse() {
         Random r = new Random();
         Matrix m = new Matrix(
@@ -31,6 +34,9 @@ public class LinearAlgebraTests extends TestCase {
     }
 
     // @Test
+    /**
+     * Test matrix rotations.
+     */
     public void testMatrixRotations() {
         Vector v = new Vector(1, 2, 3);
         Matrix r = Matrix.rotationX(Math.PI / 2);
@@ -47,10 +53,20 @@ public class LinearAlgebraTests extends TestCase {
         assertTrue(r.times(v).approximatelyEqual(new Vector(2.12132, 0.7071068, 3)));
     }
 
+    /**
+     * Suite.
+     *
+     * @return the test
+     */
     public static Test suite() {
         return new TestSuite(LinearAlgebraTests.class);
     }
 
+    /**
+     * The main method.
+     *
+     * @param args command line arguments
+     */
     public static void main(String args[]) {
         junit.textui.TestRunner.run(suite());
     }

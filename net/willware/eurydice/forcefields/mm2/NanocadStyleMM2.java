@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.JigImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.Structure.AtomProcessor;
 import net.willware.eurydice.elements.Carbon;
@@ -21,10 +22,10 @@ import net.willware.eurydice.forcefields.ForceField;
  * Drexler's book <i>Nanosystems</i>, around page 44 if memory serves.
  * @see <a href="http://en.wikipedia.org/wiki/Molecular_modelling">Wikipedia article on molecular modeling</a>
  */
-public class NanocadStyleMM2 extends ForceField {
+public class NanocadStyleMM2 extends JigImpl implements ForceField {
 
     /** A list of the energy terms used to compute forces on the atoms in {@link #struc}. */
-    public List<Term> termList;
+    private List<Term> termList;
 
     /**
      * A flag indicating a change in the topology of the structure (an atom or bond has been added
@@ -35,8 +36,6 @@ public class NanocadStyleMM2 extends ForceField {
 
     /**
      * Constructor.
-     *
-     * @param struc the structure to which this force field applies
      */
     public NanocadStyleMM2() {
         termList = new ArrayList<Term>();

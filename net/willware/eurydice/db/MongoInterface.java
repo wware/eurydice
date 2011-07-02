@@ -13,10 +13,12 @@ import com.mongodb.DBCursor;
 import com.mongodb.MongoException;
 
 import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Jig;
-import net.willware.eurydice.core.Region;
-import net.willware.eurydice.core.SmallStructure;
+import net.willware.eurydice.core.JigImpl;
+import net.willware.eurydice.core.StructureImpl;
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.serialization.XyzFile;
 
@@ -81,14 +83,14 @@ public class MongoInterface implements IStructureDatabase {
             }
             if (obj == null)
                 return null;
-            SmallStructure struc = new SmallStructure((UUID) obj.get("parentUuid"));
+            StructureImpl struc = new StructureImpl((UUID) obj.get("parentUuid"));
             struc.setUUID(uuid);
             query = new BasicDBObject();
             query.put("strucUuid", uuid.toString());
             cur = query("atoms", query);
             while (cur.hasNext()) {
                 obj = cur.next();
-                Atom a = Atom.getElement((String) obj.get("element"));    // C, H, O, N, etc
+                Atom a = AtomImpl.getElement((String) obj.get("element"));    // C, H, O, N, etc
                 a.setId((Long) obj.get("id"));
                 String hyb = (String) obj.get("hybridization");
                 if      ("NONE".equals(hyb)) a.setHybridization(Atom.NONE);
@@ -107,7 +109,7 @@ public class MongoInterface implements IStructureDatabase {
             cur = query("jigs", query);
             while (cur.hasNext()) {
                 obj = cur.next();
-                Jig j = Jig.getJig(struc, (String) obj.get("jigtype"));
+                Jig j = JigImpl.getJig(struc, (String) obj.get("jigtype"));
                 j.setProperties((Properties) obj.get("properties"));
                 struc.addJig(j);
             }

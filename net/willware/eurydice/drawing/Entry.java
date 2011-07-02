@@ -11,9 +11,8 @@ import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.drawing.DrawingEngine.Color;
 import net.willware.eurydice.math.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class Entry.
+ * An entry in a display list, for drawing purposes.
  */
 public abstract class Entry {
     protected DrawingEngine engine;
@@ -146,13 +145,13 @@ public abstract class Entry {
             myBond = b;
             engine = e;
 
-            Vector pos1 = myBond.a1.getPosition();
+            Vector pos1 = myBond.getFirstAtom().getPosition();
             x1 = o.xyzToScreen(pos1);
-            r1 = radiusRatio * myBond.a1.covalentRadius() * o.zoomFactor;
+            r1 = radiusRatio * myBond.getFirstAtom().covalentRadius() * o.zoomFactor;
             r1 *= o.perspectiveFactor(x1.getZ());
 
-            x2 = o.xyzToScreen(myBond.a2.getPosition());
-            r2 = radiusRatio * myBond.a2.covalentRadius() * o.zoomFactor;
+            x2 = o.xyzToScreen(myBond.getSecondAtom().getPosition());
+            r2 = radiusRatio * myBond.getSecondAtom().covalentRadius() * o.zoomFactor;
             r2 *= o.perspectiveFactor(x2.getZ());
 
             // compute a perpendicular vector in screen space
@@ -180,8 +179,8 @@ public abstract class Entry {
         public void quickDraw() {
             Color black = engine.getColor("black");
             Color gray = engine.getColor("gray");
-            Color c1 = myBond.a1.color(engine);
-            Color c2 = myBond.a2.color(engine);
+            Color c1 = myBond.getFirstAtom().color(engine);
+            Color c2 = myBond.getSecondAtom().color(engine);
             // Gray isn't quite dark enough to look good in a wireframe
             if (c1.equals(gray))
                 c1 = black;

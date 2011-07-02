@@ -3,7 +3,7 @@ package net.willware.eurydice.db;
 import java.util.UUID;
 
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.core.Region;
+import net.willware.eurydice.math.Region;
 
 /**
  * This is the fundamental API for storing and fetching structures in any kind of

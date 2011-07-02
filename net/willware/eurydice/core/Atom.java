@@ -9,17 +9,12 @@ import java.util.List;
 
 import net.willware.eurydice.drawing.DrawingEngine;
 import net.willware.eurydice.drawing.DrawingEngine.Color;
-import net.willware.eurydice.elements.Carbon;
-import net.willware.eurydice.elements.Hydrogen;
-import net.willware.eurydice.elements.Nitrogen;
-import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
-public abstract class Atom {
+public interface Atom {
     // hybridizations are a virtual enum
     /** SP3 hybridization type. */
     public static final int SP3 = 0;
@@ -32,7 +27,6 @@ public abstract class Atom {
 
     /** NONE hybridization type. */
     public static final int NONE = 3;
-    private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
     // these should be defined within elements, as class variables
     /**
@@ -40,7 +34,7 @@ public abstract class Atom {
      *
      * @return the name of the element, such as "Carbon" or "Hydrogen"
      */
-    public abstract String name();
+    public String name();
 
     /**
      * Symbol.
@@ -100,86 +94,12 @@ public abstract class Atom {
      */
     public abstract int correctNumBonds();
 
-    /**
-     * Gets the element.
-     *
-     * @param elementName the element name
-     * @return the element
-     */
-    public static Atom getElement(String elementName) {
-        if ("C".equals(elementName))
-            return new Carbon();
-        if ("H".equals(elementName))
-            return new Hydrogen();
-        if ("O".equals(elementName))
-            return new Oxygen();
-        if ("N".equals(elementName))
-            return new Nitrogen();
-        return null;
-    }
-
-    private Vector position, previousPosition, force;
-
-    // instance variables
-    // ideally these would be accessed only with setters and getters
-    private long id;
-    private int charge;
-    private double fractionalCharge;
-    private int hybridization;
-
-    /**
-     * Instantiates a new atom.
-     */
-    public Atom() {
-        position = new Vector();
-        force = new Vector();
-        previousPosition = null;
-        setHybridization(NONE);
-        setCharge(0);
-        setFractionalCharge(0.0);
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    public String toString() {
-        return "<" + symbol() + " " + hybridnames[getHybridization()] + ">";
-    }
-
-    protected class BondInfo {
-        public int singles;
-        public int doubles;
-        public int triples;
-    }
-
-    protected BondInfo getMyBonds(List<Bond> bonds) {
-        BondInfo bi = new BondInfo();
-        bi.singles = 0;
-        bi.doubles = 0;
-        bi.triples = 0;
-        for (Bond b: bonds) {
-            switch (b.order()) {
-            default:
-                bi.singles++;
-                break;
-            case 2:
-                bi.doubles++;
-                break;
-            case 3:
-                bi.triples++;
-                break;
-            }
-        }
-        return bi;
-    }
     // overload me, unless I'm hydrogen
     /**
      * Rehybridize this atom, given a list of bonds.
      * @param bonds a bond list
      */
-    public void rehybridize(List<Bond> bonds) {
-        hybridization = NONE;
-    }
+    public void rehybridize(List<Bond> bonds);
 
     /**
      * Sets the electrostatic charge for an ionized atom. This is not the
@@ -187,18 +107,14 @@ public abstract class Atom {
      * of differing electronegativity, which forms an electric dipole moment.
      * @param charge the new charge
      */
-    public void setCharge(int charge) {
-        this.charge = charge;
-    }
+    public void setCharge(int charge);
 
     /**
      * Gets the atom's charge due to ionization.
      *
      * @return the charge
      */
-    public int getCharge() {
-        return charge;
-    }
+    public int getCharge();
 
     /**
      * Sets the fractional charge resulting from a bond with an atom
@@ -206,9 +122,7 @@ public abstract class Atom {
      *
      * @param fractionalCharge the new fractional charge
      */
-    public void setFractionalCharge(double fractionalCharge) {
-        this.fractionalCharge = fractionalCharge;
-    }
+    public void setFractionalCharge(double fractionalCharge);
 
     /**
      * Gets the fractional charge resulting from a bond with an atom
@@ -216,147 +130,103 @@ public abstract class Atom {
      *
      * @return the fractional charge
      */
-    public double getFractionalCharge() {
-        return fractionalCharge;
-    }
+    public double getFractionalCharge();
 
     /**
      * Sets the hybridization of this atom.
      *
      * @param hybridization the new hybridization
      */
-    public void setHybridization(int hybridization) {
-        this.hybridization = hybridization;
-    }
+    public void setHybridization(int hybridization);
 
     /**
-     * Gets the hybridization of this atom.
+     * Gets the hybridization of this atom using one of the integer constants
+     * such as {@link #SP3}, {@link #SP2}, {@link #SP} or {@link #NONE}.
      *
-     * @return the hybridization
+     * @return the hybridization as an integer
      */
-    public int getHybridization() {
-        return hybridization;
-    }
+    public int getHybridization();
 
     /**
-     * Gets the hybridization of this atom.
+     * Gets the hybridization of this atom as a string, for example
+     * "SP3", "SP2", "SP" for most small atoms, or "NONE" for hydrogen.
      *
-     * @return the hybridization
+     * @return the hybridization as a string
      */
-    public String getHybridizationString() {
-        switch (hybridization) {
-        default:
-        case SP3:
-            return "SP3";
-        case SP2:
-            return "SP2";
-        case SP:
-            return "SP";
-        case NONE:
-            return "NONE";
-        }
-    }
+    public String getHybridizationString();
 
     /**
      * Sets the position vector of this atom.
      *
      * @param position the new position
      */
-    public void setPosition(Vector position) {
-        this.position = position;
-    }
+    public void setPosition(Vector position);
 
     /**
      * Move this atom by a delta position vector.
      *
      * @param delta the delta position vector
      */
-    public void move(Vector delta) {
-        position = position.add(delta);
-    }
+    public void move(Vector delta);
 
     /**
      * Gets the position vector of this atom.
      *
      * @return the position
      */
-    public Vector getPosition() {
-        return position;
-    }
+    public Vector getPosition();
 
     /**
      * Sets the previous position of this atom, used in Verlet integration.
      *
      * @param previousPosition the new previous position
      */
-    public void setPreviousPosition(Vector previousPosition) {
-        this.previousPosition = previousPosition;
-    }
+    public void setPreviousPosition(Vector previousPosition);
 
     /**
      * Gets the previous position of this atom, used in Verlet integration.
      *
      * @return the previous position
      */
-    public Vector getPreviousPosition() {
-        return previousPosition;
-    }
+    public Vector getPreviousPosition();
 
     /**
      * Sets the force vector acting on this atom.
      *
      * @param force the new force
      */
-    public void setForce(Vector force) {
-        this.force = force;
-    }
+    public void setForce(Vector force);
 
     /**
      * Set the force vector of this atom to zero.
      */
-    public void zeroForce() {
-        if (force == null)
-            force = new Vector();
-        else {
-            force.setX(0.0);
-            force.setY(0.0);
-            force.setZ(0.0);
-        }
-    }
+    public void zeroForce();
 
     /**
      * Adds an increment vector to this atom's force vector.
      *
      * @param dforce the dforce
      */
-    public void addForce(Vector dforce) {
-        force = force.add(dforce);
-    }
+    public void addForce(Vector dforce);
 
     /**
      * Gets the force vector acting on this atom.
      *
      * @return the force
      */
-    public Vector getForce() {
-        return force;
-    }
+    public Vector getForce();
 
     /**
      * Sets the 64-bit id for this atom, unique within its structure.
      *
      * @param index the new id
      */
-    public void setId(long index) {
-        this.id = index;
-    }
+    public void setId(long index);
 
     /**
      * Gets the 64-bit id for this atom, unique within its structure.
      *
      * @return the id
      */
-    public long getId() {
-        return id;
-    }
+    public long getId();
 }
