@@ -18,7 +18,7 @@ import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Jig;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.StructureImpl;
-import net.willware.eurydice.db.IStructureDatabase;
+import net.willware.eurydice.db.StructureDatabase;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 
@@ -30,7 +30,7 @@ public class DatabaseTests extends TestCase {
     /**
      * A simple test database.
      */
-    private class TestDatabase implements IStructureDatabase {
+    private class TestDatabase implements StructureDatabase {
 
         /** All the structures (and anything else) this database knows about. */
         private Map<UUID,Object> everything;
@@ -43,7 +43,7 @@ public class DatabaseTests extends TestCase {
         }
 
         /* (non-Javadoc)
-         * @see net.willware.eurydice.db.IStructureDatabase#store(net.willware.eurydice.core.Structure)
+         * @see net.willware.eurydice.db.StructureDatabase#store(net.willware.eurydice.core.Structure)
          */
         public boolean store(Structure ip) {
             if (ip == null)
@@ -53,7 +53,7 @@ public class DatabaseTests extends TestCase {
         }
 
         /* (non-Javadoc)
-         * @see net.willware.eurydice.db.IStructureDatabase#fetch(java.util.UUID)
+         * @see net.willware.eurydice.db.StructureDatabase#fetch(java.util.UUID)
          */
         public Structure fetch(UUID uuid) {
             if (uuid == null)
@@ -62,7 +62,7 @@ public class DatabaseTests extends TestCase {
         }
 
         /* (non-Javadoc)
-         * @see net.willware.eurydice.db.IStructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.math.Region)
+         * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.math.Region)
          */
         public Structure fetchByRegion(UUID uuid, Region r) {
             if (uuid == null)
@@ -317,7 +317,7 @@ public class DatabaseTests extends TestCase {
      */
     public void testBasicDbOperations() {
         TestSmallStructure struc = new TestSmallStructure(null);
-        IStructureDatabase sdb = new TestDatabase();
+        StructureDatabase sdb = new TestDatabase();
         TestCase.assertTrue(sdb.store(struc));
         Structure s = sdb.fetch(struc.getUUID());
         TestCase.assertEquals("expected: " + struc.toJson() + ", got: " + s.toJson(),
@@ -340,7 +340,7 @@ public class DatabaseTests extends TestCase {
      */
     public void testBigStructure() {
         TestBigPositionList struc = new TestBigPositionList(null);
-        IStructureDatabase sdb = new TestDatabase();
+        StructureDatabase sdb = new TestDatabase();
         TestCase.assertTrue(sdb.store(struc));
         TestCase.assertEquals(sdb.fetch(struc.getUUID()), struc);
         Structure child = struc.clone();

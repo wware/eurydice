@@ -21,7 +21,7 @@ import net.willware.eurydice.serialization.XyzFile;
 /**
  * MysqlInterface is an interface between the Java code and a MySQL database.
  */
-public class MysqlInterface implements IStructureDatabase {
+public class MysqlInterface implements StructureDatabase {
 
     private static Object driver = null;
     private String connectString;
@@ -203,7 +203,7 @@ public class MysqlInterface implements IStructureDatabase {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.db.IStructureDatabase#fetch(java.util.UUID)
+     * @see net.willware.eurydice.db.StructureDatabase#fetch(java.util.UUID)
      */
     @Override
     public Structure fetch(UUID uuid) {
@@ -222,7 +222,7 @@ public class MysqlInterface implements IStructureDatabase {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.db.IStructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.core.Region)
+     * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.core.Region)
      */
     @Override
     public Structure fetchByRegion(UUID uuid, Region r) {
@@ -243,7 +243,7 @@ public class MysqlInterface implements IStructureDatabase {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.db.IStructureDatabase#store(net.willware.eurydice.core.Structure)
+     * @see net.willware.eurydice.db.StructureDatabase#store(net.willware.eurydice.core.Structure)
      */
     @Override
     public boolean store(Structure s) {

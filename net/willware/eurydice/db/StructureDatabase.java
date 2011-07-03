@@ -10,7 +10,7 @@ import net.willware.eurydice.math.Region;
  * database. This provides an abstraction layer to conceal details like whether the
  * database is an RDBMS or some non-SQL thing, and whether it runs locally or remotely.
  */
-public interface IStructureDatabase {
+public interface StructureDatabase {
 
     /**
      * Store a structure, or a portion of a structure. Two store operations will be assumed

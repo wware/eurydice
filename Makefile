@@ -1,8 +1,12 @@
 .SUFFIXES: .java .class .rst .html ;
 
-CLASSPATH := \
+__CLASSPATH := \
 	/usr/share/java/junit.jar \
 	/usr/share/java/mongo-1.2.jar \
+	.
+
+CLASSPATH := \
+	/usr/share/java/junit.jar \
 	.
 
 # Convert spaces to colons.
