@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-import net.willware.eurydice.serialization.InputStreamFromString;
 
 /**
  * A jig can be used to apply external forces to the atoms in a structure, or to perform

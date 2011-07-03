@@ -8,14 +8,13 @@ package net.willware.eurydice.core;
 import java.util.List;
 
 import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.DrawingEngine.Color;
+import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Nitrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */

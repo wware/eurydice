@@ -10,7 +10,7 @@ import java.util.List;
 import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.DrawingEngine.Color;
+import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.math.Vector;
 
 public class Oxygen extends AtomImpl {

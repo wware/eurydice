@@ -18,9 +18,11 @@ SOURCES = \
 	net/willware/eurydice/core/Atom.java \
 	net/willware/eurydice/core/BondImpl.java \
 	net/willware/eurydice/core/Bond.java \
+	net/willware/eurydice/core/InputStreamFromString.java \
 	net/willware/eurydice/core/JigImpl.java \
 	net/willware/eurydice/core/Jig.java \
 	net/willware/eurydice/core/NanocadStyleStructure.java \
+	net/willware/eurydice/core/OutputStreamToString.java \
 	net/willware/eurydice/core/Settings.java \
 	net/willware/eurydice/core/StructureImpl.java \
 	net/willware/eurydice/core/Structure.java \
@@ -29,9 +31,11 @@ SOURCES = \
 	net/willware/eurydice/db/MysqlInterface.java \
 	net/willware/eurydice/drawing/AWTApplet.java \
 	net/willware/eurydice/drawing/AWTEngine.java \
+	net/willware/eurydice/drawing/Color.java \
+	net/willware/eurydice/drawing/DrawingEngineImpl.java \
 	net/willware/eurydice/drawing/DrawingEngine.java \
 	net/willware/eurydice/drawing/Entry.java \
-	net/willware/eurydice/drawing/IDrawingEngine.java \
+	net/willware/eurydice/drawing/OrientationImpl.java \
 	net/willware/eurydice/drawing/Orientation.java \
 	net/willware/eurydice/drawing/RasmolDrawing.java \
 	net/willware/eurydice/elements/Carbon.java \
@@ -60,9 +64,7 @@ SOURCES = \
 	net/willware/eurydice/math/Region.java \
 	net/willware/eurydice/math/Vector.java \
 	net/willware/eurydice/serialization/Filetype.java \
-	net/willware/eurydice/serialization/InputStreamFromString.java \
 	net/willware/eurydice/serialization/NanocadNativeFormat.java \
-	net/willware/eurydice/serialization/OutputStreamToString.java \
 	net/willware/eurydice/serialization/PdbFile.java \
 	net/willware/eurydice/serialization/XyzFile.java \
 	net/willware/eurydice/tests/DatabaseTests.java \

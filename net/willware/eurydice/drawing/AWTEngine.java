@@ -8,7 +8,7 @@ import java.awt.RenderingHints;
 /**
  * The Class AWTEngine.
  */
-public class AWTEngine extends DrawingEngine {
+public class AWTEngine extends DrawingEngineImpl {
 
     private Graphics2D graphics;
 

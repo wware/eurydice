@@ -1,4 +1,4 @@
-package net.willware.eurydice.serialization;
+package net.willware.eurydice.core;
 
 import java.io.OutputStream;
 

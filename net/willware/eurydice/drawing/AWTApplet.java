@@ -21,7 +21,7 @@ import net.willware.eurydice.library.*;
  */
 public class AWTApplet extends JApplet implements MouseListener, MouseMotionListener  {
 
-    private Orientation ort = new Orientation();
+    private Orientation ort = new OrientationImpl();
     private Graphics gr;
     private Structure struc = new Aspirin();
     //private Structure struc = new DiamondRod();

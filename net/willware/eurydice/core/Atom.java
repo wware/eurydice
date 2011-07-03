@@ -8,7 +8,7 @@ package net.willware.eurydice.core;
 import java.util.List;
 
 import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.DrawingEngine.Color;
+import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.math.Vector;
 
 /**

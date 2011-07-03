@@ -8,14 +8,14 @@ package net.willware.eurydice.drawing;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.drawing.DrawingEngine.Color;
+import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.math.Vector;
 
 /**
  * An entry in a display list, for drawing purposes.
  */
 public abstract class Entry {
-    protected DrawingEngine engine;
+    protected DrawingEngineImpl engine;
     // empirical good-looking multiplier
     protected static final double radiusRatio = 0.6;
     private static Color force_color;
@@ -81,11 +81,11 @@ public abstract class Entry {
          * @param e the e
          * @param struc the struc
          */
-        public AtomEntry(Orientation o, Atom a, DrawingEngine e, Structure struc) {
+        public AtomEntry(Orientation o, Atom a, DrawingEngineImpl e, Structure struc) {
             atom = a;
             engine = e;
             screencoords = o.xyzToScreen(a.getPosition());
-            radius = radiusRatio * a.covalentRadius() * o.zoomFactor
+            radius = radiusRatio * a.covalentRadius() * o.getZoomFactor()
                      * o.perspectiveFactor(screencoords.getZ());
             screencoords = screencoords.subtract(new Vector(radius, radius, 0.0));
             //bogus = a.currentNumBonds() != a.correctNumBonds();
@@ -141,17 +141,17 @@ public abstract class Entry {
          * @param e the e
          * @param struc the struc
          */
-        public BondEntry(Orientation o, Bond b, DrawingEngine e, Structure struc) {
+        public BondEntry(Orientation o, Bond b, DrawingEngineImpl e, Structure struc) {
             myBond = b;
             engine = e;
 
             Vector pos1 = myBond.getFirstAtom().getPosition();
             x1 = o.xyzToScreen(pos1);
-            r1 = radiusRatio * myBond.getFirstAtom().covalentRadius() * o.zoomFactor;
+            r1 = radiusRatio * myBond.getFirstAtom().covalentRadius() * o.getZoomFactor();
             r1 *= o.perspectiveFactor(x1.getZ());
 
             x2 = o.xyzToScreen(myBond.getSecondAtom().getPosition());
-            r2 = radiusRatio * myBond.getSecondAtom().covalentRadius() * o.zoomFactor;
+            r2 = radiusRatio * myBond.getSecondAtom().covalentRadius() * o.getZoomFactor();
             r2 *= o.perspectiveFactor(x2.getZ());
 
             // compute a perpendicular vector in screen space
@@ -241,7 +241,7 @@ public abstract class Entry {
          * @param f0 the f0
          * @param e the e
          */
-        public ForceEntry(Orientation o, Vector origin, Vector f0, DrawingEngine e) {
+        public ForceEntry(Orientation o, Vector origin, Vector f0, DrawingEngineImpl e) {
             ort = o;
             orig = new Vector();
             f = new Vector();

@@ -12,12 +12,16 @@ import net.willware.eurydice.serialization.PdbFile;
 /**
  * A drawing engine that exports a file to RasMol, which does a lovely job.
  */
-public class RasmolDrawing implements IDrawingEngine {
+public class RasmolDrawing implements DrawingEngine {
 
     // keep those two files alive til we're done with them
     // avoid having the compiler optimize them into oblivion
     private File moleculeFile = null;
     private File scriptFile = null;
+
+    public Color getColor(String name) {
+        throw new RuntimeException("not implemented yet");
+    }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.drawing.IDrawingEngine#draw(net.willware.eurydice.drawing.Orientation, net.willware.eurydice.core.Structure)
