@@ -1,8 +1,7 @@
 package net.willware.eurydice.db;
 
-import java.util.UUID;
-
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.math.Region;
 
 /**
@@ -14,8 +13,8 @@ public interface StructureDatabase {
 
     /**
      * Store a structure, or a portion of a structure. Two store operations will be assumed
-     * to refer to the same structure if the structure arguments share the same UUID (see
-     * {@link Structure#getUUID()}). This allows very large structures to be stored in a
+     * to refer to the same structure if the structure arguments share the same unique ID (see
+     * {@link Structure#getUniqueId()}). This allows very large structures to be stored in a
      * database incrementally, or to be processed in pieces.
      *
      * @param s      a structure to be stored
@@ -24,19 +23,19 @@ public interface StructureDatabase {
     public boolean store(Structure s);
 
     /**
-     * Fetch a structure corresponding to a given UUID.
+     * Fetch a structure corresponding to a given unique ID.
      *
-     * @param uuid      a unique UUID for the structure being fetched
+     * @param id        a unique ID for the structure being fetched
      * @return          the structure being sought, or null if not found
      */
-    public Structure fetch(UUID uuid);
+    public Structure fetch(UniqueId id);
 
     /**
      * Fetch a substructure bounded by a rectangular region of 3-space.
      *
-     * @param uuid      a unique ID for the structure being fetched
+     * @param id        a unique ID for the structure being fetched
      * @param r         the {@link Region} within which atoms are being fetched
      * @return          the portion of the structure bounded by the region, or null if not found
      */
-    public Structure fetchByRegion(UUID uuid, Region r);
+    public Structure fetchByRegion(UniqueId id, Region r);
 }

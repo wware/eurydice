@@ -5,8 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Properties;
-import java.util.UUID;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -16,8 +14,11 @@ import junit.textui.TestRunner;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Jig;
+import net.willware.eurydice.core.Properties;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.StructureImpl;
+import net.willware.eurydice.core.UniqueId;
+import net.willware.eurydice.core.UniqueIdImpl;
 import net.willware.eurydice.db.StructureDatabase;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
@@ -33,13 +34,13 @@ public class DatabaseTests extends TestCase {
     private class TestDatabase implements StructureDatabase {
 
         /** All the structures (and anything else) this database knows about. */
-        private Map<UUID,Object> everything;
+        private Map<UniqueId,Object> everything;
 
         /**
          * Constructor.
          */
         private TestDatabase() {
-            everything = new HashMap<UUID,Object>();
+            everything = new HashMap<UniqueId,Object>();
         }
 
         /* (non-Javadoc)
@@ -48,26 +49,26 @@ public class DatabaseTests extends TestCase {
         public boolean store(Structure ip) {
             if (ip == null)
                 throw new IllegalArgumentException();
-            everything.put(ip.getUUID(), ip);
+            everything.put(ip.getUniqueId(), ip);
             return true;
         }
 
         /* (non-Javadoc)
-         * @see net.willware.eurydice.db.StructureDatabase#fetch(java.util.UUID)
+         * @see net.willware.eurydice.db.StructureDatabase#fetch(net.willware.eurydice.core.UniqueId)
          */
-        public Structure fetch(UUID uuid) {
-            if (uuid == null)
+        public Structure fetch(UniqueId uid) {
+            if (uid == null)
                 throw new IllegalArgumentException();
-            return (Structure) everything.get(uuid);
+            return (Structure) everything.get(uid);
         }
 
         /* (non-Javadoc)
-         * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.math.Region)
+         * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(net.willware.eurydice.core.UniqueId, net.willware.eurydice.math.Region)
          */
-        public Structure fetchByRegion(UUID uuid, Region r) {
-            if (uuid == null)
+        public Structure fetchByRegion(UniqueId uid, Region r) {
+            if (uid == null)
                 throw new IllegalArgumentException();
-            Structure struc = (Structure) everything.get(uuid);
+            Structure struc = (Structure) everything.get(uid);
             return struc.sublist(r);
         }
     }
@@ -83,10 +84,10 @@ public class DatabaseTests extends TestCase {
         /**
          * Instantiates a new test small structure.
          *
-         * @param parentUUID the parent uuid
+         * @param parentID the parent unique id
          */
-        public TestSmallStructure(UUID parentUUID) {
-            super(parentUUID);
+        public TestSmallStructure(UniqueId parentID) {
+            super(parentID);
         }
 
         /* (non-Javadoc)
@@ -100,9 +101,9 @@ public class DatabaseTests extends TestCase {
          * @see java.lang.Object#clone()
          */
         public TestSmallStructure clone() {
-            UUID uuid = getUUID();
-            TestSmallStructure newguy = new TestSmallStructure(uuid);
-            // same UUID? different UUID?
+            UniqueId uid = new UniqueIdImpl();
+            TestSmallStructure newguy = new TestSmallStructure(uid);
+            // same unique ID? different unique ID?
             newguy.metadata = metadata;
             return newguy;
         }
@@ -139,7 +140,7 @@ public class DatabaseTests extends TestCase {
         /* (non-Javadoc)
          * @see net.willware.eurydice.core.StructureImpl#size()
          */
-        public long size() {
+        public int size() {
             return 0;
         }
 
@@ -153,7 +154,7 @@ public class DatabaseTests extends TestCase {
         /* (non-Javadoc)
          * @see net.willware.eurydice.core.StructureImpl#get(long)
          */
-        public Atom get(long index) {
+        public Atom get(int index) {
             throw new RuntimeException("not implemented yet");
         }
 
@@ -179,9 +180,6 @@ public class DatabaseTests extends TestCase {
         }
     }
 
-    /** The Constant BigNumberOfAtoms. */
-    private static final long BigNumberOfAtoms = 1L << 33;  // a little too big for 32-bit index
-
     /**
      * The Class TestBigPositionList.
      */
@@ -196,32 +194,18 @@ public class DatabaseTests extends TestCase {
         /**
          * Instantiates a new test big position list.
          *
-         * @param parentUUID the parent uuid
+         * @param parentID the parent unique id
          */
-        public TestBigPositionList(UUID parentUUID) {
-            super(parentUUID);
+        public TestBigPositionList(UniqueId parentID) {
+            super(parentID);
             lst = new ArrayList<Vector>();
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#getBoundingBox()
-         */
-        public Region getBoundingBox() {
-            return null;
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#indexOf(net.willware.eurydice.core.Atom)
-         */
-        public long indexOf(Atom a) {
-            throw new RuntimeException("not implemented yet");
         }
 
         /* (non-Javadoc)
          * @see net.willware.eurydice.core.StructureImpl#size()
          */
-        public long size() {
-            return BigNumberOfAtoms;
+        public int size() throws IndexOutOfBoundsException {
+            throw new IndexOutOfBoundsException();
         }
 
         /* (non-Javadoc)
@@ -229,71 +213,13 @@ public class DatabaseTests extends TestCase {
          */
         public TestBigPositionList clone() {
             TestBigPositionList newguy =
-                new TestBigPositionList(getUUID());
-            // same UUID? different UUID?
+                new TestBigPositionList(getUniqueId());
+            // same unique ID? different unique ID?
             newguy.metadata = metadata;
             newguy.lst = new ArrayList<Vector>();
             for (Vector v: lst)
                 newguy.lst.add(v);
             return newguy;
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#sublist(net.willware.eurydice.math.Region)
-         */
-        public Structure sublist(Region r) {
-            throw new RuntimeException("not implemented yet");
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#getIterator()
-         */
-        public Iterator<Atom> getIterator() {
-            return new Iterator<Atom>() {
-                public boolean hasNext() {
-                    return false;
-                }
-                public Atom next() {
-                    return null;
-                }
-                public void remove() { }
-            };
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#getMetadata()
-         */
-        public Properties getMetadata() {
-            return metadata;
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#get(long)
-         */
-        public Atom get(long index) {
-            throw new RuntimeException("not implemented yet");
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#numJigs()
-         */
-        public int numJigs() {
-            return 0;
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#getJig(int)
-         */
-        public Jig getJig(int index) {
-            return null;
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.StructureImpl#inferBonds()
-         */
-        public List<Bond> inferBonds() {
-            // atoms are too far apart to be bonded
-            return new ArrayList<Bond>();
         }
     }
 
@@ -319,19 +245,19 @@ public class DatabaseTests extends TestCase {
         TestSmallStructure struc = new TestSmallStructure(null);
         StructureDatabase sdb = new TestDatabase();
         TestCase.assertTrue(sdb.store(struc));
-        Structure s = sdb.fetch(struc.getUUID());
+        Structure s = sdb.fetch(struc.getUniqueId());
         TestCase.assertEquals("expected: " + struc.toJson() + ", got: " + s.toJson(),
                               struc, s);
-        TestCase.assertEquals("expected: " + struc.getUUID() + ", got: " + s.getUUID(),
-                              struc.getUUID(), s.getUUID());
+        TestCase.assertEquals("expected: " + struc.getUniqueId() + ", got: " + s.getUniqueId(),
+                              struc.getUniqueId(), s.getUniqueId());
         Structure child = struc.clone();
         TestCase.assertNotSame(struc, child);
         TestCase.assertTrue(sdb.store(child));
-        s = sdb.fetch(child.getUUID());
+        s = sdb.fetch(child.getUniqueId());
         TestCase.assertEquals("expected: " + child.toJson() + ", got: " + s.toJson(),
                               child, s);
-        TestCase.assertEquals("expected: " + child.getUUID() + ", got: " + s.getUUID(),
-                              child.getUUID(), s.getUUID());
+        TestCase.assertEquals("expected: " + child.getUniqueId() + ", got: " + s.getUniqueId(),
+                              child.getUniqueId(), s.getUniqueId());
     }
 
     // @Test
@@ -342,11 +268,11 @@ public class DatabaseTests extends TestCase {
         TestBigPositionList struc = new TestBigPositionList(null);
         StructureDatabase sdb = new TestDatabase();
         TestCase.assertTrue(sdb.store(struc));
-        TestCase.assertEquals(sdb.fetch(struc.getUUID()), struc);
+        TestCase.assertEquals(sdb.fetch(struc.getUniqueId()), struc);
         Structure child = struc.clone();
         TestCase.assertNotSame(struc, child);
         TestCase.assertTrue(sdb.store(child));
-        TestCase.assertEquals(sdb.fetch(child.getUUID()), child);
+        TestCase.assertEquals(sdb.fetch(child.getUniqueId()), child);
     }
 
     /**

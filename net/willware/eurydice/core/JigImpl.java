@@ -1,9 +1,6 @@
 package net.willware.eurydice.core;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
-
 
 /**
  * A jig can be used to apply external forces to the atoms in a structure, or to perform
@@ -20,12 +17,11 @@ public abstract class JigImpl implements Jig {
     private Structure struc;
 
     /**
-     * Gets the jig.
+     * Creates an instance of a jig, given the name
      *
      * @param struc the struc
      * @param jigName the jig name
      * @return the jig
-     */
     public static JigImpl getJig(Structure struc, String jigName) {
         // handle simple jigs
         // handle force fields
@@ -40,8 +36,23 @@ public abstract class JigImpl implements Jig {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        //if ("NanocadStyleMM2".equals(jigName))
-        //    return new NanocadStyleMM2((NanocadStyleStructure) struc);
+    }
+     */
+
+    /**
+     * Creates an instance of a jig, given the name
+     *
+     * @param struc the struc
+     * @param jigName the jig name
+     * @return the jig
+     */
+    public static JigImpl getJig(Structure struc, String jigName) {
+        if (!"net.willware.eurydice.forcefields.mm2.NanocadStyleMM2".equals(jigName))
+            throw new RuntimeException("cannot handle jig named " + jigName);
+        JigImpl j = new net.willware.eurydice.forcefields.mm2.NanocadStyleMM2();
+        j.properties = new Properties();
+        j.struc = struc;
+        return j;
     }
 
     /**
@@ -49,7 +60,7 @@ public abstract class JigImpl implements Jig {
      *
      * @return the list
      */
-    public abstract List<Long> atomIndices();
+    public abstract List<UniqueId> atomIndices();
 
     /**
      * Compute a map of force vector based on atom positions. The keys are atom indices
@@ -65,9 +76,7 @@ public abstract class JigImpl implements Jig {
      * @param str a stringified Properties instance to import stuff from
      */
     public void loadProperties(String str) {
-        try {
-            properties.load(new InputStreamFromString(str));
-        } catch (IOException ex) { }
+        properties.load(str);
     }
 
     /**
@@ -86,7 +95,7 @@ public abstract class JigImpl implements Jig {
      * @param value the value of the property
      */
     public void setProperty(String key, String value) {
-        properties.setProperty(key, value);
+        properties.put(key, value);
     }
 
     /**

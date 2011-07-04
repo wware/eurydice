@@ -51,11 +51,17 @@ public class PdbFile extends Filetype {
         }
         List<Bond> bondList = struc.inferBonds();
         for (i = 0; i < bondList.size(); i++) {
-            Bond b = bondList.get(i);
-            ps.print("CONECT");
-            ps.print(formatInt((int)b.getFirstAtom().getId() + 1, 5, RIGHT));
-            ps.print(formatInt((int)b.getSecondAtom().getId() + 1, 5, RIGHT));
-            ps.print("\n");
+            try {
+                Bond b = bondList.get(i);
+                int i1 = b.getFirstAtom().getUniqueId().toInteger();
+                int i2 = b.getFirstAtom().getUniqueId().toInteger();
+                ps.print("CONECT");
+                ps.print(formatInt(i1 + 1, 5, RIGHT));
+                ps.print(formatInt(i2 + 1, 5, RIGHT));
+                ps.print("\n");
+            } catch (Exception e) {
+                // TODO do something intelligent here
+            }
         }
         ps.print("END\n");
     }

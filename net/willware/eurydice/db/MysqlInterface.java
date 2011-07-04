@@ -2,7 +2,6 @@ package net.willware.eurydice.db;
 
 import java.sql.ResultSet;
 import java.util.Iterator;
-import java.util.UUID;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -14,6 +13,8 @@ import net.willware.eurydice.core.Jig;
 import net.willware.eurydice.core.JigImpl;
 import net.willware.eurydice.core.StructureImpl;
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.core.UniqueId;
+import net.willware.eurydice.core.UniqueIdImpl;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.serialization.XyzFile;
@@ -144,7 +145,7 @@ public class MysqlInterface implements StructureDatabase {
          */
         public void handleResult(ResultSet rs) throws SQLException {
             Atom a = AtomImpl.getElement(rs.getString("element"));    // C, H, O, N, etc
-            a.setId(rs.getLong("id"));
+            a.setUniqueId(new UniqueIdImpl((int) rs.getLong("id")));
             String hyb = rs.getString("hybridization");
             if      ("NONE".equals(hyb)) a.setHybridization(Atom.NONE);
             else if ("SP".equals(hyb))   a.setHybridization(Atom.SP);
@@ -203,15 +204,15 @@ public class MysqlInterface implements StructureDatabase {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.db.StructureDatabase#fetch(java.util.UUID)
+     * @see net.willware.eurydice.db.StructureDatabase#fetch(net.willware.eurydice.core.UniqueId)
      */
     @Override
-    public Structure fetch(UUID uuid) {
+    public Structure fetch(UniqueId id) {
         // if you're calling fetch(), you expect the whole structure to fit in RAM
         // so that would be a SmallStructure
-        StructureImpl struc = new StructureImpl(uuid);
+        StructureImpl struc = new StructureImpl(id);
         StructureIdFetchHandler fetcher = new StructureIdFetchHandler();
-        sqlQuery("SELECT * FROM structures WHERE uuid=\"" + uuid + "\"",
+        sqlQuery("SELECT * FROM structures WHERE uid=\"" + id.toInteger() + "\"",
                  fetcher, false);
         long strucId = fetcher.getId();
         sqlQuery("SELECT * FROM atoms WHERE structureId=" + strucId,
@@ -222,15 +223,15 @@ public class MysqlInterface implements StructureDatabase {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(java.util.UUID, net.willware.eurydice.core.Region)
+     * @see net.willware.eurydice.db.StructureDatabase#fetchByRegion(net.willware.eurydice.core.UniqueId, net.willware.eurydice.core.Region)
      */
     @Override
-    public Structure fetchByRegion(UUID uuid, Region r) {
+    public Structure fetchByRegion(UniqueId id, Region r) {
         Vector vmin = r.getMinCorner();
         Vector vmax = r.getMaxCorner();
-        StructureImpl struc = new StructureImpl(uuid);
+        StructureImpl struc = new StructureImpl(id);
         StructureIdFetchHandler fetcher = new StructureIdFetchHandler();
-        sqlQuery("SELECT * FROM structures WHERE uuid=" + uuid, fetcher, false);
+        sqlQuery("SELECT * FROM structures WHERE uid=" + id.toInteger(), fetcher, false);
         long strucId = fetcher.getId();
         sqlQuery("SELECT * FROM atoms WHERE structureId=" + strucId +
                  " AND x >= " + vmin.getX() + " AND x < " + vmax.getX() +
@@ -248,31 +249,31 @@ public class MysqlInterface implements StructureDatabase {
     @Override
     public boolean store(Structure s) {
         // create this structure if it doesn't already exist, ignore error if it does
-        UUID pid = s.getParentUUID();
-        String uuidString = "\"" + s.getUUID() + "\"";
+        UniqueId pid = s.getParentUniqueId();
+        String idString = "\"" + s.getUniqueId().toInteger() + "\"";
         String metadataString = "\"" + s.getMetadata() + "\"";
         if (pid != null) {
-            String parentUuidString = "\"" + pid + "\"";
-            sqlQuery("INSERT INTO structures (uuid,parentUuid,metadata) VALUES (" +
-                     uuidString + "," + parentUuidString + "," + metadataString + ")",
+            String parentIdString = "\"" + pid + "\"";
+            sqlQuery("INSERT INTO structures (id,parentId,metadata) VALUES (" +
+                     idString + "," + parentIdString + "," + metadataString + ")",
                      null, true);
         } else {
-            sqlQuery("INSERT INTO structures (uuid,metadata) VALUES (" +
-                     uuidString + "," + metadataString + ")", null, true);
+            sqlQuery("INSERT INTO structures (id,metadata) VALUES (" +
+                     idString + "," + metadataString + ")", null, true);
         }
-        // get the mysql-assigned ID (distinct from user-assigned UUID) for the structure
+        // get the mysql-assigned ID (distinct from user-assigned unique ID) for the structure
         StructureIdFetchHandler fetcher = new StructureIdFetchHandler();
-        sqlQuery("SELECT * FROM structures WHERE uuid=" + uuidString, fetcher, false);
+        sqlQuery("SELECT * FROM structures WHERE uid=" + idString, fetcher, false);
         long strucId = fetcher.getId();
         // store atoms, deleting any previous versions of them first
         Iterator<Atom> atomiter = s.getIterator();
         while (atomiter.hasNext()) {
             Atom a = atomiter.next();
             sqlQuery("DELETE FROM atoms WHERE structureId=" + strucId +
-                     " AND id=" + a.getId(), null, false);
+                     " AND id=" + a.getUniqueId(), null, false);
             Vector p = a.getPosition();
             sqlQuery("INSERT INTO atoms (id,structureId,element,hybridization,x,y,z) VALUES (" +
-                     a.getId() + "," + strucId + ",\"" + a.symbol() + "\"," +
+                     a.getUniqueId() + "," + strucId + ",\"" + a.symbol() + "\"," +
                      "\"" + a.getHybridizationString() + "\"," +
                      p.getX() + "," + p.getY() + "," + p.getZ() + ")", null, false);
         }
@@ -301,7 +302,7 @@ public class MysqlInterface implements StructureDatabase {
         XyzFile.print(s);
         mysql.store(s);
         mysql.store(s);
-        Structure s2 = mysql.fetch(s.getUUID());
+        Structure s2 = mysql.fetch(s.getUniqueId());
         XyzFile.print(s2);
     }
 }

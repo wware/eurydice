@@ -53,8 +53,8 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
      * @param struc a position list to be drawn
      */
     public void bubbleDraw(Orientation ort, Structure struc) {
-        final long n = struc.size();
-        for (long i = 0; i < n; i++)
+        final int n = struc.size();
+        for (int i = 0; i < n; i++)
             new Entry.AtomEntry(ort, struc.get(i), DrawingEngineImpl.this, struc).quickDraw();
     }
     /**

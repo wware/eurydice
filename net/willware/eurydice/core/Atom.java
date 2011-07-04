@@ -217,16 +217,16 @@ public interface Atom {
     public Vector getForce();
 
     /**
-     * Sets the 64-bit id for this atom, unique within its structure.
+     * Set the unique ID for this atom.
      *
-     * @param index the new id
+     * @param the unique ID
      */
-    public void setId(long index);
+    public void setUniqueId(UniqueId id);
 
     /**
-     * Gets the 64-bit id for this atom, unique within its structure.
+     * Get the unique ID for this atom.
      *
-     * @return the id
+     * @return the unique ID
      */
-    public long getId();
+    public UniqueId getUniqueId();
 }

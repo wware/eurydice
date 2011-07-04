@@ -2,8 +2,6 @@ package net.willware.eurydice.core;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
 
 import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Region;
@@ -72,7 +70,7 @@ public interface Structure {
      *
      * @return the number of atoms in this structure
      */
-    public long size();
+    public int size() throws IndexOutOfBoundsException;
     /**
      * Give the index of an atom in the atom list, -1 if not found.
      * @param a the atom to be found
@@ -96,10 +94,10 @@ public interface Structure {
     public abstract Jig getJig(int index);
     /**
      * Versioning is done ala Git, with a tree structure built of parent links. Each version is
-     * identified by a UUID, and all versions except the root have a non-null parent.
-     * @return the UUID for this structure's parent, or null if it's a root
+     * identified by a UniqueId, and all versions except the root have a non-null parent.
+     * @return the UniqueId for this structure's parent, or null if it's a root
      */
-    public UUID getParentUUID();
+    public UniqueId getParentUniqueId();
 
     /**
      * Force fields (such as MM2 or GROMACS) compute forces just as jigs do, and share
@@ -117,17 +115,18 @@ public interface Structure {
     public ForceField getForceField();
 
     /**
-     * Sets the unique UUID for this structure.
+     * Sets the unique ID for this structure.
      *
-     * @param uuid the new uUID
+     * @param id the new unique ID
      */
-    public void setUUID(UUID uuid);
+    //public void setUniqueId(UniqueId id);
+
     /**
-     * Gets the unique UUID for this structure.
+     * Gets the unique ID for this structure.
      *
      * @return the unique ID for this structure, may not be null
      */
-    public UUID getUUID();
+    public UniqueId getUniqueId();
     /**
      * A bounding box is useful. This is a promise from the position list that all
      * atom positions will be inside the returned region
@@ -143,12 +142,20 @@ public interface Structure {
     public Properties getMetadata();
 
     /**
-     * Gets an atom from the structure's list of atoms, indexed by {@link Atom#getId()}.
+     * Gets an atom from the structure's list of atoms, indexed by {@link Atom#getUniqueId()}.
      *
      * @param index an index into the list of atoms
      * @return the corresponding atom
      */
-    public Atom get(long index);
+    public Atom get(UniqueId index);
+
+    /**
+     * Gets an atom from the structure's list of atoms, indexed by an int, if applicable.
+     *
+     * @param index an index into the list of atoms
+     * @return the corresponding atom
+     */
+    public Atom get(int index);
 
     /**
      * We like iterators because they're scalable.
@@ -160,7 +167,7 @@ public interface Structure {
      * corner of the region, then create a list of those atoms whose position (x,y,z)
      * satisfies x1 &lt;= x &lt; x2, y1 &lt;= y &lt; y2, z1 &lt;= z &lt; z2.
      * @param r a rectangular region of 3-space
-     * @return a PositionList of those atoms inside that region
+     * @return a Struction containing only those atoms inside that region
      */
     public Structure sublist(Region r);
 

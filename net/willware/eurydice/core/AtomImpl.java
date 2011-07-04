@@ -35,6 +35,8 @@ public abstract class AtomImpl implements Atom {
     /** The Constant hybridnames. */
     private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
+    private UniqueId id;
+
     // these should be defined within elements, as class variables
     /**
      * Name.
@@ -124,8 +126,6 @@ public abstract class AtomImpl implements Atom {
 
     // instance variables
     // ideally these would be accessed only with setters and getters
-    /** The id. */
-    private long id;
 
     /** The charge. */
     private int charge;
@@ -140,6 +140,7 @@ public abstract class AtomImpl implements Atom {
      * Instantiates a new atom.
      */
     public AtomImpl() {
+        this.id = new UniqueIdImpl();
         position = new Vector();
         force = new Vector();
         previousPosition = null;
@@ -367,12 +368,12 @@ public abstract class AtomImpl implements Atom {
     }
 
     /**
-     * Sets the 64-bit id for this atom, unique within its structure.
+     * Gets the 64-bit id for this atom, unique within its structure.
      *
-     * @param index the new id
+     * @return the id
      */
-    public void setId(long index) {
-        this.id = index;
+    public void setUniqueId(UniqueId id) {
+        this.id = id;
     }
 
     /**
@@ -380,7 +381,7 @@ public abstract class AtomImpl implements Atom {
      *
      * @return the id
      */
-    public long getId() {
+    public UniqueId getUniqueId() {
         return id;
     }
 }

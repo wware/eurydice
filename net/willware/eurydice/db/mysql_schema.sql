@@ -2,11 +2,11 @@ use eurydice;
 
 create table `structures` (
   `id` int(11) NOT NULL auto_increment,
-  `uuid` varchar(40) NOT NULL,
-  `parentUuid` varchar(40) default NULL,
+  `uid` varchar(40) NOT NULL,
+  `parentId` varchar(40) default NULL,
   `metadata` varchar(5000) default NULL,
   UNIQUE(`id`),
-  UNIQUE(`uuid`)
+  UNIQUE(`uid`)
 );
 
 create table `atoms` (

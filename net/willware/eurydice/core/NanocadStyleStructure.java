@@ -5,8 +5,6 @@
 
 package net.willware.eurydice.core;
 
-import java.util.UUID;
-
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.math.Vector;
 
@@ -29,7 +27,7 @@ public class NanocadStyleStructure extends StructureImpl {
     private Vector centerOfGravity;
 
     /**
-     * Instantiates a new nanocad style structure.
+     * Constructor.
      */
     public NanocadStyleStructure() {
         super(null);
@@ -37,12 +35,12 @@ public class NanocadStyleStructure extends StructureImpl {
     }
 
     /**
-     * Instantiates a new nanocad style structure.
+     * Constructor.
      *
-     * @param parentUUID the parent uuid
+     * @param pid the parent unique id
      */
-    public NanocadStyleStructure(UUID parentUUID) {
-        super(parentUUID);
+    public NanocadStyleStructure(UniqueId pid) {
+        super(pid);
         empty();
     }
 

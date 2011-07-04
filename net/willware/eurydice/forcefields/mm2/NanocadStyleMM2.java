@@ -8,6 +8,7 @@ import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.JigImpl;
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.core.Structure.AtomProcessor;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.forcefields.ForceField;
@@ -52,11 +53,11 @@ public class NanocadStyleMM2 extends JigImpl implements ForceField {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.IJig#atomIndices()
      */
-    public List<Long> atomIndices() {
+    public List<UniqueId> atomIndices() {
         Iterator<Atom> iter = getStruc().getIterator();
-        List<Long> lst = new ArrayList<Long>();
+        List<UniqueId> lst = new ArrayList<UniqueId>();
         while (iter.hasNext())
-            lst.add(iter.next().getId());
+            lst.add(iter.next().getUniqueId());
         return lst;
     }
 

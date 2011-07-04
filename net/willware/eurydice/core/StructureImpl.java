@@ -3,8 +3,6 @@ package net.willware.eurydice.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
 
 import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Region;
@@ -27,11 +25,11 @@ public class StructureImpl implements Structure {
     /** The metadata. */
     private Properties metadata;
 
-    /** The unique UUID that identifies this structure. */
-    protected UUID uuid;   // might need access to implement clone method
+    /** The unique ID that identifies this structure. */
+    protected UniqueId id;   // might need access to implement clone method
 
-    /** The UUID of the parent structure, if this structure has a parent. */
-    protected UUID parentUUID;
+    /** The unique ID of the parent structure, if this structure has a parent. */
+    protected UniqueId parentID;
 
     /** The force field used to compute interatomic forces for this structure. */
     private ForceField forceField;
@@ -51,11 +49,11 @@ public class StructureImpl implements Structure {
     /**
      * Constructor.
      *
-     * @param parentUUID the UUID of the parent structure, or null
+     * @param parentID the unique ID of the parent structure, or null
      */
-    public StructureImpl(UUID parentUUID) {
-        uuid = UUID.randomUUID();
-        this.parentUUID = parentUUID;
+    public StructureImpl(UniqueId parentID) {
+        id = new UniqueIdImpl();
+        this.parentID = parentID;
         forceField = null;
         position = new Vector();
         orientation = new Quaternion();
@@ -68,12 +66,12 @@ public class StructureImpl implements Structure {
     /**
      * Constructor.
      *
-     * @param parentUUID the UUID of the parent structure, or null
+     * @param parentID the unique ID of the parent structure, or null
      * @param pos position within containing Structure
      */
-    public StructureImpl(UUID parentUUID, Vector pos) {
-        uuid = UUID.randomUUID();
-        this.parentUUID = parentUUID;
+    public StructureImpl(UniqueId parentID, Vector pos) {
+        id = new UniqueIdImpl();
+        this.parentID = parentID;
         forceField = null;
         position = pos;
         orientation = new Quaternion();
@@ -86,13 +84,13 @@ public class StructureImpl implements Structure {
     /**
      * Constructor.
      *
-     * @param parentUUID the UUID of the parent structure, or null
+     * @param parentID the unique ID of the parent structure, or null
      * @param pos position within containing Structure
      * @param ort the orientation relative to the containing Structure
      */
-    public StructureImpl(UUID parentUUID, Vector pos, Quaternion ort) {
-        uuid = UUID.randomUUID();
-        this.parentUUID = parentUUID;
+    public StructureImpl(UniqueId parentID, Vector pos, Quaternion ort) {
+        id = new UniqueIdImpl();
+        this.parentID = parentID;
         forceField = null;
         position = pos;
         orientation = ort;
@@ -143,10 +141,10 @@ public class StructureImpl implements Structure {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#getParentUUID()
+     * @see net.willware.eurydice.core.Structure#getparentID()
      */
-    public UUID getParentUUID() {
-        return parentUUID;
+    public UniqueId getParentUniqueId() {
+        return parentID;
     }
 
     /* (non-Javadoc)
@@ -164,17 +162,10 @@ public class StructureImpl implements Structure {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#setUUID(java.util.UUID)
+     * @see net.willware.eurydice.core.Structure#getUniqueId()
      */
-    public void setUUID(UUID uuid) {
-        this.uuid = uuid;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#getUUID()
-     */
-    public UUID getUUID() {
-        return uuid;
+    public UniqueId getUniqueId() {
+        return id;
     }
 
     /* (non-Javadoc)
@@ -338,15 +329,22 @@ public class StructureImpl implements Structure {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#size()
      */
-    public long size() {
+    public int size() {
         return atomList.size();
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#get(long)
      */
-    public Atom get(long index) {
-        return atomList.get((int)index);
+    public Atom get(UniqueId index) {
+        return atomList.get(index.toInteger());
+    }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.core.Structure#get(long)
+     */
+    public Atom get(int index) {
+        return get(UniqueIdImpl.makeTempId(index));
     }
 
     /**
@@ -361,7 +359,7 @@ public class StructureImpl implements Structure {
     public List<Bond> inferBonds() {
         if (previousBondList != null)
             return previousBondList;
-        long i, j;
+        int i, j;
         final int n = atomList.size();
         List<Bond> bondList = new ArrayList<Bond>();
         for (i = 0; i < n - 1; i++) {
@@ -384,7 +382,6 @@ public class StructureImpl implements Structure {
      * @param a the atom to be added
      */
     public void addAtom(Atom a) {
-        a.setId(size());
         atomList.add(a);
         announceChange();
     }

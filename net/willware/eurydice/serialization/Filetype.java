@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import net.willware.eurydice.core.InputStreamFromString;
-import net.willware.eurydice.core.OutputStreamToString;
 import net.willware.eurydice.core.Structure;
 
 /**

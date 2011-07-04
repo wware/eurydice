@@ -94,7 +94,7 @@ public class BondImpl implements Bond {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<Bond " + a1.getId() + " " + a2.getId() + " " +
+        return "<Bond " + a1.getUniqueId() + " " + a2.getUniqueId() + " " +
                (new Integer(order)).toString() + ">";
     }
 

@@ -1,8 +1,5 @@
 package net.willware.eurydice.math;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-
 /**
  * Quaternions are a <a href="http://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation">convenient</a>
  * way to scale and rotate 3-dimensional objects.
@@ -36,11 +33,10 @@ public class Quaternion {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        NumberFormat formatter = new DecimalFormat("#0.0000");
-        String r = "<Quat " + formatter.format(realPart) + " "
-                   + formatter.format(imaginaryPart.getX()) + " "
-                   + formatter.format(imaginaryPart.getY()) + " "
-                   + formatter.format(imaginaryPart.getZ());
+        String r = "<Quat " + realPart + " "
+                   + imaginaryPart.getX() + " "
+                   + imaginaryPart.getY() + " "
+                   + imaginaryPart.getZ();
         if (units != null)
             r += " " + units;
         return r + ">";

@@ -62,8 +62,8 @@ a work in progress::
 
  public interface IStructureDatabase {
      public boolean store(Structure s);
-     public Structure fetch(UUID uuid);
-     public Structure fetchByRegion(UUID uuid, Region r);
+     public Structure fetch(UniqueId uid);
+     public Structure fetchByRegion(UniqueId uid, Region r);
  }
 
 I'd like to test it with `MySQL`_, `MongoDB`_, `HBase`_, and the `Google

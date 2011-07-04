@@ -1,8 +1,5 @@
 package net.willware.eurydice.math;
 
-import java.util.Formatter;
-import java.util.Locale;
-
 /**
  * Matrices are useful for rotations, scaling operations, other things.
  */
@@ -42,10 +39,9 @@ public class Matrix {
      */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        Formatter f = new Formatter(sb, Locale.US);
-        f.format(" %13.6f %13.6f %13.6f\n", m11, m12, m13);
-        f.format(" %13.6f %13.6f %13.6f\n", m21, m22, m23);
-        f.format(" %13.6f %13.6f %13.6f",   m31, m32, m33);
+        sb.append(" " + m11 + " " + m12 + " " + m13 + "\n");
+        sb.append(" " + m21 + " " + m22 + " " + m23 + "\n");
+        sb.append(" " + m31 + " " + m32 + " " + m23);
         return sb.toString();
     }
 
