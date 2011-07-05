@@ -17,26 +17,26 @@ public abstract class JigImpl implements Jig {
     private Structure struc;
 
     /**
-     * Creates an instance of a jig, given the name
+     * Creates an instance of a jig, given the name.
      *
      * @param struc the struc
      * @param jigName the jig name
      * @return the jig
-    public static JigImpl getJig(Structure struc, String jigName) {
-        // handle simple jigs
-        // handle force fields
-        try {
-            // The newInstance() call is a work around for some broken Java implementations
-            // I think we just instantiate it and forget it, only need to do that once
-            // It's a bad idea to do imports of com.mysql.jdbc things for some reason
-            JigImpl j = (JigImpl) Class.forName(jigName).newInstance();
-            j.properties = new Properties();
-            j.struc = struc;
-            return j;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
+     * public static JigImpl getJig(Structure struc, String jigName) {
+     * // handle simple jigs
+     * // handle force fields
+     * try {
+     * // The newInstance() call is a work around for some broken Java implementations
+     * // I think we just instantiate it and forget it, only need to do that once
+     * // It's a bad idea to do imports of com.mysql.jdbc things for some reason
+     * JigImpl j = (JigImpl) Class.forName(jigName).newInstance();
+     * j.properties = new Properties();
+     * j.struc = struc;
+     * return j;
+     * } catch (Exception ex) {
+     * throw new RuntimeException(ex);
+     * }
+     * }
      */
 
     /**
@@ -49,7 +49,7 @@ public abstract class JigImpl implements Jig {
     public static JigImpl getJig(Structure struc, String jigName) {
         if (!"net.willware.eurydice.forcefields.mm2.NanocadStyleMM2".equals(jigName))
             throw new RuntimeException("cannot handle jig named " + jigName);
-        JigImpl j = new net.willware.eurydice.forcefields.mm2.NanocadStyleMM2();
+        JigImpl j = new net.willware.eurydice.nanocad.NanocadStyleMM2();
         j.properties = new Properties();
         j.struc = struc;
         return j;

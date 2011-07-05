@@ -15,7 +15,10 @@ import net.willware.eurydice.core.Structure;
  */
 public abstract class Filetype {
     /* these are for formatting strings and numbers */
+    /** The Constant LEFT. */
     protected final static int LEFT = 0;
+
+    /** The Constant RIGHT. */
     protected final static int RIGHT = 1;
 
     /** The pbis. */
@@ -97,16 +100,35 @@ public abstract class Filetype {
         throw new RuntimeException("not implemented yet");
     }
 
+    /**
+     * Scan int.
+     *
+     * @return the int
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected int scanInt() throws IOException {
         return (int) scanDouble();
     }
 
+    /**
+     * Read.
+     *
+     * @param n the n
+     * @return the string
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected String read(int n) throws IOException {
         byte[] b = new byte[n];
         pbis.read(b);
         return new String(b);
     }
 
+    /**
+     * Unread.
+     *
+     * @param s the s
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected void unread(String s) throws IOException {
         int i;
         for (i = s.length() - 1; i >= 0; i--) {
@@ -114,12 +136,24 @@ public abstract class Filetype {
         }
     }
 
+    /**
+     * Next char.
+     *
+     * @return the char
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected char nextChar() throws IOException {
         char c = (char) pbis.read();
         pbis.unread(c);
         return c;
     }
 
+    /**
+     * Scan word.
+     *
+     * @return the string
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected String scanWord() throws IOException {
         StringBuilder sb = new StringBuilder();
         skipBlanks();
@@ -148,6 +182,11 @@ public abstract class Filetype {
         }
     }
 
+    /**
+     * Bag line.
+     *
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected void bagLine() throws IOException {
         while (true) {
             char c = (char) pbis.read();
@@ -157,6 +196,11 @@ public abstract class Filetype {
         }
     }
 
+    /**
+     * Skip blanks.
+     *
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     protected void skipBlanks() throws IOException {
         while (true) {
             char c = (char) pbis.read();
@@ -167,6 +211,13 @@ public abstract class Filetype {
         }
     }
 
+    /**
+     * Checks if is blank.
+     *
+     * @param c the c
+     * @param includeNewline the include newline
+     * @return true, if is blank
+     */
     protected boolean isBlank(char c, boolean includeNewline) {
         if (includeNewline)
             return c == ' ' || c == '\t' || c == '\n'
@@ -175,6 +226,14 @@ public abstract class Filetype {
             return c == ' ' || c == '\t';
     }
 
+    /**
+     * Format int.
+     *
+     * @param x the x
+     * @param spaces the spaces
+     * @param direction the direction
+     * @return the string
+     */
     protected String formatInt(int x, int spaces, int direction) {
         String intstr = "";
         boolean neg = false;
@@ -201,6 +260,14 @@ public abstract class Filetype {
         return intstr;
     }
 
+    /**
+     * Format string.
+     *
+     * @param x the x
+     * @param spaces the spaces
+     * @param direction the direction
+     * @return the string
+     */
     protected String formatString(String x, int spaces, int direction) {
         int i;
         String spc = "";
@@ -212,6 +279,13 @@ public abstract class Filetype {
             return spc + x;
     }
 
+    /**
+     * Format fractional part.
+     *
+     * @param x the x
+     * @param fracpart the fracpart
+     * @return the string
+     */
     protected String formatFractionalPart(double x, int fracpart) {
         String fracstr = "";
         if (x < 0.0)
@@ -227,6 +301,14 @@ public abstract class Filetype {
         return fracstr;
     }
 
+    /**
+     * Format double.
+     *
+     * @param x the x
+     * @param intpart the intpart
+     * @param fracpart the fracpart
+     * @return the string
+     */
     protected String formatDouble(double x, int intpart, int fracpart) {
         boolean neg = false;
         String fraction;
@@ -249,8 +331,15 @@ public abstract class Filetype {
                              RIGHT) + "." + fraction;
     }
 
+    /**
+     * The Class InputStreamFromStringBuilder.
+     */
     protected class InputStreamFromStringBuilder extends InputStream {
+
+        /** The index. */
         private int index;
+
+        /** The s. */
         private String s;
 
         /**
@@ -269,6 +358,68 @@ public abstract class Filetype {
             if (index >= s.length())
                 return -1;
             return (int) s.charAt(index++);
+        }
+    }
+
+    /**
+     * The Class InputStreamFromString.
+     */
+    protected class InputStreamFromString extends InputStream {
+
+        /** The s. */
+        private String s;
+
+        /** The index. */
+        private int index;
+
+        /**
+         * Instantiates a new input stream from string.
+         *
+         * @param s the s
+         */
+        public InputStreamFromString(String s) {
+            this.s = s;
+            index = 0;
+        }
+
+        /* (non-Javadoc)
+         * @see java.io.InputStream#read()
+         */
+        public int read() {
+            if (index >= s.length())
+                return -1;
+            return (int) s.charAt(index++);
+        }
+    }
+
+    /**
+     * OutputStreamToString is a handy class that saves characters written to an
+     * OutputStream, then presents them as a String.
+     */
+    protected class OutputStreamToString extends OutputStream {
+
+        /** Characters are stored in a StringBuffer. */
+        private StringBuilder sb;
+
+        /**
+         * Constructor.
+         */
+        public OutputStreamToString() {
+            sb = new StringBuilder();
+        }
+
+        /* (non-Javadoc)
+         * @see java.io.OutputStream#write(int)
+         */
+        public void write(int x) {
+            sb.append((char) x);
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        public String toString() {
+            return sb.toString();
         }
     }
 }

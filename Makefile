@@ -22,26 +22,17 @@ SOURCES = \
 	net/willware/eurydice/core/Atom.java \
 	net/willware/eurydice/core/BondImpl.java \
 	net/willware/eurydice/core/Bond.java \
-	net/willware/eurydice/core/InputStreamFromString.java \
 	net/willware/eurydice/core/JigImpl.java \
 	net/willware/eurydice/core/Jig.java \
-	net/willware/eurydice/core/NanocadStyleStructure.java \
-	net/willware/eurydice/core/OutputStreamToString.java \
-	net/willware/eurydice/core/Settings.java \
+	net/willware/eurydice/core/OrientationImpl.java \
+	net/willware/eurydice/core/Orientation.java \
+	net/willware/eurydice/core/Properties.java \
 	net/willware/eurydice/core/StructureImpl.java \
 	net/willware/eurydice/core/Structure.java \
-	net/willware/eurydice/db/IStructureDatabase.java \
-	net/willware/eurydice/db/MongoInterface.java \
+	net/willware/eurydice/core/Substructure.java \
+	net/willware/eurydice/core/UniqueId.java \
 	net/willware/eurydice/db/MysqlInterface.java \
-	net/willware/eurydice/drawing/AWTApplet.java \
-	net/willware/eurydice/drawing/AWTEngine.java \
-	net/willware/eurydice/drawing/Color.java \
-	net/willware/eurydice/drawing/DrawingEngineImpl.java \
-	net/willware/eurydice/drawing/DrawingEngine.java \
-	net/willware/eurydice/drawing/Entry.java \
-	net/willware/eurydice/drawing/OrientationImpl.java \
-	net/willware/eurydice/drawing/Orientation.java \
-	net/willware/eurydice/drawing/RasmolDrawing.java \
+	net/willware/eurydice/db/StructureDatabase.java \
 	net/willware/eurydice/elements/Carbon.java \
 	net/willware/eurydice/elements/Hydrogen.java \
 	net/willware/eurydice/elements/Nitrogen.java \
@@ -50,7 +41,6 @@ SOURCES = \
 	net/willware/eurydice/forcefields/mm2/AngleTerm.java \
 	net/willware/eurydice/forcefields/mm2/LengthTerm.java \
 	net/willware/eurydice/forcefields/mm2/LongRangeTerm.java \
-	net/willware/eurydice/forcefields/mm2/NanocadStyleMM2.java \
 	net/willware/eurydice/forcefields/mm2/TermImpl.java \
 	net/willware/eurydice/forcefields/mm2/Term.java \
 	net/willware/eurydice/forcefields/mm2/TorsionTerm.java \
@@ -67,12 +57,28 @@ SOURCES = \
 	net/willware/eurydice/math/Quaternion.java \
 	net/willware/eurydice/math/Region.java \
 	net/willware/eurydice/math/Vector.java \
+	net/willware/eurydice/nanocad/AtomEntry.java \
+	net/willware/eurydice/nanocad/AWTApplet.java \
+	net/willware/eurydice/nanocad/AWTEngine.java \
+	net/willware/eurydice/nanocad/BondEntry.java \
+	net/willware/eurydice/nanocad/DrawingEngineImpl.java \
+	net/willware/eurydice/nanocad/ForceEntry.java \
+	net/willware/eurydice/nanocad/NanocadNativeFormat.java \
+	net/willware/eurydice/nanocad/NanocadStyleMM2.java \
+	net/willware/eurydice/nanocad/NanocadStyleStructure.java \
 	net/willware/eurydice/serialization/Filetype.java \
-	net/willware/eurydice/serialization/NanocadNativeFormat.java \
 	net/willware/eurydice/serialization/PdbFile.java \
 	net/willware/eurydice/serialization/XyzFile.java \
 	net/willware/eurydice/tests/DatabaseTests.java \
 	net/willware/eurydice/tests/LinearAlgebraTests.java \
+	net/willware/eurydice/view/Color.java \
+	net/willware/eurydice/view/DrawingEngine.java \
+	net/willware/eurydice/view/Entry.java \
+	net/willware/eurydice/view/PerspectiveImpl.java \
+	net/willware/eurydice/view/Perspective.java \
+	net/willware/eurydice/view/RasmolDrawing.java \
+	net/willware/eurydice/view/ScreenSpaceImpl.java \
+	net/willware/eurydice/view/ScreenSpace.java \
 
 # ENDSRCLIST
 
@@ -123,11 +129,11 @@ tests: $(JARFILE)
 	java $(JFLAGS) net.willware.eurydice.tests.LinearAlgebraTests
 
 run-applet: $(JARFILE)
-	java $(JFLAGS) net.willware.eurydice.drawing.AWTApplet
+	java $(JFLAGS) net.willware.eurydice.view.AWTApplet
 
 PACKAGE_DESCRIPTIONS = net/willware/eurydice/core/package.html \
 	net/willware/eurydice/db/package.html \
-	net/willware/eurydice/drawing/package.html \
+	net/willware/eurydice/view/package.html \
 	net/willware/eurydice/elements/package.html \
 	net/willware/eurydice/forcefields/package.html \
 	net/willware/eurydice/forcefields/mm2/package.html \
@@ -167,8 +173,8 @@ net/willware/eurydice/core/package.html: net/willware/eurydice/core/README.rst
 	$(call rsthtml, net/willware/eurydice/core/package.html, net/willware/eurydice/core/README.rst)
 net/willware/eurydice/db/package.html: net/willware/eurydice/db/README.rst
 	$(call rsthtml, net/willware/eurydice/db/package.html, net/willware/eurydice/db/README.rst)
-net/willware/eurydice/drawing/package.html: net/willware/eurydice/drawing/README.rst
-	$(call rsthtml, net/willware/eurydice/drawing/package.html, net/willware/eurydice/drawing/README.rst)
+net/willware/eurydice/view/package.html: net/willware/eurydice/view/README.rst
+	$(call rsthtml, net/willware/eurydice/view/package.html, net/willware/eurydice/view/README.rst)
 net/willware/eurydice/elements/package.html: net/willware/eurydice/elements/README.rst
 	$(call rsthtml, net/willware/eurydice/elements/package.html, net/willware/eurydice/elements/README.rst)
 net/willware/eurydice/forcefields/package.html: net/willware/eurydice/forcefields/README.rst

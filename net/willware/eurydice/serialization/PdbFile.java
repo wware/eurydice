@@ -20,7 +20,8 @@ public class PdbFile extends Filetype {
      */
 
     /**
-     * NOTE THAT THIS METHOD IS NOT YET IMPLEMENTED!
+     * NOTE THAT THIS METHOD IS NOT YET IMPLEMENTED!.
+     *
      * @param ins an InputStream from which a serialization is obtained
      * @return the de-serialized structure
      */

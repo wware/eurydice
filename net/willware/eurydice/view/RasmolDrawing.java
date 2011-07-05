@@ -1,4 +1,4 @@
-package net.willware.eurydice.drawing;
+package net.willware.eurydice.view;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.serialization.PdbFile;
 
 /**
@@ -16,18 +17,32 @@ public class RasmolDrawing implements DrawingEngine {
 
     // keep those two files alive til we're done with them
     // avoid having the compiler optimize them into oblivion
+    /** The molecule file. */
     private File moleculeFile = null;
+
+    /** The script file. */
     private File scriptFile = null;
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.view.DrawingEngine#getColor(java.lang.String)
+     */
     public Color getColor(String name) {
         throw new RuntimeException("not implemented yet");
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.IDrawingEngine#draw(net.willware.eurydice.drawing.Orientation, net.willware.eurydice.core.Structure)
+     * @see net.willware.eurydice.view.DrawingEngine#drawWithForces(net.willware.eurydice.core.Structure, net.willware.eurydice.forcefields.ForceField)
      */
     @Override
-    public void draw(Orientation o, Structure s) {
+    public void drawWithForces(Structure s, ForceField ff) {
+        draw(s);
+    }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.view.DrawingEngine#draw(net.willware.eurydice.core.Structure)
+     */
+    @Override
+    public void draw(Structure s) {
         try {
             // store the file in a XYZ file
             moleculeFile = File.createTempFile("rasmol", ".pdb");
@@ -50,10 +65,10 @@ public class RasmolDrawing implements DrawingEngine {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.IDrawingEngine#quickDraw(net.willware.eurydice.drawing.Orientation, net.willware.eurydice.core.Structure)
+     * @see net.willware.eurydice.view.DrawingEngine#quickDraw(net.willware.eurydice.core.Structure)
      */
     @Override
-    public void quickDraw(Orientation o, Structure s) {
+    public void quickDraw(Structure s) {
         try {
             // store the file in a XYZ file
             moleculeFile = File.createTempFile("rasmol", ".pdb");
@@ -75,6 +90,6 @@ public class RasmolDrawing implements DrawingEngine {
      */
     public static void main(String[] args) {
         //new RasmolDrawing().draw(null, new net.willware.eurydice.library.Aspirin());
-        new RasmolDrawing().draw(null, new net.willware.eurydice.library.DiamondRod());
+        new RasmolDrawing().draw(new net.willware.eurydice.library.DiamondRod());
     }
 }

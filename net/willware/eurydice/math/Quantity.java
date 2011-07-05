@@ -4,7 +4,11 @@ package net.willware.eurydice.math;
  * A Quantity is a number with physical dimensions, for example 9.8 m sec^-2.
  */
 public class Quantity {
+
+    /** The amount. */
     private double amount;
+
+    /** The units. */
     private PhysicalUnit units;
 
     /**

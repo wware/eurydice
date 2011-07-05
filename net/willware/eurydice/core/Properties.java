@@ -3,13 +3,20 @@ package net.willware.eurydice.core;
 import java.util.HashMap;
 
 /**
- * Global settings for the Eurydice code base should be loadable from a file.
+ * Useful repository for various kinds of metadata. For instance, global settings
+ * for the Eurydice code base should be loadable from a file. This is intended as a
+ * GWT-JavaScript-safe version of java.util.Properties.
  */
 public class Properties extends HashMap<String,String> {
 
     /** The Constant serialVersionUID. */
     public static final long serialVersionUID = 1;
 
+    /**
+     * Load properties settings from a string. The string could be the contents of a file.
+     *
+     * @param s the s
+     */
     public void load(String s) {
         for (String s2 : s.split("\n")) {
             String[] fields = s2.split("=");
@@ -21,16 +28,28 @@ public class Properties extends HashMap<String,String> {
         }
     }
 
+    /**
+     * Set a settings value.
+     *
+     * @param key the key
+     * @param value the value
+     */
     public void setProperty(String key, String value) {
         put(key, value);
     }
 
+    /**
+     * Get a settings value.
+     *
+     * @param key the key
+     * @return the property
+     */
     public String getProperty(String key) {
         return get(key);
     }
 
     /**
-     * Gets a settings value, insisting that it not be a null or empty string.
+     * Get a settings value, insisting that it not be a null or empty string.
      *
      * @param key the key
      * @return the non-null settings value

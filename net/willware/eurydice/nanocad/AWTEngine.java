@@ -1,8 +1,10 @@
-package net.willware.eurydice.drawing;
+package net.willware.eurydice.nanocad;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+
+import net.willware.eurydice.view.Color;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -10,12 +12,19 @@ import java.awt.RenderingHints;
  */
 public class AWTEngine extends DrawingEngineImpl {
 
+    /** The graphics. */
     private Graphics2D graphics;
 
+    /**
+     * The Class AwtColor.
+     */
     private class AwtColor implements Color {
+
+        /** The acolor. */
         java.awt.Color acolor;
     }
 
+    /** The current color. */
     private AwtColor currentColor;
 
     /**
@@ -32,7 +41,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#drawCircle(double, double, double)
+     * @see net.willware.eurydice.view.DrawingEngine#drawCircle(double, double, double)
      */
     @Override
     public void drawCircle(double x, double y, double r) {
@@ -40,7 +49,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#drawLine(double, double, double, double)
+     * @see net.willware.eurydice.view.DrawingEngine#drawLine(double, double, double, double)
      */
     @Override
     public void drawLine(double x1, double y1, double x2, double y2) {
@@ -48,7 +57,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#fillCircle(double, double, double)
+     * @see net.willware.eurydice.view.DrawingEngine#fillCircle(double, double, double)
      */
     @Override
     public void fillCircle(double x, double y, double r) {
@@ -56,7 +65,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#getColor(java.lang.String)
+     * @see net.willware.eurydice.view.DrawingEngine#getColor(java.lang.String)
      */
     @Override
     public Color getColor(String colorname) {
@@ -83,7 +92,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#getCurrentColor()
+     * @see net.willware.eurydice.view.DrawingEngine#getCurrentColor()
      */
     @Override
     public Color getCurrentColor() {
@@ -91,7 +100,7 @@ public class AWTEngine extends DrawingEngineImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.DrawingEngine#setCurrentColor(net.willware.eurydice.drawing.DrawingEngine.Color)
+     * @see net.willware.eurydice.view.DrawingEngine#setCurrentColor(net.willware.eurydice.view.DrawingEngine.Color)
      */
     @Override
     public void setCurrentColor(Color c) {

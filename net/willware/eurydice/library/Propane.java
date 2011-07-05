@@ -6,12 +6,19 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class Propane.
+ */
 public class Propane extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new propane.
+     */
     public Propane() {
         addAtom(new Carbon(Atom.SP3),
                 new Vector(-0.85748833891984, 0.34794546061805,

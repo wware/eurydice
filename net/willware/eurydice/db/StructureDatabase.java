@@ -14,11 +14,11 @@ public interface StructureDatabase {
     /**
      * Store a structure, or a portion of a structure. Two store operations will be assumed
      * to refer to the same structure if the structure arguments share the same unique ID (see
-     * {@link Structure#getUniqueId()}). This allows very large structures to be stored in a
-     * database incrementally, or to be processed in pieces.
      *
      * @param s      a structure to be stored
      * @return       true if database operation is successful
+     * {@link Structure#getUniqueId()}). This allows very large structures to be stored in a
+     * database incrementally, or to be processed in pieces.
      */
     public boolean store(Structure s);
 

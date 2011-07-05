@@ -6,12 +6,19 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class Water.
+ */
 public class Water extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new water.
+     */
     public Water() {
         addAtom(new Oxygen(Atom.SP3, new Vector(-2.3179271590246, -1.245842432839, -3.225993108704)));
         addAtom(new Oxygen(Atom.SP3, new Vector(2.3592808043861, 1.2883138211754, -4.0566716208121)));

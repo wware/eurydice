@@ -6,13 +6,13 @@ import java.io.PrintStream;
 import java.io.PushbackInputStream;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Nitrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
 /**
  * XYZ is a popular file format for serializing molecules.

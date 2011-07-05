@@ -1,6 +1,7 @@
-package net.willware.eurydice.drawing;
+package net.willware.eurydice.view;
 
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.forcefields.ForceField;
 
 /**
  * Drawing engines are used to draw structures in various graphics environments, and
@@ -13,7 +14,15 @@ public interface DrawingEngine {
      *
      * @param s the structure to be drawn.
      */
-    public void draw(Orientation o, Structure s);
+    public void draw(Structure s);
+
+    /**
+     * Draw a structure, prioritizing beauty over performance.
+     *
+     * @param s the structure to be drawn.
+     * @param ff the structure to be drawn.
+     */
+    public void drawWithForces(Structure s, ForceField ff);
 
     /**
      * Draw a structure, prioritizing performance over beauty, for instance as an
@@ -21,7 +30,7 @@ public interface DrawingEngine {
      *
      * @param s the structure to be drawn.
      */
-    public void quickDraw(Orientation o, Structure s);
+    public void quickDraw(Structure s);
 
     /**
      * Given a color name like "red" or "white" or "green", return a wrapper containing

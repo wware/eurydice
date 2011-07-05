@@ -7,9 +7,9 @@ package net.willware.eurydice.core;
 
 import java.util.List;
 
-import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.view.Color;
+import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
@@ -219,7 +219,7 @@ public interface Atom {
     /**
      * Set the unique ID for this atom.
      *
-     * @param the unique ID
+     * @param id the new unique id
      */
     public void setUniqueId(UniqueId id);
 

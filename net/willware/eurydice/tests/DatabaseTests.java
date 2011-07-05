@@ -18,7 +18,6 @@ import net.willware.eurydice.core.Properties;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.StructureImpl;
 import net.willware.eurydice.core.UniqueId;
-import net.willware.eurydice.core.UniqueIdImpl;
 import net.willware.eurydice.db.StructureDatabase;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;

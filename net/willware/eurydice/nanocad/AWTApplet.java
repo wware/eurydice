@@ -1,4 +1,4 @@
-package net.willware.eurydice.drawing;
+package net.willware.eurydice.nanocad;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -21,13 +21,20 @@ import net.willware.eurydice.library.*;
  */
 public class AWTApplet extends JApplet implements MouseListener, MouseMotionListener  {
 
-    private Orientation ort = new OrientationImpl();
+    /** The gr. */
     private Graphics gr;
+
+    /** The struc. */
     private Structure struc = new Aspirin();
     //private Structure struc = new DiamondRod();
     //private Structure struc = new Diamond();
+    /** The oldx. */
     int oldx = -1;
+
+    /** The oldy. */
     int oldy = -1;
+
+    /** The is drawing quick. */
     boolean isDrawingQuick = false;
 
     /** The Constant serialVersionUID. */
@@ -44,25 +51,47 @@ public class AWTApplet extends JApplet implements MouseListener, MouseMotionList
         addMouseMotionListener( this );
     }
 
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+     */
     public void mouseEntered( MouseEvent e ) {
         // called when the pointer enters the applet's rectangular area
     }
+
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+     */
     public void mouseExited( MouseEvent e ) {
         // called when the pointer leaves the applet's rectangular area
     }
+
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+     */
     public void mousePressed( MouseEvent e ) {
         // called after a button is pressed down
         oldx = e.getX();
         oldy = e.getY();
     }
+
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+     */
     public void mouseReleased( MouseEvent e ) {  // called after a button is released
         isDrawingQuick = false;
         clearScreen();
         repaint();
     }
+
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseMotionListener#mouseMoved(java.awt.event.MouseEvent)
+     */
     public void mouseMoved( MouseEvent e ) {  // called during motion when no buttons are down
     }
 
+    /**
+     * Clear screen.
+     */
     private void clearScreen() {
         Rectangle r = gr.getClipBounds();
         gr.setColor(getBackground());
@@ -77,24 +106,31 @@ public class AWTApplet extends JApplet implements MouseListener, MouseMotionList
         AWTEngine ae = new AWTEngine(g);
         clearScreen();
         if (isDrawingQuick)
-            ae.quickDraw(ort, struc);
+            ae.quickDraw(struc);
         else
-            ae.draw(ort, struc);
+            ae.draw(struc);
     }
 
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
+     */
     public void mouseClicked(MouseEvent e) {
     }
 
+    /* (non-Javadoc)
+     * @see java.awt.event.MouseMotionListener#mouseDragged(java.awt.event.MouseEvent)
+     */
     public void mouseDragged(MouseEvent e) {
-        double k = 0.003;
-        int dx, dy;
-        dx = e.getX() - oldx;
-        dy = e.getY() - oldy;
-        oldx += dx;
-        oldy += dy;
-        ort.rotateX(k * dx);
-        ort.rotateY(k * dy);
-        isDrawingQuick = true;
+        /*        double k = 0.003;
+                int dx, dy;
+                dx = e.getX() - oldx;
+                dy = e.getY() - oldy;
+                oldx += dx;
+                oldy += dy;
+                struc.getScreenSpace().rotateX(k * dx);
+                struc.getScreenSpace().rotateY(k * dy);
+                isDrawingQuick = true;
+        */
         clearScreen();
         repaint();
     }

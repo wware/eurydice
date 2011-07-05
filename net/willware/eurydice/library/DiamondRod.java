@@ -6,12 +6,19 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class DiamondRod.
+ */
 public class DiamondRod extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new diamond rod.
+     */
     public DiamondRod() {
         addAtom(new Carbon(Atom.SP3), new Vector(-4.34738, 0.184623, 1.30738));
         addAtom(new

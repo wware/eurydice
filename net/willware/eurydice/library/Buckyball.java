@@ -6,11 +6,18 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class Buckyball.
+ */
 public class Buckyball extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new buckyball.
+     */
     public Buckyball() {
         addAtom(new
                 Carbon(Atom.SP2), new Vector (0.0573549, 1.64498, -3.04102));

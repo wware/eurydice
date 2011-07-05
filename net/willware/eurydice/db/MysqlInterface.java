@@ -14,7 +14,6 @@ import net.willware.eurydice.core.JigImpl;
 import net.willware.eurydice.core.StructureImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.UniqueId;
-import net.willware.eurydice.core.UniqueIdImpl;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.serialization.XyzFile;
@@ -24,7 +23,10 @@ import net.willware.eurydice.serialization.XyzFile;
  */
 public class MysqlInterface implements StructureDatabase {
 
+    /** The driver. */
     private static Object driver = null;
+
+    /** The connect string. */
     private String connectString;
 
     /**
@@ -68,6 +70,7 @@ public class MysqlInterface implements StructureDatabase {
      *
      * @param queryString the SQL query string
      * @param handler the handler
+     * @param ignoreSqlError the ignore sql error
      */
     private void sqlQuery(String queryString, ResultSetHandler handler, boolean ignoreSqlError) {
         Connection conn = null;
@@ -129,10 +132,11 @@ public class MysqlInterface implements StructureDatabase {
      */
     private class AddAtomHandler implements ResultSetHandler {
 
+        /** The struc. */
         private StructureImpl struc;
 
         /**
-         * Constructor
+         * Constructor.
          *
          * @param struc the structure to which atoms will be added
          */
@@ -145,7 +149,6 @@ public class MysqlInterface implements StructureDatabase {
          */
         public void handleResult(ResultSet rs) throws SQLException {
             Atom a = AtomImpl.getElement(rs.getString("element"));    // C, H, O, N, etc
-            a.setUniqueId(new UniqueIdImpl((int) rs.getLong("id")));
             String hyb = rs.getString("hybridization");
             if      ("NONE".equals(hyb)) a.setHybridization(Atom.NONE);
             else if ("SP".equals(hyb))   a.setHybridization(Atom.SP);
@@ -155,6 +158,7 @@ public class MysqlInterface implements StructureDatabase {
                                      rs.getDouble("y"),
                                      rs.getDouble("z")));
             struc.addAtom(a);
+            a.setUniqueId(new StructureImpl.UniqueIdImpl((int) rs.getLong("id")));
         }
     }
 
@@ -163,10 +167,11 @@ public class MysqlInterface implements StructureDatabase {
      */
     private class AddJigHandler implements ResultSetHandler {
 
+        /** The struc. */
         private StructureImpl struc;
 
         /**
-         * Constructor
+         * Constructor.
          *
          * @param struc the structure to which jigs will be added
          */
@@ -189,8 +194,14 @@ public class MysqlInterface implements StructureDatabase {
      */
     private class StructureIdFetchHandler implements ResultSetHandler {
 
+        /** The id. */
         private long id;
 
+        /**
+         * Gets the id.
+         *
+         * @return the id
+         */
         public long getId() {
             return id;
         }

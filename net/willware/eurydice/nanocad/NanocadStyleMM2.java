@@ -1,4 +1,4 @@
-package net.willware.eurydice.forcefields.mm2;
+package net.willware.eurydice.nanocad;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -12,6 +12,11 @@ import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.core.Structure.AtomProcessor;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.forcefields.ForceField;
+import net.willware.eurydice.forcefields.mm2.AngleTerm;
+import net.willware.eurydice.forcefields.mm2.LengthTerm;
+import net.willware.eurydice.forcefields.mm2.LongRangeTerm;
+import net.willware.eurydice.forcefields.mm2.Term;
+import net.willware.eurydice.forcefields.mm2.TorsionTerm;
 
 /**
  * NanoCAD was a hobbyist effort written in 1997, when I didn't know Java well and

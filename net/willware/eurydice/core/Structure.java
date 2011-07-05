@@ -3,10 +3,7 @@ package net.willware.eurydice.core;
 import java.util.Iterator;
 import java.util.List;
 
-import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Region;
-import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.forcefields.ForceField;
 
 /**
  * A structure is composed of a collection of atoms and jigs, and can also contain
@@ -38,37 +35,10 @@ public interface Structure {
     public void process(AtomProcessor p);
 
     /**
-     * Sets the position.
-     *
-     * @param position the new position
-     */
-    public void setPosition(Vector position);
-
-    /**
-     * Gets the position.
-     *
-     * @return the position
-     */
-    public Vector getPosition();
-
-    /**
-     * Sets the orientation.
-     *
-     * @param orientation the new orientation
-     */
-    public void setOrientation(Quaternion orientation);
-
-    /**
-     * Gets the orientation.
-     *
-     * @return the orientation
-     */
-    public Quaternion getOrientation();
-
-    /**
      * The size of a structure is the number of atoms in it.
      *
      * @return the number of atoms in this structure
+     * @throws IndexOutOfBoundsException the index out of bounds exception
      */
     public int size() throws IndexOutOfBoundsException;
     /**
@@ -98,28 +68,6 @@ public interface Structure {
      * @return the UniqueId for this structure's parent, or null if it's a root
      */
     public UniqueId getParentUniqueId();
-
-    /**
-     * Force fields (such as MM2 or GROMACS) compute forces just as jigs do, and share
-     * the IJig interface. Set the force field for this position list.
-     *
-     * @param ff the new force field
-     */
-    public void setForceField(ForceField ff);
-
-    /**
-     * Gets the force field currently assigned to this structure.
-     *
-     * @return the force field for this structure
-     */
-    public ForceField getForceField();
-
-    /**
-     * Sets the unique ID for this structure.
-     *
-     * @param id the new unique ID
-     */
-    //public void setUniqueId(UniqueId id);
 
     /**
      * Gets the unique ID for this structure.
@@ -210,26 +158,26 @@ public interface Structure {
      *
      * @param dt the time step for this integration
      */
-    public void verletStep(final double dt);
+    public void verletStep(double dt);
 
     /**
      * Adds a substructure to the list of substructures.
      *
      * @param s the substructure to be added
      */
-    public void addSubstructure(Structure s);
+    public void addSubstructure(Substructure s);
 
     /**
      * Removes a substructure from the list of substructures.
      *
      * @param s the substructure to be removed
      */
-    public void removeSubstructure(Structure s);
+    public void removeSubstructure(Substructure s);
 
     /**
      * Gets the list of substructures.
      *
      * @return the substructures list
      */
-    public List<Structure> getSubstructures();
+    public List<Substructure> getSubstructures();
 }

@@ -3,8 +3,12 @@
  * Copyright (c) 1997,1998,1999,2011 Will Ware, all rights reserved.
  */
 
-package net.willware.eurydice.core;
+package net.willware.eurydice.nanocad;
 
+import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.JigImpl;
+import net.willware.eurydice.core.StructureImpl;
+import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.math.Vector;
 
@@ -23,7 +27,7 @@ public class NanocadStyleStructure extends StructureImpl {
     /** arbitrary multiplier for length of force vectors, chosen for visual clarity. */
     private double forceMultiplier = 100.0;
 
-    /** the center of gravity of this structure in 3-space */
+    /** the center of gravity of this structure in 3-space. */
     private Vector centerOfGravity;
 
     /**

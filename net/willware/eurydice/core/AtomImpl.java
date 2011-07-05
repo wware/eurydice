@@ -7,13 +7,13 @@ package net.willware.eurydice.core;
 
 import java.util.List;
 
-import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Nitrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.view.Color;
+import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
@@ -35,6 +35,7 @@ public abstract class AtomImpl implements Atom {
     /** The Constant hybridnames. */
     private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
+    /** The id. */
     private UniqueId id;
 
     // these should be defined within elements, as class variables
@@ -140,7 +141,6 @@ public abstract class AtomImpl implements Atom {
      * Instantiates a new atom.
      */
     public AtomImpl() {
-        this.id = new UniqueIdImpl();
         position = new Vector();
         force = new Vector();
         previousPosition = null;
@@ -370,6 +370,7 @@ public abstract class AtomImpl implements Atom {
     /**
      * Gets the 64-bit id for this atom, unique within its structure.
      *
+     * @param id the new unique id
      * @return the id
      */
     public void setUniqueId(UniqueId id) {

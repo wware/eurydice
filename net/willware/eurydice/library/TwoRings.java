@@ -6,12 +6,19 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class TwoRings.
+ */
 public class TwoRings extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new two rings.
+     */
     public TwoRings() {
         addAtom(new Carbon(Atom.SP3),
                 new Vector(2.1445892122006, -1.2708629993337,

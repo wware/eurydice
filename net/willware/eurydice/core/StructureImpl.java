@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.forcefields.ForceField;
@@ -22,26 +21,20 @@ public class StructureImpl implements Structure {
     /** The jig list. */
     private List<Jig> jigList;
 
-    /** The metadata. */
+    /** Any metadata for this structure: author, publication, date, etc. */
     private Properties metadata;
 
     /** The unique ID that identifies this structure. */
-    protected UniqueId id;   // might need access to implement clone method
+    protected final UniqueId id;   // might need access to implement clone method
 
     /** The unique ID of the parent structure, if this structure has a parent. */
-    protected UniqueId parentID;
+    protected final UniqueId parentID;
 
     /** The force field used to compute interatomic forces for this structure. */
     private ForceField forceField;
 
     /** a list of substructures, allowing structures to be hierarchical. */
-    protected List<Structure> substructures;
-
-    /** The position. */
-    private Vector position;
-
-    /** The orientation. */
-    private Quaternion orientation;
+    private List<Substructure> substructures;
 
     /** The previous bond list, used to memoize inferBonds. */
     private List<Bond> previousBondList = null;
@@ -55,79 +48,10 @@ public class StructureImpl implements Structure {
         id = new UniqueIdImpl();
         this.parentID = parentID;
         forceField = null;
-        position = new Vector();
-        orientation = new Quaternion();
         atomList = new ArrayList<Atom>();
         jigList = new ArrayList<Jig>();
         metadata = new Properties();
-        substructures = new java.util.ArrayList<Structure>();
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param parentID the unique ID of the parent structure, or null
-     * @param pos position within containing Structure
-     */
-    public StructureImpl(UniqueId parentID, Vector pos) {
-        id = new UniqueIdImpl();
-        this.parentID = parentID;
-        forceField = null;
-        position = pos;
-        orientation = new Quaternion();
-        atomList = new ArrayList<Atom>();
-        jigList = new ArrayList<Jig>();
-        metadata = new Properties();
-        substructures = new java.util.ArrayList<Structure>();
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param parentID the unique ID of the parent structure, or null
-     * @param pos position within containing Structure
-     * @param ort the orientation relative to the containing Structure
-     */
-    public StructureImpl(UniqueId parentID, Vector pos, Quaternion ort) {
-        id = new UniqueIdImpl();
-        this.parentID = parentID;
-        forceField = null;
-        position = pos;
-        orientation = ort;
-        atomList = new ArrayList<Atom>();
-        jigList = new ArrayList<Jig>();
-        metadata = new Properties();
-        substructures = new java.util.ArrayList<Structure>();
-    }
-
-    /**
-     * Sets the position.
-     *
-     * @param position the new position
-     */
-    public void setPosition(Vector position) {
-        this.position = position;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#getPosition()
-     */
-    public Vector getPosition() {
-        return position;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#setOrientation(net.willware.eurydice.math.Quaternion)
-     */
-    public void setOrientation(Quaternion orientation) {
-        this.orientation = orientation;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#getOrientation()
-     */
-    public Quaternion getOrientation() {
-        return orientation;
+        substructures = new java.util.ArrayList<Substructure>();
     }
 
     /* (non-Javadoc)
@@ -147,15 +71,19 @@ public class StructureImpl implements Structure {
         return parentID;
     }
 
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#setForceField(net.willware.eurydice.forcefields.ForceField)
+    /**
+     * Sets the force field.
+     *
+     * @param ff the new force field
      */
     public void setForceField(ForceField ff) {
         forceField = ff;
     }
 
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Structure#getForceField()
+    /**
+     * Gets the force field.
+     *
+     * @return the force field
      */
     public ForceField getForceField() {
         return forceField;
@@ -263,21 +191,21 @@ public class StructureImpl implements Structure {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#addSubstructure(net.willware.eurydice.core.Structure)
      */
-    public void addSubstructure(Structure s) {
+    public void addSubstructure(Substructure s) {
         substructures.add(s);
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#removeSubstructure(net.willware.eurydice.core.Structure)
      */
-    public void removeSubstructure(Structure s) {
+    public void removeSubstructure(Substructure s) {
         substructures.remove(s);
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#getSubstructures()
      */
-    public List<Structure> getSubstructures() {
+    public List<Substructure> getSubstructures() {
         return substructures;
     }
 
@@ -344,7 +272,8 @@ public class StructureImpl implements Structure {
      * @see net.willware.eurydice.core.Structure#get(long)
      */
     public Atom get(int index) {
-        return get(UniqueIdImpl.makeTempId(index));
+        //return get(UniqueIdImpl.makeTempId(index));
+        return get(makeTempId(index));
     }
 
     /**
@@ -382,6 +311,17 @@ public class StructureImpl implements Structure {
      * @param a the atom to be added
      */
     public void addAtom(Atom a) {
+        addAtom(a, new UniqueIdImpl());
+    }
+
+    /**
+     * Adds an atom to this structure, with a particular unique ID.
+     *
+     * @param a the atom to be added
+     * @param id the unique ID for this atom
+     */
+    public void addAtom(Atom a, UniqueId id) {
+        a.setUniqueId(id);
         atomList.add(a);
         announceChange();
     }
@@ -433,5 +373,76 @@ public class StructureImpl implements Structure {
      */
     public void addJig(Jig j) {
         jigList.add(j);
+    }
+
+    /**
+     * For small structures, a 32-bit int is fine for a unique ID. For larger structures
+     * that don't fit in the memory of a single computer, something larger will be needed,
+     * maybe a 64-bit long, or maybe a UUID.
+     */
+    public static class UniqueIdImpl implements UniqueId {
+
+        /** The myvalue. */
+        private int myvalue;
+
+        /**
+         * Instantiates a new unique id impl.
+         */
+        public UniqueIdImpl() {
+            myvalue = uniqueIdCounter++;
+        }
+
+        /**
+         * Instantiates a new unique id impl.
+         *
+         * @param count the count
+         */
+        public UniqueIdImpl(int count) {
+            if (count < uniqueIdCounter)
+                throw new RuntimeException("Unique IDs may not be unique");
+            uniqueIdCounter = count;
+            myvalue = uniqueIdCounter++;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        public String toString() {
+            return "" + myvalue;
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        public boolean equals(Object obj) {
+            try {
+                return ((UniqueIdImpl) obj).myvalue == myvalue;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        /* (non-Javadoc)
+         * @see net.willware.eurydice.core.UniqueId#toInteger()
+         */
+        public int toInteger() {
+            return myvalue;
+        }
+    }
+
+    /** The unique id counter. */
+    private static int uniqueIdCounter = 0;
+
+    /**
+     * Make temp id.
+     *
+     * @param x the x
+     * @return the unique id
+     */
+    public static UniqueId makeTempId(int x) {
+        UniqueIdImpl uii = new UniqueIdImpl();
+        uii.myvalue = x;
+        uniqueIdCounter--;
+        return uii;
     }
 }

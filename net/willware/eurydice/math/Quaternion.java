@@ -6,8 +6,13 @@ package net.willware.eurydice.math;
  */
 public class Quaternion {
 
+    /** The real part. */
     private double realPart;
+
+    /** The imaginary part. */
     private Vector imaginaryPart;
+
+    /** The units. */
     private PhysicalUnit units = null;
 
     /**
@@ -121,6 +126,11 @@ public class Quaternion {
         return multiply(other.inverse());
     }
 
+    /**
+     * Absolute value squared.
+     *
+     * @return the double
+     */
     private double absoluteValueSquared() {
         return realPart * realPart + imaginaryPart.dotProduct(imaginaryPart);
     }
@@ -198,15 +208,32 @@ public class Quaternion {
     }
 
     /**
-     * Produce a quaternion representing a rotation about an axis.
+     * Produce a quaternion representing a rotation about an axis. A rotator quaterion has
+     * an {@link #absoluteValue()} of 1.
      *
      * @param theta the rotation angle
      * @param axis the axis about which to rotate
      * @return the quaternion result
      */
-    public static Quaternion rotate(double theta, Vector axis) {
+    public static Quaternion makeRotator(double theta, Vector axis) {
         return new Quaternion(Math.cos(0.5 * theta),
                               axis.scale(Math.sin(0.5 * theta) / axis.length()));
+    }
+
+    /**
+     * Rotate a Vector using this quaternion as a rotator. A rotator quaterion has
+     * an {@link #absoluteValue()} of 1, so if this is not the case throw an exception.
+     *
+     * @param v the vector to be rotated
+     * @return the vector result
+     * @throws ArithmeticException if quaternion absolute value is too far from 1
+     */
+    public Vector rotate(Vector v) throws ArithmeticException {
+        double h = 1.0e-6;
+        double av = absoluteValue();
+        if (av < 1.0 - h || av > 1.0 + h)
+            throw new ArithmeticException();
+        return multiply(v).multiply(inverse()).imaginaryPart;
     }
 
     /**
@@ -236,9 +263,18 @@ public class Quaternion {
         Quaternion q1 = new Quaternion(1, new Vector(1, 0, 0));
         Quaternion q2 = new Quaternion(0, new Vector(0, 1, 0));
         System.out.println(q1.multiply(q2));
-        Quaternion rotator = rotate(2*Math.PI/3, new Vector(1.0,1.0,1.0));
+        Quaternion rotator = makeRotator(2*Math.PI/3, new Vector(1.0,1.0,1.0));
         System.out.println(rotator);
         Vector v = new Vector(1, 0, 0);
         System.out.println(rotator.multiply(v).multiply(rotator.inverse()));
+    }
+
+    /**
+     * Conjugate.
+     *
+     * @return the quaternion
+     */
+    public Quaternion conjugate() {
+        return new Quaternion(realPart, imaginaryPart.negate());
     }
 }

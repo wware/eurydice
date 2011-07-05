@@ -9,9 +9,9 @@ import java.util.List;
 
 import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
-import net.willware.eurydice.drawing.DrawingEngine;
-import net.willware.eurydice.drawing.Color;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.view.Color;
+import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * In the great drama of life on Earth, carbon is one of the good guys.
@@ -37,12 +37,12 @@ public class Carbon extends AtomImpl {
 
     /**
      * Constructor with hybridization argument.
+     *
+     * @param h the hybridization argument
      * @see Atom#SP3
      * @see Atom#SP2
      * @see Atom#SP
      * @see Atom#NONE
-     *
-     * @param h the hybridization argument
      */
     public Carbon(int h) {
         setHybridization(h);
@@ -50,13 +50,13 @@ public class Carbon extends AtomImpl {
 
     /**
      * Constructor with hybridization arg and position vector arg.
+     *
+     * @param h the hybridization type
+     * @param v the position vector
      * @see Atom#SP3
      * @see Atom#SP2
      * @see Atom#SP
      * @see Atom#NONE
-     *
-     * @param h the hybridization type
-     * @param v the position vector
      */
     public Carbon(int h, Vector v) {
         setHybridization(h);
@@ -138,7 +138,7 @@ public class Carbon extends AtomImpl {
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.core.Atom#color(net.willware.eurydice.drawing.DrawingEngine)
+     * @see net.willware.eurydice.core.Atom#color(net.willware.eurydice.view.DrawingEngine)
      */
     public Color color(DrawingEngine de) {
         return de.getColor("gray");

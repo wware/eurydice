@@ -4,6 +4,8 @@ package net.willware.eurydice.math;
  * A rectangular region of 3-space, delineated by two Vectors at opposing corners.
  */
 public class Region {
+
+    /** The max corner. */
     private Vector minCorner, maxCorner;
 
     /**

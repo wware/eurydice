@@ -8,9 +8,15 @@ import java.util.Iterator;
  */
 public class PhysicalUnit extends HashMap<String,Integer> {
 
+    /** The Constant serialVersionUID. */
     public static final long serialVersionUID = 1;
 
+    /**
+     * The Class Mismatch.
+     */
     public static class Mismatch extends RuntimeException {
+
+        /** The Constant serialVersionUID. */
         public static final long serialVersionUID = 1;
     }
 
@@ -50,6 +56,12 @@ public class PhysicalUnit extends HashMap<String,Integer> {
     /** The metric prefix PICO. */
     public static final double ATTO = MILLI * FEMTO;
 
+    /**
+     * Fundamental.
+     *
+     * @param abbrev the abbrev
+     * @return the physical unit
+     */
     private static PhysicalUnit fundamental(final String abbrev) {
         PhysicalUnit y = new PhysicalUnit();
         y.put(abbrev, 1);
@@ -108,6 +120,13 @@ public class PhysicalUnit extends HashMap<String,Integer> {
         return sb.toString().substring(1);
     }
 
+    /**
+     * Matches.
+     *
+     * @param unit1 the unit1
+     * @param unit2 the unit2
+     * @return true, if successful
+     */
     public static boolean matches(PhysicalUnit unit1, PhysicalUnit unit2) {
         if (unit1 == null && unit2 == null)
             return true;
@@ -116,6 +135,9 @@ public class PhysicalUnit extends HashMap<String,Integer> {
         return unit1.equals(unit2);
     }
 
+    /* (non-Javadoc)
+     * @see java.util.AbstractMap#equals(java.lang.Object)
+     */
     public boolean equals(Object x) {
         PhysicalUnit u;
         if (x == null)
@@ -168,6 +190,11 @@ public class PhysicalUnit extends HashMap<String,Integer> {
         return result;
     }
 
+    /**
+     * Inverse.
+     *
+     * @return the physical unit
+     */
     public PhysicalUnit inverse() {
         PhysicalUnit result = new PhysicalUnit();
         Iterator<String> keyIter = keySet().iterator();

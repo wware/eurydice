@@ -6,13 +6,20 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class Aspirin.
+ */
 public class Aspirin extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new aspirin.
+     */
     public Aspirin() {
         super();
         addAtom(new Carbon(Atom.SP2, new Vector(1.83608, 1.22083, 1.53739)));

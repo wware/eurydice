@@ -1,4 +1,4 @@
-package net.willware.eurydice.drawing;
+package net.willware.eurydice.nanocad;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,11 @@ import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Structure;
+import net.willware.eurydice.forcefields.ForceField;
+import net.willware.eurydice.view.Color;
+import net.willware.eurydice.view.DrawingEngine;
+import net.willware.eurydice.view.Entry;
+import net.willware.eurydice.view.ScreenSpace;
 
 /**
  * An abstraction layer to make any drawing engine look like Java AWT,
@@ -13,6 +18,8 @@ import net.willware.eurydice.core.Structure;
  */
 public abstract class DrawingEngineImpl implements DrawingEngine {
 
+    /** The screenspace. */
+    private ScreenSpace screenspace;
     /**
      * Set the current Color being used for drawing.
      * @param c the new Color value
@@ -52,48 +59,56 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
      * This is like the {@link #quickDraw} method but it only draws atoms, no bonds.
      * @param struc a position list to be drawn
      */
-    public void bubbleDraw(Orientation ort, Structure struc) {
+    public void bubbleDraw(Structure struc) {
         final int n = struc.size();
         for (int i = 0; i < n; i++)
-            new Entry.AtomEntry(ort, struc.get(i), DrawingEngineImpl.this, struc).quickDraw();
+            new AtomEntry(screenspace, struc.get(i), DrawingEngineImpl.this, struc).quickDraw();
     }
     /**
      * When an object (together with many others) is being rotated or moved, drawing needs to be quick,
      * maybe a wireframe, or if even that's too much, maybe a partial wireframe or a bounding box.
      * @param struc a structure to be drawn
      */
-    public void quickDraw(Orientation ort, final Structure struc) {
+    public void quickDraw(Structure struc) {
         for (Bond b: struc.inferBonds()) {
-            new Entry.BondEntry(ort, b, this, struc).quickDraw();
+            new BondEntry(screenspace, b, this, struc).quickDraw();
         }
     }
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.drawing.IDrawingEngine#draw(net.willware.eurydice.core.Structure)
+     * @see net.willware.eurydice.view.IDrawingEngine#draw(net.willware.eurydice.core.Structure)
      */
-    public void draw(Orientation ort, Structure struc) {
-        draw(ort, struc, 0.0, false);
+    public void draw(Structure struc) {
+        draw(screenspace, struc, 0.0, null);
+    }
+
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.view.IDrawingEngine#draw(net.willware.eurydice.core.Structure)
+     */
+    public void drawWithForces(Structure struc, ForceField ff) {
+        draw(screenspace, struc, 1.0, ff);
     }
 
     /**
      * When an object (together with many others) is done being rotated or moved, there is time to draw
-     * it in some more beautiful way, so call the {@link Entry#draw} method instead of
-     * {@link Entry#quickDraw}.
+     * it in some more beautiful way, so call the {@link Entry#draw} method instead of.
      *
+     * @param screenspace the screenspace
      * @param struc the structure to be drawn
      * @param forceMultiplier a multiplier to scale force vectors (arbitrary, choose for esthetics)
-     * @param showForces should we show force vectors when drawing a structure?
+     * @param ff the ff
+     * {@link Entry#quickDraw}.
      */
-    public void draw(final Orientation ort, final Structure struc,
-                     final double forceMultiplier, final boolean showForces) {
+    private void draw(final ScreenSpace screenspace, final Structure struc,
+                      final double forceMultiplier, final ForceField ff) {
         final List<Entry> dlist = new ArrayList<Entry>();
         final List<Bond> bondList = struc.inferBonds();
-        if (showForces) {
-            struc.getForceField().computeForces(struc);
+        if (ff != null) {
+            ff.computeForces(struc);
         }
         struc.process(new Structure.AtomProcessor() {
             public void process(Atom a) {
-                dlist.add(new Entry.AtomEntry(ort, a, DrawingEngineImpl.this, struc));
+                dlist.add(new AtomEntry(screenspace, a, DrawingEngineImpl.this, struc));
             }
         });
         struc.process(new Structure.AtomProcessor() {
@@ -101,51 +116,37 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
                 for (Bond b: bondList) {
                     Atom a2 = b.otherAtom(a1);
                     if (a2 != null && a1.getPosition().getX() < a2.getPosition().getX()) {
-                        dlist.add(new Entry.BondEntry(ort, b, DrawingEngineImpl.this, struc));
+                        dlist.add(new BondEntry(screenspace, b, DrawingEngineImpl.this, struc));
                     }
                 }
-                if (showForces) {
-                    Entry.ForceEntry dlf = new Entry.ForceEntry(ort, a1.getPosition(),
-                            a1.getForce(), DrawingEngineImpl.this);
+                if (ff != null) {
+                    ForceEntry dlf = new ForceEntry(screenspace, a1.getPosition(),
+                                                    a1.getForce(), DrawingEngineImpl.this);
                     dlf.setForceMultiplier(forceMultiplier);
                     dlist.add(dlf);
                 }
             }
         });
-        zsort(dlist, 0, dlist.size() - 1);
+        Entry.zsort(dlist);
         for (Entry e : dlist)
             e.draw();
     }
 
     /**
-     * The quicksort algorithm applied to the drawing list: we start drawing at the back of
-     * the scene and work forward, so that things in front obstruct the view of things behind.
-     * @param v a list of items to be sorted by Z coordinate
-     * @param lo0 the lowest list index being sorted (see quicksort article at wikipedia)
-     * @param hi0 the highest list index being sorted
+     * Sets the screen space.
+     *
+     * @param ss the new screen space
      */
-    private void zsort(List<Entry> v, int lo0, int hi0) {
-        int lo = lo0;
-        int hi = hi0;
-        if (hi0 > lo0) {
-            double mid = v.get((lo0 + hi0) / 2).zvalue();
-            while (lo <= hi) {
-                while (lo < hi0 && v.get(lo).zvalue() < mid)
-                    ++lo;
-                while (hi > lo0 && v.get(hi).zvalue() > mid)
-                    --hi;
-                if (lo <= hi) {
-                    Entry temp = v.get(lo);
-                    v.set(lo, v.get(hi));
-                    v.set(hi, temp);
-                    ++lo;
-                    --hi;
-                }
-            }
-            if (lo0 < hi)
-                zsort(v, lo0, hi);
-            if (lo < hi0)
-                zsort(v, lo, hi0);
-        }
+    public void setScreenSpace(ScreenSpace ss) {
+        this.screenspace = ss;
+    }
+
+    /**
+     * Gets the screen space.
+     *
+     * @return the screen space
+     */
+    public ScreenSpace getScreenSpace() {
+        return screenspace;
     }
 }

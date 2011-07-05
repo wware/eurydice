@@ -1,4 +1,4 @@
-package net.willware.eurydice.serialization;
+package net.willware.eurydice.nanocad;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +13,7 @@ import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Nitrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.core.NanocadStyleStructure;
+import net.willware.eurydice.serialization.Filetype;
 
 /**
  * The NanoCAD native format was created to preserve the information used by the

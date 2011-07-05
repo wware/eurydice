@@ -6,12 +6,19 @@
 package net.willware.eurydice.library;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.NanocadStyleStructure;
 import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.math.Vector;
+import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
+/**
+ * The Class Diamond.
+ */
 public class Diamond extends NanocadStyleStructure {
+
+    /**
+     * Instantiates a new diamond.
+     */
     public Diamond() {
         addAtom(new Carbon(Atom.SP3), new Vector(2.49072, 2.00042, -1.95816));
         addAtom(new Carbon(Atom.SP3), new Vector(1.00718, 2.34614, -1.93295));
