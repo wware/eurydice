@@ -82,10 +82,9 @@ SOURCES = \
 
 # ENDSRCLIST
 
-CLASSES = $(SOURCES:.java=.class)
+CLASSES = $$(find net -name "*.class")
 
 JARFILE = eurydice.jar
-ZIPFILE = eurydice.zip
 
 .java.class:
 	javac $(JFLAGS) $(@:.class=.java)
@@ -110,16 +109,11 @@ update-java-list:
 ls-java:
 	git ls-files | egrep '\.java$$' | sort
 
-zip: $(ZIPFILE)
-
-$(ZIPFILE): $(CLASSES)
-	zip $(ZIPFILE) $(CLASSES)
-
-$(JARFILE): $(CLASSES)
+$(JARFILE): classes
 	jar cvf $(JARFILE) $(SOURCES) $(CLASSES)
 
 classes:
-	make $(CLASSES)
+	javac $(JFLAGS) $(SOURCES)
 
 indent:
 	astyle -A2 $$(find * -name "*.java")
@@ -157,7 +151,7 @@ doc-tarball: overview.html $(PACKAGE_DESCRIPTIONS)
 	rm -rf nc2-javadoc
 
 clean:
-	rm -f *~ $$(find . -name "*.class") $(JARFILE) $(ZIPFILE)
+	rm -f *~ $$(find . -name "*.class") $(JARFILE)
 	rm -f *~ $$(find . -name "package.html")
 	rm -f *~ $$(find . -name "*.java.orig")
 	rm -rf html overview.html $(PACKAGE_DESCRIPTIONS)
