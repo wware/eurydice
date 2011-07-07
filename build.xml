@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<project name="eurydice" default="run-tests" basedir=".">
+  <property name="junit" location="/usr/share/java/junit.jar" />
+  <property name="mongo" location="/usr/share/java/mongo-1.2.jar" />
+
+  <path id="project.class.path">
+    <pathelement location="${junit}" />
+    <!--pathelement location="${mongo}" /-->
+    <pathelement location="eurydice.jar" />
+  </path>
+
+  <target name="clean">
+    <delete dir="html" failonerror="false" />
+    <delete dir="classes" failonerror="false" />
+    <delete file="overview.html" failonerror="false" />
+    <delete file="eurydice.jar" failonerror="false" />
+    <delete>
+      <fileset dir="src" includes="**/package.html" />
+    </delete>
+    <delete>
+      <fileset dir="." includes="**/*.orig" />
+    </delete>
+  </target>
+
+  <target name="javac" description="Compile java source files">
+    <mkdir dir="classes"/>
+    <javac srcdir="src" includes="**" encoding="utf-8" destdir="classes"
+           source="1.5" target="1.5" nowarn="true" includeantruntime="false"
+           debug="true" debuglevel="lines,vars,source">
+      <classpath refid="project.class.path"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="javac" description="Create a jar file">
+    <zip destfile="eurydice.jar" basedir="classes"/>
+    <!-- include sources so javadoc will pop up in Eclipse projects -->
+    <zip destfile="eurydice.jar" basedir="src" update="true"/>
+  </target>
+
+  <target name="indent" description="Clean up Java indentation">
+    <exec dir="." executable="/usr/bin/astyle" os="Linux">
+      <arg line="-A2"/>
+      <arg line="-r"/>
+      <arg line="*.java"/>
+    </exec>
+  </target>
+
+</project>

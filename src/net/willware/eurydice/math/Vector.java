@@ -168,6 +168,25 @@ public class Vector {
     }
 
     /**
+     * Square of the distance between this vector and another
+     *
+     * @return the distance squared
+     */
+    public double distsq(Vector v) {
+        v = v.subtract(this);
+        return v.dotProduct(v);
+    }
+
+    /**
+     * Square of the Euclidean length of this vector.
+     *
+     * @return the euclidean length squared
+     */
+    public double lensq() {
+        return dotProduct(this);
+    }
+
+    /**
      * Euclidean length of this vector.
      *
      * @return the euclidean length
@@ -208,7 +227,7 @@ public class Vector {
      * @param q the quaternion being multiplied
      * @return the quaternion result
      */
-    public Quaternion multiply(Quaternion q) {
+    public Quaternion multiplyQuaternion(Quaternion q) {
         Quaternion q2 = (new Quaternion(0.0, this)).multiply(q);
         if (units != null && q.getUnits() != null)
             q2.setUnits(units.times(q.getUnits()));

@@ -1,7 +1,8 @@
 package net.willware.eurydice.math;
 
 /**
- * Quaternions are a <a href="http://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation">convenient</a>
+ * Quaternions are a
+ * <a href="http://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation">convenient</a>
  * way to scale and rotate 3-dimensional objects.
  */
 public class Quaternion {
@@ -38,10 +39,7 @@ public class Quaternion {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        String r = "<Quat " + realPart + " "
-                   + imaginaryPart.getX() + " "
-                   + imaginaryPart.getY() + " "
-                   + imaginaryPart.getZ();
+        String r = "<Quat " + realPart + " " + imaginaryPart.toString();
         if (units != null)
             r += " " + units;
         return r + ">";
@@ -85,11 +83,22 @@ public class Quaternion {
         double e = other.realPart, f = other.imaginaryPart.getX();
         double g = other.imaginaryPart.getY(), h = other.imaginaryPart.getZ();
         Quaternion q = new Quaternion(a*e - b*f - c*g - d*h,
-                                      new Vector(a*f + b*e + c*h - d*g, a*g - b*h + c*e + d*f, a*h + b*g - c*f + d*e));
+                                      new Vector(a*f + b*e + c*h - d*g,
+                                                 a*g - b*h + c*e + d*f,
+                                                 a*h + b*g - c*f + d*e));
         if (units != null && other.units != null) {
             q.units = units.times(other.units);
         }
         return q;
+    }
+
+    /**
+     * Additive inverse of this quaternion.
+     *
+     * @return the negated quaternion
+     */
+    public Quaternion negate() {
+        return scale(-1);
     }
 
     /**
@@ -108,7 +117,7 @@ public class Quaternion {
      * @param other the vector to be multiplied
      * @return the quaternion result
      */
-    public Quaternion multiply(Vector other) {
+    public Quaternion multiplyVector(Vector other) {
         Quaternion q = multiply(new Quaternion(0.0, other));
         if (units != null && other.getUnits() != null) {
             q.units = units.times(other.getUnits());
@@ -142,6 +151,15 @@ public class Quaternion {
      */
     public double absoluteValue() {
         return Math.sqrt(absoluteValueSquared());
+    }
+
+    /**
+     * A normalized version of this quaternion.
+     *
+     * @return the normalized quaternion
+     */
+    public Quaternion normalize() {
+        return scale(1.0 / absoluteValue());
     }
 
     /**
@@ -222,18 +240,20 @@ public class Quaternion {
 
     /**
      * Rotate a Vector using this quaternion as a rotator. A rotator quaterion has
-     * an {@link #absoluteValue()} of 1, so if this is not the case throw an exception.
+     * an {@link #absoluteValue()} of 1, so if this is not the case, normalize the
+     * quaternion first.
      *
      * @param v the vector to be rotated
      * @return the vector result
-     * @throws ArithmeticException if quaternion absolute value is too far from 1
      */
-    public Vector rotate(Vector v) throws ArithmeticException {
+    public Vector rotate(Vector v) {
         double h = 1.0e-6;
-        double av = absoluteValue();
-        if (av < 1.0 - h || av > 1.0 + h)
-            throw new ArithmeticException();
-        return multiply(v).multiply(inverse()).imaginaryPart;
+        double avs = absoluteValueSquared();
+        Quaternion q = this;
+        if (avs < 1.0 - h || avs > 1.0 + h) {
+            q = q.scale(1 / Math.sqrt(avs));
+        }
+        return q.multiplyVector(v).multiply(q.inverse()).imaginaryPart;
     }
 
     /**
@@ -266,7 +286,7 @@ public class Quaternion {
         Quaternion rotator = makeRotator(2*Math.PI/3, new Vector(1.0,1.0,1.0));
         System.out.println(rotator);
         Vector v = new Vector(1, 0, 0);
-        System.out.println(rotator.multiply(v).multiply(rotator.inverse()));
+        System.out.println(rotator.multiplyVector(v).multiply(rotator.inverse()));
     }
 
     /**
