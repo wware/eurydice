@@ -1,7 +1,5 @@
 package net.willware.eurydice.forcefields.mm2;
 
-import java.util.List;
-
 import net.willware.eurydice.core.Structure;
 
 /**
@@ -27,13 +25,4 @@ public interface Term {
      * @param struc the structure containing the atoms
      */
     public void computeForces(Structure struc);
-
-    /**
-     * Enumerate the list of energy terms required to compute internal forces on the atoms
-     * of a structure, by studying how those atoms are bonded to one another.
-     *
-     * @param termList the list of energy terms under construction
-     * @param struc the structure to which this applies
-     */
-    public void enumerate(List<Term> termList, Structure struc);
 }

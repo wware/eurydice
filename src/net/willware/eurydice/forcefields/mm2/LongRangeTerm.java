@@ -109,19 +109,6 @@ public class LongRangeTerm extends TermImpl {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.TermImpl#termLength()
-     */
-    public int termLength() {
-        return 2;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.TermImpl#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
-     */
-    public void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
-    }
-
     /** The Constant maxNumChained. */
     private final static int maxNumChained = 50;
 

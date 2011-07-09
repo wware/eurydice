@@ -5,7 +5,6 @@
 
 package net.willware.eurydice.forcefields.mm2;
 
-import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
@@ -66,25 +65,6 @@ public class AngleTerm extends TermImpl {
             kth = 0.3;
             th0 = 120.0 * radiansPerDegree;
         }
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.Term#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
-     */
-    protected void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
-        AngleTerm t = new AngleTerm(v.get(0),
-                                    v.get(1),
-                                    v.get(2));
-        if (t.myAtoms[0].getPosition().getX() < t.myAtoms[2].getPosition().getX()) {
-            termList.add(t);
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.Term#termLength()
-     */
-    public int termLength() {
-        return 3;
     }
 
     /* (non-Javadoc)

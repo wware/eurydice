@@ -47,9 +47,9 @@ public abstract class JigImpl implements Jig {
      * @return the jig
      */
     public static JigImpl getJig(Structure struc, String jigName) {
-        if (!"net.willware.eurydice.forcefields.mm2.NanocadStyleMM2".equals(jigName))
+        if (!"net.willware.eurydice.forcefields.mm2.MM2".equals(jigName))
             throw new RuntimeException("cannot handle jig named " + jigName);
-        JigImpl j = new net.willware.eurydice.nanocad.NanocadStyleMM2();
+        JigImpl j = new net.willware.eurydice.forcefields.mm2.MM2();
         j.properties = new Properties();
         j.struc = struc;
         return j;

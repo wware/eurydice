@@ -6,7 +6,6 @@
 package net.willware.eurydice.forcefields.mm2;
 
 import java.lang.Math;
-import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
@@ -68,28 +67,6 @@ public class TorsionTerm extends TermImpl {
             }
         if (!found)
             v1 = v2 = v3 = 0.0;
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.TermImpl#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
-     */
-    protected void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
-        TorsionTerm t = new TorsionTerm(v.get(0),
-                                        v.get(1),
-                                        v.get(2),
-                                        v.get(3));
-        if (v1 == 0.0 && v2 == 0.0 && v3 == 0.0)
-            return;
-        if (t.myAtoms[0].getPosition().getX() < t.myAtoms[3].getPosition().getX()) {
-            termList.add(t);
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.TermImpl#termLength()
-     */
-    public int termLength() {
-        return 4;
     }
 
     /* (non-Javadoc)

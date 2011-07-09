@@ -1,4 +1,4 @@
-package net.willware.eurydice.nanocad;
+package net.willware.eurydice.forcefields.mm2;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,29 +6,19 @@ import java.util.List;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.BondChainProcessor;
 import net.willware.eurydice.core.JigImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.core.Structure.AtomProcessor;
-import net.willware.eurydice.elements.Carbon;
 import net.willware.eurydice.forcefields.ForceField;
-import net.willware.eurydice.forcefields.mm2.AngleTerm;
-import net.willware.eurydice.forcefields.mm2.LengthTerm;
-import net.willware.eurydice.forcefields.mm2.LongRangeTerm;
-import net.willware.eurydice.forcefields.mm2.Term;
-import net.willware.eurydice.forcefields.mm2.TorsionTerm;
 
 /**
- * NanoCAD was a hobbyist effort written in 1997, when I didn't know Java well and
- * didn't know how to plan for large structures (exceeding 4 billion atoms). The MM2
- * implementation uses data structures that require a 32-bit atom index, where a
- * 64-bit index would be much more scalable. This force field is not scalable for other
- * reasons as well, including the inefficient {@link #enumerateTerms()} method.<p>
  * Most of what I know about the MM2 force field comes from Chapter 3 of K. Eric
  * Drexler's book <i>Nanosystems</i>, around page 44 if memory serves.
  * @see <a href="http://en.wikipedia.org/wiki/Molecular_modelling">Wikipedia article on molecular modeling</a>
  */
-public class NanocadStyleMM2 extends JigImpl implements ForceField {
+public class MM2 extends JigImpl implements ForceField {
 
     /** A list of the energy terms used to compute forces on the atoms in {@link #struc}. */
     private List<Term> termList;
@@ -43,7 +33,7 @@ public class NanocadStyleMM2 extends JigImpl implements ForceField {
     /**
      * Constructor.
      */
-    public NanocadStyleMM2() {
+    public MM2() {
         termList = new ArrayList<Term>();
         hasTopologyChanged = true;
     }
@@ -93,20 +83,21 @@ public class NanocadStyleMM2 extends JigImpl implements ForceField {
         for (i = 0; i < getStruc().size(); i++)
             getStruc().get(i).rehybridize(bondlist);
         termList = new ArrayList<Term>();
-        /*
-         * Design flaw in the Java language: You can't inherit static methods.
-         * I would love to type something like
-         *   LengthTerm.enumerate(termList, struc);
-         *   AngleTerm.enumerate(termList, struc);
-         *   TorsionTerm.enumerate(termList, struc);
-         *   LongRangeTerm.enumerate(termList, struc);
-         * instead of the silliness below, but it is what it is.
-         */
-        Atom a = new Carbon();
-        new LengthTerm(a, a).enumerate(termList, getStruc());
-        new AngleTerm(a, a, a).enumerate(termList, getStruc());
-        new TorsionTerm(a, a, a, a).enumerate(termList, getStruc());
-        new LongRangeTerm(a, a).enumerate(termList, getStruc());
-        // System.out.println("NUMBER OF TERMS IS " + termList.size());
+        getStruc().processBondChains(new BondChainProcessor() {
+            public void process2(Atom a1, Atom a2) {
+                if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0) {
+                    termList.add(new LengthTerm(a1, a2));
+                    termList.add(new LongRangeTerm(a1, a2));
+                }
+            }
+            public void process3(Atom a1, Atom a2, Atom a3) {
+                if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0)
+                    termList.add(new AngleTerm(a1, a2, a3));
+            }
+            public void process4(Atom a1, Atom a2, Atom a3, Atom a4) {
+                if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0)
+                    termList.add(new TorsionTerm(a1, a2, a3, a4));
+            }
+        });
     }
 }

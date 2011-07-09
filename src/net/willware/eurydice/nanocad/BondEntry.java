@@ -1,9 +1,9 @@
 package net.willware.eurydice.nanocad;
 
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
 import net.willware.eurydice.view.Entry;
 import net.willware.eurydice.view.ScreenSpace;
 
@@ -76,10 +76,10 @@ public class BondEntry extends Entry {
      * @see net.willware.eurydice.view.Entry#quickpaint()
      */
     public void quickDraw() {
-        Color black = engine.getColor("black");
-        Color gray = engine.getColor("gray");
-        Color c1 = myBond.getFirstAtom().color(engine);
-        Color c2 = myBond.getSecondAtom().color(engine);
+        Color black = Color.getColor("black");
+        Color gray = Color.getColor("gray50");
+        Color c1 = myBond.getFirstAtom().color();
+        Color c2 = myBond.getSecondAtom().color();
         // Gray isn't quite dark enough to look good in a wireframe
         if (c1.equals(gray))
             c1 = black;
@@ -96,7 +96,7 @@ public class BondEntry extends Entry {
         double len = xdiff.length();
         Vector v1 = x1.subtract(xdiff.scale(r1 / len));
         Vector v2 = x2.add(xdiff.scale(r2 / len));
-        Color black = engine.getColor("black");
+        Color black = Color.getColor("black");
         Vector perpGapHalf = null;
         if (myBond.order() > 1)
             perpGapHalf = perpendicularGap.scale(0.5);

@@ -12,97 +12,16 @@ import net.willware.eurydice.elements.Hydrogen;
 import net.willware.eurydice.elements.Nitrogen;
 import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
-import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
 public abstract class AtomImpl implements Atom {
-    // hybridizations are a virtual enum
-    /** SP3 hybridization type. */
-    public static final int SP3 = 0;
-
-    /** SP2 hybridization type. */
-    public static final int SP2 = 1;
-
-    /** SP hybridization type. */
-    public static final int SP = 2;
-
-    /** NONE hybridization type. */
-    public static final int NONE = 3;
-
     /** The Constant hybridnames. */
     private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
     /** The id. */
     private UniqueId id;
-
-    // these should be defined within elements, as class variables
-    /**
-     * Name.
-     *
-     * @return the name of the element, such as "Carbon" or "Hydrogen"
-     */
-    public abstract String name();
-
-    /**
-     * Symbol.
-     *
-     * @return the official chemical symbol, such as "C" or "H"
-     */
-    public abstract String symbol();
-
-    /**
-     * Atomic number.
-     *
-     * @return the atomic number of this element
-     */
-    public abstract int atomicNumber();
-
-    /**
-     * Mass.
-     *
-     * @return the mass of this element (ignoring isotopes)
-     */
-    public abstract double mass();
-
-    /**
-     * Color.
-     *
-     * @param de an instance of a DrawingEngine
-     * @return the display color of this atom
-     */
-    public abstract Color color(DrawingEngine de);
-
-    /**
-     * Covalent radius.
-     *
-     * @return the covalent radius of this atom, in angstroms
-     */
-    public abstract double covalentRadius();
-
-    /**
-     * Vdw energy.
-     *
-     * @return the van-der-Waals energy
-     */
-    public abstract double vdwEnergy();
-
-    /**
-     * Vdw radius.
-     *
-     * @return the van-der-Waals radius of this atom
-     */
-    public abstract double vdwRadius();
-
-    /**
-     * Correct num bonds.
-     *
-     * @return the number of single bonds for this atom when SP3-hybridized,
-     * such as 4 for carbon or 3 for nitrogen
-     */
-    public abstract int correctNumBonds();
 
     /**
      * Gets the element.
@@ -153,7 +72,7 @@ public abstract class AtomImpl implements Atom {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<" + symbol() + " " + hybridnames[getHybridization()] + ">";
+        return "<" + symbol() + " " + id + " " + hybridnames[getHybridization()] + ">";
     }
 
     /**

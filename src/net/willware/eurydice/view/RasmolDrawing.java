@@ -24,13 +24,6 @@ public class RasmolDrawing implements DrawingEngine {
     private File scriptFile = null;
 
     /* (non-Javadoc)
-     * @see net.willware.eurydice.view.DrawingEngine#getColor(java.lang.String)
-     */
-    public Color getColor(String name) {
-        throw new RuntimeException("not implemented yet");
-    }
-
-    /* (non-Javadoc)
      * @see net.willware.eurydice.view.DrawingEngine#drawWithForces(net.willware.eurydice.core.Structure, net.willware.eurydice.forcefields.ForceField)
      */
     @Override

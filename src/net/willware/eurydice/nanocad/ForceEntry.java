@@ -1,7 +1,7 @@
 package net.willware.eurydice.nanocad;
 
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
 import net.willware.eurydice.view.Entry;
 import net.willware.eurydice.view.ScreenSpace;
 
@@ -68,7 +68,7 @@ public class ForceEntry extends Entry {
      */
     public void quickDraw() {
         if (force_color == null)
-            force_color = engine.getColor("green");
+            force_color = Color.getColor("green");
         BondEntry.drawBondLine(engine, force_color, ForceEntry.force_color, begin, end);
         // u is perpendicular to the force vector in screen space
         Vector u = new Vector(end.getY() - begin.getY(),

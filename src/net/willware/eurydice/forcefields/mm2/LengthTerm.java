@@ -6,7 +6,6 @@
 package net.willware.eurydice.forcefields.mm2;
 
 import java.lang.Math;
-import java.util.List;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
@@ -59,23 +58,6 @@ public class LengthTerm extends TermImpl {
             ks = 2.0;
             r0 = 1.2;
         }
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.Term#buildTerm(java.util.List, java.util.List, net.willware.eurydice.core.Structure)
-     */
-    protected void buildTerm(List<Atom> v, List<Term> termList, Structure struc) {
-        LengthTerm t = new LengthTerm(v.get(0), v.get(1));
-        if (t.myAtoms[0].getPosition().getX() < t.myAtoms[1].getPosition().getX()) {
-            termList.add(t);
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.forcefields.mm2.Term#termLength()
-     */
-    public int termLength() {
-        return 2;
     }
 
     /* (non-Javadoc)

@@ -31,12 +31,4 @@ public interface DrawingEngine {
      * @param s the structure to be drawn.
      */
     public void quickDraw(Structure s);
-
-    /**
-     * Given a color name like "red" or "white" or "green", return a wrapper containing
-     * the native representation for that color (for example "#FF0000" for HTML).
-     * @param colorname the familiar name of the color
-     * @return a Color wrapper with a native instance of that color
-     */
-    public Color getColor(String colorname);
 }

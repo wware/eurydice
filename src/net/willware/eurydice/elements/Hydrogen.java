@@ -6,9 +6,8 @@
 package net.willware.eurydice.elements;
 
 import net.willware.eurydice.core.AtomImpl;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
-import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * The Class Hydrogen.
@@ -84,8 +83,8 @@ public class Hydrogen extends AtomImpl {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#color(net.willware.eurydice.view.DrawingEngine)
      */
-    public Color color(DrawingEngine de) {
-        return de.getColor("white");
+    public Color color() {
+        return Color.getColor("White");
     }
 
     /* (non-Javadoc)

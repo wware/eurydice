@@ -35,12 +35,20 @@ public interface Structure {
     public void process(AtomProcessor p);
 
     /**
-     * The size of a structure is the number of atoms in it.
+     * The size of a structure is the number of atoms; if the structure is too
+     * large to fit the size into a 32-bit integer (there are at least 2**31 atoms)
+     * then this method returns -1.
      *
-     * @return the number of atoms in this structure
-     * @throws IndexOutOfBoundsException the index out of bounds exception
+     * @return the number of atoms in this structure, or -1
      */
-    public int size() throws IndexOutOfBoundsException;
+    public int size();
+    /**
+     * Returns a list of atoms, if the structure is small enough to fit all the atoms
+     * into a list; if not, returns null
+     *
+     * @return a list of the atoms in this structure, or null
+     */
+    public List<Atom> getAtomList();
     /**
      * Give the index of an atom in the atom list, -1 if not found.
      * @param a the atom to be found
@@ -180,4 +188,11 @@ public interface Structure {
      * @return the substructures list
      */
     public List<Substructure> getSubstructures();
+
+    /**
+     * Process bond chains, used by force fields to figure out what energy terms apply to a structure.
+     *
+     * @param proc an implementor of {@link BondChainProcessor}
+     */
+    public void processBondChains(BondChainProcessor proc);
 }

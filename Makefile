@@ -44,6 +44,8 @@ doc-tarball: overview.html $(PACKAGE_DESCRIPTIONS)
 clean:
 	rm -f *~ $$(find . -name "package.html")
 	rm -rf html overview.html $(PACKAGE_DESCRIPTIONS)
+	# clean up Eclipse detritus
+	rm -f $$(find src -name "*.class")
 
 rsthtml = \
 	rst2html $(2) /tmp/rst.html; \

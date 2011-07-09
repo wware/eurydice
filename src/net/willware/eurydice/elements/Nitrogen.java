@@ -9,9 +9,8 @@ import java.util.List;
 
 import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
-import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * The Class Nitrogen.
@@ -129,8 +128,8 @@ public class Nitrogen extends AtomImpl {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#color(net.willware.eurydice.view.DrawingEngine)
      */
-    public Color color(DrawingEngine de) {
-        return de.getColor("blue");
+    public Color color() {
+        return Color.getColor("Blue");
     }
 
     /* (non-Javadoc)

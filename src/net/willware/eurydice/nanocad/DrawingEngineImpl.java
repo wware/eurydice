@@ -5,9 +5,9 @@ import java.util.List;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.forcefields.ForceField;
-import net.willware.eurydice.view.Color;
 import net.willware.eurydice.view.DrawingEngine;
 import net.willware.eurydice.view.Entry;
 import net.willware.eurydice.view.ScreenSpace;

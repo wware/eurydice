@@ -8,8 +8,6 @@ package net.willware.eurydice.core;
 import java.util.List;
 
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
-import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
@@ -34,28 +32,28 @@ public interface Atom {
      *
      * @return the name of the element, such as "Carbon" or "Hydrogen"
      */
-    public String name();
+    String name();
 
     /**
      * Symbol.
      *
      * @return the official chemical symbol, such as "C" or "H"
      */
-    public abstract String symbol();
+    String symbol();
 
     /**
      * Atomic number.
      *
      * @return the atomic number of this element
      */
-    public abstract int atomicNumber();
+    int atomicNumber();
 
     /**
      * Mass.
      *
      * @return the mass of this element (ignoring isotopes)
      */
-    public abstract double mass();
+    double mass();
 
     /**
      * Color.
@@ -63,28 +61,28 @@ public interface Atom {
      * @param de an instance of a DrawingEngine
      * @return the display color of this atom
      */
-    public abstract Color color(DrawingEngine de);
+    Color color();
 
     /**
      * Covalent radius.
      *
      * @return the covalent radius of this atom, in angstroms
      */
-    public abstract double covalentRadius();
+    double covalentRadius();
 
     /**
      * Vdw energy.
      *
      * @return the van-der-Waals energy
      */
-    public abstract double vdwEnergy();
+    double vdwEnergy();
 
     /**
      * Vdw radius.
      *
      * @return the van-der-Waals radius of this atom
      */
-    public abstract double vdwRadius();
+    double vdwRadius();
 
     /**
      * Correct num bonds.
@@ -92,14 +90,14 @@ public interface Atom {
      * @return the number of single bonds for this atom when SP3-hybridized,
      * such as 4 for carbon or 3 for nitrogen
      */
-    public abstract int correctNumBonds();
+    int correctNumBonds();
 
     // overload me, unless I'm hydrogen
     /**
      * Rehybridize this atom, given a list of bonds.
      * @param bonds a bond list
      */
-    public void rehybridize(List<Bond> bonds);
+    void rehybridize(List<Bond> bonds);
 
     /**
      * Sets the electrostatic charge for an ionized atom. This is not the
@@ -107,14 +105,14 @@ public interface Atom {
      * of differing electronegativity, which forms an electric dipole moment.
      * @param charge the new charge
      */
-    public void setCharge(int charge);
+    void setCharge(int charge);
 
     /**
      * Gets the atom's charge due to ionization.
      *
      * @return the charge
      */
-    public int getCharge();
+    int getCharge();
 
     /**
      * Sets the fractional charge resulting from a bond with an atom
@@ -122,7 +120,7 @@ public interface Atom {
      *
      * @param fractionalCharge the new fractional charge
      */
-    public void setFractionalCharge(double fractionalCharge);
+    void setFractionalCharge(double fractionalCharge);
 
     /**
      * Gets the fractional charge resulting from a bond with an atom
@@ -130,14 +128,14 @@ public interface Atom {
      *
      * @return the fractional charge
      */
-    public double getFractionalCharge();
+    double getFractionalCharge();
 
     /**
      * Sets the hybridization of this atom.
      *
      * @param hybridization the new hybridization
      */
-    public void setHybridization(int hybridization);
+    void setHybridization(int hybridization);
 
     /**
      * Gets the hybridization of this atom using one of the integer constants
@@ -145,7 +143,7 @@ public interface Atom {
      *
      * @return the hybridization as an integer
      */
-    public int getHybridization();
+    int getHybridization();
 
     /**
      * Gets the hybridization of this atom as a string, for example
@@ -153,80 +151,80 @@ public interface Atom {
      *
      * @return the hybridization as a string
      */
-    public String getHybridizationString();
+    String getHybridizationString();
 
     /**
      * Sets the position vector of this atom.
      *
      * @param position the new position
      */
-    public void setPosition(Vector position);
+    void setPosition(Vector position);
 
     /**
      * Move this atom by a delta position vector.
      *
      * @param delta the delta position vector
      */
-    public void move(Vector delta);
+    void move(Vector delta);
 
     /**
      * Gets the position vector of this atom.
      *
      * @return the position
      */
-    public Vector getPosition();
+    Vector getPosition();
 
     /**
      * Sets the previous position of this atom, used in Verlet integration.
      *
      * @param previousPosition the new previous position
      */
-    public void setPreviousPosition(Vector previousPosition);
+    void setPreviousPosition(Vector previousPosition);
 
     /**
      * Gets the previous position of this atom, used in Verlet integration.
      *
      * @return the previous position
      */
-    public Vector getPreviousPosition();
+    Vector getPreviousPosition();
 
     /**
      * Sets the force vector acting on this atom.
      *
      * @param force the new force
      */
-    public void setForce(Vector force);
+    void setForce(Vector force);
 
     /**
      * Set the force vector of this atom to zero.
      */
-    public void zeroForce();
+    void zeroForce();
 
     /**
      * Adds an increment vector to this atom's force vector.
      *
      * @param dforce the dforce
      */
-    public void addForce(Vector dforce);
+    void addForce(Vector dforce);
 
     /**
      * Gets the force vector acting on this atom.
      *
      * @return the force
      */
-    public Vector getForce();
+    Vector getForce();
 
     /**
      * Set the unique ID for this atom.
      *
      * @param id the new unique id
      */
-    public void setUniqueId(UniqueId id);
+    void setUniqueId(UniqueId id);
 
     /**
      * Get the unique ID for this atom.
      *
      * @return the unique ID
      */
-    public UniqueId getUniqueId();
+    UniqueId getUniqueId();
 }

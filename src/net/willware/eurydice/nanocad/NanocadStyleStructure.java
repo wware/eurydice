@@ -54,7 +54,7 @@ public class NanocadStyleStructure extends StructureImpl {
     public void empty() {
         changedSinceLastSave = true;
         setForceField((ForceField) JigImpl.getJig(this,
-                      "net.willware.eurydice.forcefields.mm2.NanocadStyleMM2"));
+                      "net.willware.eurydice.forcefields.mm2.MM2"));
     }
 
     /**
@@ -205,3 +205,4 @@ public class NanocadStyleStructure extends StructureImpl {
         return showForces;
     }
 }
+

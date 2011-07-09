@@ -167,6 +167,13 @@ public class StructureImpl implements Structure {
     }
 
     /* (non-Javadoc)
+     * @see net.willware.eurydice.core.Structure#getAtomList()
+     */
+    public List<Atom> getAtomList() {
+        return atomList;
+    }
+
+    /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#verletStep(double)
      */
     public void verletStep(final double dt) {
@@ -305,6 +312,43 @@ public class StructureImpl implements Structure {
         return bondList;
     }
 
+    /* (non-Javadoc)
+     * @see net.willware.eurydice.core.Structure#processBondChains(net.willware.eurydice.core.BondChainProcessor)
+     */
+    public void processBondChains(BondChainProcessor proc) {
+        inferBonds();
+        for (Atom a : atomList)
+            processBondChainHelper(a, proc, 3);
+    }
+
+    private void processBondChainHelper(final Atom a, final BondChainProcessor proc, int n) {
+        if (n == 0)
+            return;
+        BondChainProcessor proc2 = new BondChainProcessor() {
+            public void process2(Atom w, Atom x) {
+                proc.process3(a, w, x);
+            }
+            public void process3(Atom w, Atom x, Atom y) {
+                proc.process4(a, w, x, y);
+            }
+            public void process4(Atom w, Atom x, Atom y, Atom z) {
+                // do nothing
+            }
+            public boolean alreadyHave(Atom w) {
+                return proc.alreadyHave(w) || (w == a);
+            }
+        };
+        for (Bond b: previousBondList) {
+            if (b.contains(a)) {
+                Atom x = b.otherAtom(a);
+                if (!proc2.alreadyHave(x)) {
+                    proc.process2(a, x);
+                    processBondChainHelper(x, proc2, n - 1);
+                }
+            }
+        }
+    }
+
     /**
      * Adds an atom to this structure.
      *
@@ -427,6 +471,20 @@ public class StructureImpl implements Structure {
          */
         public int toInteger() {
             return myvalue;
+        }
+
+        @Override
+        public int compareTo(UniqueId arg) {
+            try {
+                UniqueIdImpl other = (UniqueIdImpl) arg;
+                if (myvalue < other.myvalue)
+                    return -1;
+                else if (myvalue > other.myvalue)
+                    return -1;
+                return 0;
+            } catch (ClassCastException e) {
+                return -1;
+            }
         }
     }
 

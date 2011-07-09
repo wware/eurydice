@@ -4,13 +4,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
-import net.willware.eurydice.view.Color;
+import net.willware.eurydice.core.Color;
 
 // TODO: Auto-generated Javadoc
 /**
  * The Class AWTEngine.
  */
-public class AWTEngine extends DrawingEngineImpl {
+public class AWTEngine extends DrawingEngineImpl implements Color.ColorFactory {
 
     /** The graphics. */
     private Graphics2D graphics;
@@ -18,10 +18,15 @@ public class AWTEngine extends DrawingEngineImpl {
     /**
      * The Class AwtColor.
      */
-    private class AwtColor implements Color {
+    private class AwtColor extends Color {
+        private java.awt.Color acolor;
+        public AwtColor(final int red, final int green, final int blue) {
+            acolor = new java.awt.Color(red, green, blue);
+        }
+    }
 
-        /** The acolor. */
-        java.awt.Color acolor;
+    public Color getColor(int red, int green, int blue) {
+        return new AwtColor(red, green, blue);
     }
 
     /** The current color. */
@@ -33,7 +38,7 @@ public class AWTEngine extends DrawingEngineImpl {
      * @param g the g
      */
     public AWTEngine(Graphics g) {
-        currentColor = new AwtColor();
+        Color.setFactory(this);
         currentColor.acolor = java.awt.Color.white;
         graphics = (Graphics2D) g;
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -62,33 +67,6 @@ public class AWTEngine extends DrawingEngineImpl {
     @Override
     public void fillCircle(double x, double y, double r) {
         graphics.fillOval((int) x, (int) y, (int) r, (int) r);
-    }
-
-    /* (non-Javadoc)
-     * @see net.willware.eurydice.view.DrawingEngine#getColor(java.lang.String)
-     */
-    @Override
-    public Color getColor(String colorname) {
-        AwtColor ac = new AwtColor();
-        if ("white".equals(colorname))
-            ac.acolor = java.awt.Color.white;
-        else if ("black".equals(colorname))
-            ac.acolor = java.awt.Color.black;
-        else if ("red".equals(colorname))
-            ac.acolor = java.awt.Color.red;
-        else if ("green".equals(colorname))
-            ac.acolor = java.awt.Color.green;
-        else if ("blue".equals(colorname))
-            ac.acolor = java.awt.Color.blue;
-        else if ("yellow".equals(colorname))
-            ac.acolor = java.awt.Color.yellow;
-        else if ("gray".equals(colorname))
-            ac.acolor = java.awt.Color.gray;
-        else if ("orange".equals(colorname))
-            ac.acolor = java.awt.Color.orange;
-        else
-            throw new RuntimeException("not handling this color: " + colorname);
-        return ac;
     }
 
     /* (non-Javadoc)

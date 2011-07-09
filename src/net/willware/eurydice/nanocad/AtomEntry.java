@@ -1,6 +1,7 @@
 package net.willware.eurydice.nanocad;
 
 import net.willware.eurydice.core.Atom;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.view.Entry;
@@ -22,7 +23,9 @@ public class AtomEntry extends Entry {
 
     /** The engine. */
     private DrawingEngineImpl engine;
-    //private boolean bogus;
+
+    /** This flag tells you if you have the wrong number of bonds */
+    private boolean bogus;
     // empirical good-looking multiplier
     /*package*/ /** The Constant radiusRatio. */
     static final double radiusRatio = 0.6;
@@ -43,6 +46,7 @@ public class AtomEntry extends Entry {
                  * screenspace.getZoomFactor(), screencoords.getZ());
         screencoords = screencoords.subtract(new Vector(radius, radius, 0.0));
         //bogus = a.currentNumBonds() != a.correctNumBonds();
+        bogus = false;   // currentNumBonds not implemented at the moment
     }
 
     // perspective preserves Z ordering
@@ -64,12 +68,12 @@ public class AtomEntry extends Entry {
      * @see net.willware.eurydice.view.Entry#paint()
      */
     public void draw() {
-        engine.setCurrentColor(atom.color(engine));
+        engine.setCurrentColor(atom.color());
         engine.fillCircle(screencoords.getX(), screencoords.getY(), 2 * radius);
-        //if (bogus)
-        //    engine.setCurrentColor(engine.getColor("orange"));
-        //else
-        engine.setCurrentColor(engine.getColor("black"));
+        if (bogus)
+            engine.setCurrentColor(Color.getColor("orange"));
+        else
+            engine.setCurrentColor(Color.getColor("black"));
         engine.drawCircle(screencoords.getX(), screencoords.getY(), 2 * radius);
     }
 }

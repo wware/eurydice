@@ -9,9 +9,8 @@ import java.util.List;
 
 import net.willware.eurydice.core.AtomImpl;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.Color;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Color;
-import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * In the great drama of life on Earth, carbon is one of the good guys.
@@ -140,8 +139,8 @@ public class Carbon extends AtomImpl {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Atom#color(net.willware.eurydice.view.DrawingEngine)
      */
-    public Color color(DrawingEngine de) {
-        return de.getColor("gray");
+    public Color color() {
+        return Color.getColor("Gray30");
     }
 
     /* (non-Javadoc)
