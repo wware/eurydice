@@ -29,12 +29,16 @@ public class MM2 extends JigImpl implements ForceField {
      * be accurately computed again.
      */
     private boolean hasTopologyChanged;
+    
+    private LongRangeForces longRange;
 
     /**
      * Constructor.
      */
-    public MM2() {
+    public MM2(Structure struc) {
+    	super(struc);
         termList = new ArrayList<Term>();
+        longRange = new LongRangeForces(struc);
         hasTopologyChanged = true;
     }
 
@@ -59,19 +63,19 @@ public class MM2 extends JigImpl implements ForceField {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.IJig#computeForces(net.willware.eurydice.core.Structure)
      */
-    public void computeForces(Structure struc) {
-        //System.out.println("COMPUTE FORCES");
+    public void computeForces() {
         if (hasTopologyChanged) {
             hasTopologyChanged = false;
             enumerateTerms();
         }
-        struc.process(new AtomProcessor() {
+        getStruc().process(new AtomProcessor() {
             public void process(Atom a) {
                 a.zeroForce();
             }
         });
         for (int i = 0; i < termList.size(); i++)
-            termList.get(i).computeForces(struc);
+            termList.get(i).computeForces(getStruc());
+        longRange.computeForces();
     }
 
     /**
@@ -87,12 +91,15 @@ public class MM2 extends JigImpl implements ForceField {
             public void process2(Atom a1, Atom a2) {
                 if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0) {
                     termList.add(new LengthTerm(a1, a2));
-                    termList.add(new LongRangeTerm(a1, a2));
+                    // termList.add(new LongRangeTerm(a1, a2));
+                    longRange.addExclusion(a1, a2);
                 }
             }
             public void process3(Atom a1, Atom a2, Atom a3) {
-                if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0)
+                if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0) {
                     termList.add(new AngleTerm(a1, a2, a3));
+                    longRange.addExclusion(a1, a3);
+                }
             }
             public void process4(Atom a1, Atom a2, Atom a3, Atom a4) {
                 if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0)

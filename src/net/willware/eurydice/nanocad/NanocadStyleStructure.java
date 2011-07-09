@@ -99,7 +99,7 @@ public class NanocadStyleStructure extends StructureImpl {
     public void computeInternalForces() {
         ForceField ff = getForceField();
         if (ff != null)
-            ff.computeForces(this);
+            ff.computeForces();
     }
 
     /**

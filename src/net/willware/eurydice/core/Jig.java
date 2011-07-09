@@ -1,5 +1,7 @@
 package net.willware.eurydice.core;
 
+import java.util.List;
+
 /**
  * A jig can be used to apply external forces to the atoms in a structure, or to perform
  * measurements on the structure. Examples of external forces would be anchors that hold
@@ -15,7 +17,14 @@ public interface Jig {
      *
      * @param struc the struc
      */
-    public void computeForces(Structure struc);
+    public void computeForces();
+
+    /**
+     * Return a list of indices for the atoms this jig is connected to.
+     *
+     * @return the list
+     */
+    public List<UniqueId> atomIndices();
 
     /**
      * Jigs have properties.

@@ -104,7 +104,7 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
         final List<Entry> dlist = new ArrayList<Entry>();
         final List<Bond> bondList = struc.inferBonds();
         if (ff != null) {
-            ff.computeForces(struc);
+            ff.computeForces();
         }
         struc.process(new Structure.AtomProcessor() {
             public void process(Atom a) {

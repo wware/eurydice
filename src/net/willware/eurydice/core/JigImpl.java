@@ -1,7 +1,5 @@
 package net.willware.eurydice.core;
 
-import java.util.List;
-
 /**
  * A jig can be used to apply external forces to the atoms in a structure, or to perform
  * measurements on the structure. Examples of external forces would be anchors that hold
@@ -38,6 +36,10 @@ public abstract class JigImpl implements Jig {
      * }
      * }
      */
+    
+    protected JigImpl(Structure struc) {
+    	this.struc = struc;
+    }
 
     /**
      * Creates an instance of a jig, given the name
@@ -49,26 +51,10 @@ public abstract class JigImpl implements Jig {
     public static JigImpl getJig(Structure struc, String jigName) {
         if (!"net.willware.eurydice.forcefields.mm2.MM2".equals(jigName))
             throw new RuntimeException("cannot handle jig named " + jigName);
-        JigImpl j = new net.willware.eurydice.forcefields.mm2.MM2();
+        JigImpl j = new net.willware.eurydice.forcefields.mm2.MM2(struc);
         j.properties = new Properties();
-        j.struc = struc;
         return j;
     }
-
-    /**
-     * Return a list of indices for the atoms this jig is connected to.
-     *
-     * @return the list
-     */
-    public abstract List<UniqueId> atomIndices();
-
-    /**
-     * Compute a map of force vector based on atom positions. The keys are atom indices
-     * and the values are the force vectors applicable to each atom.
-     *
-     * @param struc the struc
-     */
-    public abstract void computeForces(Structure struc);
 
     /**
      * Jigs have properties.
