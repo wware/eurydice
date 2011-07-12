@@ -15,12 +15,12 @@ import net.willware.eurydice.math.Vector;
 /**
  * The Class Oxygen.
  */
-public class Oxygen extends AtomImpl {
+public class Sulfur extends AtomImpl {
 
     /**
      * Instantiates a new oxygen.
      */
-    public Oxygen() {
+    public Sulfur() {
         setHybridization(SP3);
     }
 
@@ -29,7 +29,7 @@ public class Oxygen extends AtomImpl {
      *
      * @param v the v
      */
-    public Oxygen(Vector v) {
+    public Sulfur(Vector v) {
         setHybridization(SP3);
         setPosition(v);
     }
@@ -39,7 +39,7 @@ public class Oxygen extends AtomImpl {
      *
      * @param h the h
      */
-    public Oxygen(int h) {
+    public Sulfur(int h) {
         setHybridization(h);
     }
 
@@ -49,7 +49,7 @@ public class Oxygen extends AtomImpl {
      * @param h the h
      * @param v the v
      */
-    public Oxygen(int h, Vector v) {
+    public Sulfur(int h, Vector v) {
         setHybridization(h);
         setPosition(v);
     }
@@ -83,43 +83,35 @@ public class Oxygen extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#covalentRadius()
      */
     public double covalentRadius() {
-        switch (getHybridization()) {
-        default:
-        case SP3:
-            return 0.74;
-        case SP2:
-            return 0.62;
-        case SP:
-            return 0.55;
-        }
+    	return 1.05;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#name()
      */
     public String name() {
-        return "Oxygen";
+        return "Sulfur";
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#symbol()
      */
     public String symbol() {
-        return "O";
+        return "S";
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#atomicNumber()
      */
     public int atomicNumber() {
-        return 8;
+        return 16;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#mass()
      */
     public double mass() {
-        return 16.0;
+        return 32.065;
     }
 
     /* (non-Javadoc)
@@ -133,17 +125,14 @@ public class Oxygen extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#vdwEnergy()
      */
     public double vdwEnergy() {
-        if (getHybridization() == SP3)
-            return 0.406;
-        else
-            return 0.536;
+    	return 0.536;   // TODO - correct value??
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#vdwRadius()
      */
     public double vdwRadius() {
-        return 1.4;
+        return 1.8;
     }
 
     /* (non-Javadoc)

@@ -15,12 +15,12 @@ import net.willware.eurydice.math.Vector;
 /**
  * The Class Oxygen.
  */
-public class Oxygen extends AtomImpl {
+public class Fluorine extends AtomImpl {
 
     /**
      * Instantiates a new oxygen.
      */
-    public Oxygen() {
+    public Fluorine() {
         setHybridization(SP3);
     }
 
@@ -29,7 +29,7 @@ public class Oxygen extends AtomImpl {
      *
      * @param v the v
      */
-    public Oxygen(Vector v) {
+    public Fluorine(Vector v) {
         setHybridization(SP3);
         setPosition(v);
     }
@@ -39,7 +39,7 @@ public class Oxygen extends AtomImpl {
      *
      * @param h the h
      */
-    public Oxygen(int h) {
+    public Fluorine(int h) {
         setHybridization(h);
     }
 
@@ -49,7 +49,7 @@ public class Oxygen extends AtomImpl {
      * @param h the h
      * @param v the v
      */
-    public Oxygen(int h, Vector v) {
+    public Fluorine(int h, Vector v) {
         setHybridization(h);
         setPosition(v);
     }
@@ -70,11 +70,8 @@ public class Oxygen extends AtomImpl {
         BondInfo bi = this.getMyBonds(bonds);
         switch (bi.singles) {
         default:
-        case 2:
-            setHybridization(SP3);
-            break;
         case 1:
-            setHybridization(SP2);
+            setHybridization(SP3);
             break;
         }
     }
@@ -83,73 +80,62 @@ public class Oxygen extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#covalentRadius()
      */
     public double covalentRadius() {
-        switch (getHybridization()) {
-        default:
-        case SP3:
-            return 0.74;
-        case SP2:
-            return 0.62;
-        case SP:
-            return 0.55;
-        }
+    	return 0.6;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#name()
      */
     public String name() {
-        return "Oxygen";
+        return "Fluorine";
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#symbol()
      */
     public String symbol() {
-        return "O";
+        return "F";
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#atomicNumber()
      */
     public int atomicNumber() {
-        return 8;
+        return 9;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#mass()
      */
     public double mass() {
-        return 16.0;
+        return 19.0;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#color(net.willware.eurydice.view.DrawingEngine)
      */
     public Color color() {
-        return Color.getColor("Red");
+        return Color.getColor("Green");
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#vdwEnergy()
      */
     public double vdwEnergy() {
-        if (getHybridization() == SP3)
-            return 0.406;
-        else
-            return 0.536;
+    	return 0.6;   // TODO what should this really be??
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#vdwRadius()
      */
     public double vdwRadius() {
-        return 1.4;
+        return 1.47;
     }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.AtomImpl#correctNumBonds()
      */
     public int correctNumBonds() {
-        return 2;
+        return 1;
     }
 }
