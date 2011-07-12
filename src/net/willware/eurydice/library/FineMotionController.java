@@ -5222,6 +5222,7 @@ public class FineMotionController extends NanocadStyleStructure {
                 new Vector(3.087000, 2.836000, -26.598000));
         addAtom(new Hydrogen(),
                 new Vector(0.558000, 4.009000, -24.173000));
+        centerAtoms();
         addBond(0, 942);
         addBond(1, 943);
         addBond(2, 944);
