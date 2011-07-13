@@ -108,34 +108,43 @@ public class Octree extends Region {
             children[key].addAtom(a);
         }
     }
+    
+    private boolean isLeaf() {
+    	return halfDimension < granularity;
+    }
 
     /**
-     * Given a rectangular region of 3-space, get a list of all the atoms
-     * in that region.
+     * Given a rectangular region of 3-space, add all the atoms
+     * in that region to a list.
      *
      * @param r the rectangular region
-     * @param lst the atoms in that region
-     * TODO - Looks buggy, never uses X_PARTIAL, Y_PARTIAL, Z_PARTIAL, TEST THOROUGHLY
+     * @param lst the list to be added
      */
     public void getAtoms(Region r, List<Atom> lst) {
-        List<Atom> retval = new ArrayList<Atom>();
-        int coverage = r.covers(this);
-        if (coverage == 0)
-            return;
-        if (coverage == (X_COMPLETE | Y_COMPLETE | Z_COMPLETE)) {
-            getAllAtoms(retval);
-            return;
+    	if (r.exterior(this))
+    		return;
+        else if (r.interior(this)) {
+            getAllAtoms(lst);
         }
-        for (int i = 0; i < 8; i++)
-            if (children[i] != null)
-                children[i].getAtoms(r, lst);
+    	else if (isLeaf()) {
+        	for (Atom a: atoms)
+        		if (r.interior(a.getPosition()) && !lst.contains(a))
+        			lst.add(a);
+        }
+        else {
+        	for (int i = 0; i < 8; i++)
+        		if (children[i] != null)
+        			children[i].getAtoms(r, lst);
+        }
     }
 
     private void getAllAtoms(List<Atom> lst) {
-        if (halfDimension < granularity) {
+        if (isLeaf()) {
             for (Atom a : atoms)
-                lst.add(a);
-        } else if (children != null) {
+            	if (!lst.contains(a))
+            		lst.add(a);
+        }
+        else {
             for (int i = 0; i < 8; i++)
                 if (children[i] != null)
                     children[i].getAllAtoms(lst);
