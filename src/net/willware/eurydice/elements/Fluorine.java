@@ -80,7 +80,7 @@ public class Fluorine extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#covalentRadius()
      */
     public double covalentRadius() {
-    	return 0.6;
+        return 0.6;
     }
 
     /* (non-Javadoc)
@@ -122,7 +122,7 @@ public class Fluorine extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#vdwEnergy()
      */
     public double vdwEnergy() {
-    	return 0.6;   // TODO what should this really be??
+        return 0.6;   // TODO what should this really be??
     }
 
     /* (non-Javadoc)

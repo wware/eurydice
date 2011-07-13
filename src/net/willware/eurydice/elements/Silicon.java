@@ -97,7 +97,7 @@ public class Silicon extends AtomImpl {
      * @see net.willware.eurydice.core.Atom#covalentRadius()
      */
     public double covalentRadius() {
-    	return 1.11;
+        return 1.11;
     }
 
     /* (non-Javadoc)

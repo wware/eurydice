@@ -25,53 +25,52 @@ public class LongRangeForces {
 
     /** The bonds. */
     List<Bond> bonds;
-    
+
     public LongRangeForces(Structure struc) {
-    	this.struc = struc;
+        this.struc = struc;
     }
 
     private class AtomPair {
-    	private Atom a1;
-    	private Atom a2;
-    	public AtomPair(Atom a1, Atom a2) {
-        	if (a1.getUniqueId().compareTo(a2.getUniqueId()) >= 0) {
-        		Atom temp = a2;
-        		a2 = a1;
-        		a1 = temp;
-        	}
-    		this.a1 = a1;
-    		this.a2 = a2;
-    	}
-    	public String toString() {
-    		return "<Pair " + a1 + " " + a2 + ">";    		
-    	}
-    	public boolean equals(Object obj) {
-    		try {
-    			AtomPair pair2 = (AtomPair) obj;
-    			return (a1.getUniqueId().equals(pair2.a1.getUniqueId()) &&
-    					a2.getUniqueId().equals(pair2.a2.getUniqueId()));
-    		}
-    		catch (Exception e) {
-    			return false;
-    		}
-    	}
+        private Atom a1;
+        private Atom a2;
+        public AtomPair(Atom a1, Atom a2) {
+            if (a1.getUniqueId().compareTo(a2.getUniqueId()) >= 0) {
+                Atom temp = a2;
+                a2 = a1;
+                a1 = temp;
+            }
+            this.a1 = a1;
+            this.a2 = a2;
+        }
+        public String toString() {
+            return "<Pair " + a1 + " " + a2 + ">";
+        }
+        public boolean equals(Object obj) {
+            try {
+                AtomPair pair2 = (AtomPair) obj;
+                return (a1.getUniqueId().equals(pair2.a1.getUniqueId()) &&
+                        a2.getUniqueId().equals(pair2.a2.getUniqueId()));
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
-    
+
     private ArrayList<AtomPair> exclusions = new ArrayList<AtomPair>();
-    
+
     public void addExclusion(Atom a1, Atom a2) {
-    	AtomPair pair = new AtomPair(a1, a2);
-    	// if (DEBUG) System.out.println("add " + pair);
-    	if (!exclusions.contains(pair))
-    		exclusions.add(pair);
+        AtomPair pair = new AtomPair(a1, a2);
+        // if (DEBUG) System.out.println("add " + pair);
+        if (!exclusions.contains(pair))
+            exclusions.add(pair);
     }
-    
+
     public boolean hasExclusion(Atom a1, Atom a2) {
-    	AtomPair pair = new AtomPair(a1, a2);
-    	// if (DEBUG) System.out.println("check " + pair);
-    	return exclusions.contains(pair);
+        AtomPair pair = new AtomPair(a1, a2);
+        // if (DEBUG) System.out.println("check " + pair);
+        return exclusions.contains(pair);
     }
-    
+
     // TODO figure out correct constant for dipole charge assignments
     private static final double dontKnowCorrectUnits = 1.0;
 
@@ -113,7 +112,7 @@ public class LongRangeForces {
             }
         }
     }
-    
+
     private static final boolean DEBUG = false;
 
     /* (non-Javadoc)
@@ -126,10 +125,10 @@ public class LongRangeForces {
             for (j = i + 1; j < n; j++) {
                 Atom a2 = struc.get(j);
                 if (!hasExclusion(a1, a2)) {
-                	if (DEBUG)
-                		System.out.println(a1 + " " + a2);
-                	else
-                		computeForces(a1, a2);
+                    if (DEBUG)
+                        System.out.println(a1 + " " + a2);
+                    else
+                        computeForces(a1, a2);
                 }
             }
         }

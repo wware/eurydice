@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<project name="eurydice" default="run-tests" basedir=".">
+<project name="eurydice" default="jar" basedir=".">
   <property name="junit" location="/usr/share/java/junit.jar" />
   <property name="mongo" location="/usr/share/java/mongo-1.2.jar" />
+  <!-- Arguments to gwtc and devmode targets -->
+  <property name="gwt.args" value="" />
+  <!-- Configure path to GWT SDK -->
+  <property name="gwt.sdk" location="/home/wware/gwt-2.3.0" />
 
   <path id="project.class.path">
+    <pathelement location="${gwt.sdk}/gwt-user.jar"/>
+    <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
     <pathelement location="${junit}" />
     <!--pathelement location="${mongo}" /-->
     <pathelement location="eurydice.jar" />
@@ -12,10 +18,13 @@
   <target name="clean">
     <delete dir="html" failonerror="false" />
     <delete dir="classes" failonerror="false" />
+    <delete dir="lib" failonerror="false" />
+    <delete dir="war" failonerror="false" />
     <delete file="overview.html" failonerror="false" />
     <delete file="eurydice.jar" failonerror="false" />
     <delete>
       <fileset dir="src" includes="**/package.html" />
+      <fileset dir="src" includes="**/*.class" />  <!-- Eclipse detritus -->
     </delete>
     <delete>
       <fileset dir="." includes="**/*.orig" />
@@ -29,6 +38,29 @@
            debug="true" debuglevel="lines,vars,source">
       <classpath refid="project.class.path"/>
     </javac>
+  </target>
+
+  <!-- Verify that a subset of the Eurydice code can be successfully
+    translated to Javascript using GWT, for use on a website. -->
+  <target name="gwt" depends="javac" description="Test GWT-safe sections of code">
+    <mkdir dir="lib" />
+    <copy todir="lib" file="${gwt.sdk}/gwt-servlet.jar" />
+    <copy todir="lib" file="${gwt.sdk}/gwt-servlet-deps.jar" />
+    <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+      <classpath>
+        <pathelement location="src"/>
+        <path refid="project.class.path"/>
+        <pathelement location="/home/wware/gwt-2.3.0/validation-api-1.0.0.GA.jar" />
+        <pathelement location="/home/wware/gwt-2.3.0/validation-api-1.0.0.GA-sources.jar" />
+      </classpath>
+      <!-- add jvmarg -Xss16M or similar if you see a StackOverflowError -->
+      <jvmarg value="-Xmx256M"/>
+      <arg line="-war"/>
+      <arg value="war"/>
+      <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+      <arg line="${gwt.args}"/>
+      <arg value="net.willware.eurydice.eurydice"/>
+    </java>
   </target>
 
   <target name="jar" depends="javac" description="Create a jar file">

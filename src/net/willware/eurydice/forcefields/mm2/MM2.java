@@ -29,14 +29,14 @@ public class MM2 extends JigImpl implements ForceField {
      * be accurately computed again.
      */
     private boolean hasTopologyChanged;
-    
+
     private LongRangeForces longRange;
 
     /**
      * Constructor.
      */
     public MM2(Structure struc) {
-    	super(struc);
+        super(struc);
         termList = new ArrayList<Term>();
         longRange = new LongRangeForces(struc);
         hasTopologyChanged = true;

@@ -83,7 +83,7 @@ public class Sulfur extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#covalentRadius()
      */
     public double covalentRadius() {
-    	return 1.05;
+        return 1.05;
     }
 
     /* (non-Javadoc)
@@ -125,7 +125,7 @@ public class Sulfur extends AtomImpl {
      * @see net.willware.eurydice.core.AtomImpl#vdwEnergy()
      */
     public double vdwEnergy() {
-    	return 0.536;   // TODO - correct value??
+        return 0.536;   // TODO - correct value??
     }
 
     /* (non-Javadoc)

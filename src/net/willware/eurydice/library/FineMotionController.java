@@ -4268,7 +4268,7 @@ public class FineMotionController extends NanocadStyleStructure {
                 new Vector(-12.681000, 8.658000, 3.789000));
         helper();
     }
-    
+
     private void helper() {
         addAtom(new Carbon(Atom.SP3),
                 new Vector(-11.121000, 8.658000, 3.806000));

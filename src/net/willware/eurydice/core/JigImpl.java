@@ -36,9 +36,9 @@ public abstract class JigImpl implements Jig {
      * }
      * }
      */
-    
+
     protected JigImpl(Structure struc) {
-    	this.struc = struc;
+        this.struc = struc;
     }
 
     /**
