@@ -79,22 +79,22 @@ public class Region {
     }
 
     public boolean interior(Vector v) {
-    	return (minCorner.getX() < v.getX() && v.getX() < maxCorner.getX() &&
-    			minCorner.getY() < v.getY() && v.getY() < maxCorner.getY() &&
-    			minCorner.getY() < v.getY() && v.getY() < maxCorner.getY());
+        return (minCorner.getX() < v.getX() && v.getX() < maxCorner.getX() &&
+                minCorner.getY() < v.getY() && v.getY() < maxCorner.getY() &&
+                minCorner.getY() < v.getY() && v.getY() < maxCorner.getY());
     }
 
     public boolean interior(Region other) {
-    	return interior(other.minCorner) && interior(other.maxCorner);
+        return interior(other.minCorner) && interior(other.maxCorner);
     }
 
     public boolean exterior(Vector v) {
-    	return ((minCorner.getX() >= v.getX() || v.getX() >= maxCorner.getX()) &&
-    			(minCorner.getY() >= v.getY() || v.getY() >= maxCorner.getY()) &&
-    			(minCorner.getY() >= v.getY() || v.getY() >= maxCorner.getY()));
+        return ((minCorner.getX() >= v.getX() || v.getX() >= maxCorner.getX()) &&
+                (minCorner.getY() >= v.getY() || v.getY() >= maxCorner.getY()) &&
+                (minCorner.getY() >= v.getY() || v.getY() >= maxCorner.getY()));
     }
 
     public boolean exterior(Region other) {
-    	return exterior(other.minCorner) && exterior(other.maxCorner);
+        return exterior(other.minCorner) && exterior(other.maxCorner);
     }
 }

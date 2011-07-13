@@ -84,8 +84,8 @@ public class Quaternion {
         double g = other.imaginaryPart.getY(), h = other.imaginaryPart.getZ();
         Quaternion q = new Quaternion(a*e - b*f - c*g - d*h,
                                       new Vector(a*f + b*e + c*h - d*g,
-                                                 a*g - b*h + c*e + d*f,
-                                                 a*h + b*g - c*f + d*e));
+                                              a*g - b*h + c*e + d*f,
+                                              a*h + b*g - c*f + d*e));
         if (units != null && other.units != null) {
             q.units = units.times(other.units);
         }

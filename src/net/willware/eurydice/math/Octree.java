@@ -108,9 +108,9 @@ public class Octree extends Region {
             children[key].addAtom(a);
         }
     }
-    
+
     private boolean isLeaf() {
-    	return halfDimension < granularity;
+        return halfDimension < granularity;
     }
 
     /**
@@ -121,30 +121,27 @@ public class Octree extends Region {
      * @param lst the list to be added
      */
     public void getAtoms(Region r, List<Atom> lst) {
-    	if (r.exterior(this))
-    		return;
+        if (r.exterior(this))
+            return;
         else if (r.interior(this)) {
             getAllAtoms(lst);
-        }
-    	else if (isLeaf()) {
-        	for (Atom a: atoms)
-        		if (r.interior(a.getPosition()) && !lst.contains(a))
-        			lst.add(a);
-        }
-        else {
-        	for (int i = 0; i < 8; i++)
-        		if (children[i] != null)
-        			children[i].getAtoms(r, lst);
+        } else if (isLeaf()) {
+            for (Atom a: atoms)
+                if (r.interior(a.getPosition()) && !lst.contains(a))
+                    lst.add(a);
+        } else {
+            for (int i = 0; i < 8; i++)
+                if (children[i] != null)
+                    children[i].getAtoms(r, lst);
         }
     }
 
     private void getAllAtoms(List<Atom> lst) {
         if (isLeaf()) {
             for (Atom a : atoms)
-            	if (!lst.contains(a))
-            		lst.add(a);
-        }
-        else {
+                if (!lst.contains(a))
+                    lst.add(a);
+        } else {
             for (int i = 0; i < 8; i++)
                 if (children[i] != null)
                     children[i].getAllAtoms(lst);

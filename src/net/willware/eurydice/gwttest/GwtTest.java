@@ -10,10 +10,10 @@ import net.willware.eurydice.math.Vector;
 import com.google.gwt.core.client.EntryPoint;
 
 public class GwtTest implements EntryPoint {
-	private Atom a;
-	private StructureImpl s;
-	private Quaternion q;
-	private MM2 mm2;
+    private Atom a;
+    private StructureImpl s;
+    private Quaternion q;
+    private MM2 mm2;
     public void onModuleLoad() {
         a = new Carbon();
         s = new StructureImpl(null);
@@ -22,16 +22,16 @@ public class GwtTest implements EntryPoint {
         mm2 = new MM2(s);
         q.setImaginary(q.rotate(new Vector(3.1415926, 2.718281828, 1.2345678)));
     }
-	public Atom getA() {
-		return a;
-	}
-	public StructureImpl getS() {
-		return s;
-	}
-	public Quaternion getQ() {
-		return q;
-	}
-	public MM2 getMm2() {
-		return mm2;
-	}
+    public Atom getA() {
+        return a;
+    }
+    public StructureImpl getS() {
+        return s;
+    }
+    public Quaternion getQ() {
+        return q;
+    }
+    public MM2 getMm2() {
+        return mm2;
+    }
 }
