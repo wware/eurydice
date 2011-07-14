@@ -1,4 +1,4 @@
-package net.willware.eurydice.view;
+package net.willware.eurydice.externals;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.serialization.PdbFile;
+import net.willware.eurydice.view.DrawingEngine;
 
 /**
  * A drawing engine that exports a file to RasMol, which does a lovely job.

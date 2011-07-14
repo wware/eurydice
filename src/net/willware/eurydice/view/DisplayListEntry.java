@@ -5,12 +5,12 @@
 
 package net.willware.eurydice.view;
 
-import java.util.List;
-
 /**
- * An entry in a display list, for drawing purposes.
+ * An entry in a display list, for use in the <a href="http://en.wikipedia.org/wiki/Painter's_algorithm">Painter's
+ * algorithm</a> where opaque things are drawn starting with the ones in the back, so that as the front ones
+ * are drawn later, they obscure the things behind them.
  */
-public abstract class Entry {
+public abstract class DisplayListEntry {
     /**
      * The Z coordinate of the object (usually its center of gravity), which allows objects to be
      * Z-sorted for the painter's algorithm.
@@ -37,39 +37,36 @@ public abstract class Entry {
      *
      * @param dlist the dlist
      */
-    public static void zsort(List<Entry> dlist) {
-        zsort(dlist, 0, dlist.size() - 1);
+    public static void zsort(DisplayListEntry[] dlist) {
+        zsort(dlist, 0, dlist.length - 1);
     }
 
-    /**
-     * Zsort.
-     *
-     * @param v the v
-     * @param lo0 the lo0
-     * @param hi0 the hi0
+    /*
+     * All the work of Z sort is really done in this helper method. This is an implementation of
+     * quicksort.
      */
-    private static void zsort(List<Entry> v, int lo0, int hi0) {
+    private static void zsort(DisplayListEntry[] dlst, int lo0, int hi0) {
         int lo = lo0;
         int hi = hi0;
         if (hi0 > lo0) {
-            double mid = v.get((lo0 + hi0) / 2).zvalue();
+            double mid = dlst[(lo0 + hi0) / 2].zvalue();
             while (lo <= hi) {
-                while (lo < hi0 && v.get(lo).zvalue() < mid)
+                while (lo < hi0 && dlst[lo].zvalue() < mid)
                     ++lo;
-                while (hi > lo0 && v.get(hi).zvalue() > mid)
+                while (hi > lo0 && dlst[hi].zvalue() > mid)
                     --hi;
                 if (lo <= hi) {
-                    Entry temp = v.get(lo);
-                    v.set(lo, v.get(hi));
-                    v.set(hi, temp);
+                    DisplayListEntry temp = dlst[lo];
+                    dlst[lo] = dlst[hi];
+                    dlst[hi] = temp;
                     ++lo;
                     --hi;
                 }
             }
             if (lo0 < hi)
-                zsort(v, lo0, hi);
+                zsort(dlst, lo0, hi);
             if (lo < hi0)
-                zsort(v, lo, hi0);
+                zsort(dlst, lo, hi0);
         }
     }
 }

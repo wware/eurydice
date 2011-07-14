@@ -2,13 +2,13 @@ package net.willware.eurydice.nanocad;
 
 import net.willware.eurydice.core.Color;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Entry;
+import net.willware.eurydice.view.DisplayListEntry;
 import net.willware.eurydice.view.ScreenSpace;
 
 /**
  * The Class ForceEntry.
  */
-public class ForceEntry extends Entry {
+public class ForceEntry extends DisplayListEntry {
 
     /** The f. */
     private Vector begin, end, orig, f;

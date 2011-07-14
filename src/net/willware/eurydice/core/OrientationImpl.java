@@ -41,6 +41,7 @@ public class OrientationImpl implements Orientation {
      */
     public void rotateX(double radians) {
         rotation = Quaternion.makeRotator(radians, new Vector(1, 0, 0)).multiply(rotation);
+        rotation = rotation.normalize();
     }
 
     /* (non-Javadoc)
@@ -48,6 +49,7 @@ public class OrientationImpl implements Orientation {
      */
     public void rotateY(double radians) {
         rotation = Quaternion.makeRotator(radians, new Vector(0, 1, 0)).multiply(rotation);
+        rotation = rotation.normalize();
     }
 
     /* (non-Javadoc)
@@ -55,6 +57,7 @@ public class OrientationImpl implements Orientation {
      */
     public void rotateZ(double radians) {
         rotation = Quaternion.makeRotator(radians, new Vector(0, 0, 1)).multiply(rotation);
+        rotation = rotation.normalize();
     }
 
     /* (non-Javadoc)

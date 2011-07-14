@@ -21,6 +21,7 @@
   <source path="math"/>
   <source path="forcefields"/>
   <source path="elements"/>
+  <source path="view"/>
   <source path="gwttest"/>
 
 </module>

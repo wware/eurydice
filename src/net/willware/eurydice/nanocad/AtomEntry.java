@@ -4,13 +4,13 @@ import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Color;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.view.Entry;
+import net.willware.eurydice.view.DisplayListEntry;
 import net.willware.eurydice.view.ScreenSpace;
 
 /**
  * The Class AtomEntry.
  */
-public class AtomEntry extends Entry {
+public class AtomEntry extends DisplayListEntry {
 
     /** The screencoords. */
     private Vector screencoords;    // screen coordinates for atom

@@ -84,8 +84,8 @@ public class Quaternion {
         double g = other.imaginaryPart.getY(), h = other.imaginaryPart.getZ();
         Quaternion q = new Quaternion(a*e - b*f - c*g - d*h,
                                       new Vector(a*f + b*e + c*h - d*g,
-                                              a*g - b*h + c*e + d*f,
-                                              a*h + b*g - c*f + d*e));
+                                                 a*g - b*h + c*e + d*f,
+                                                 a*h + b*g - c*f + d*e));
         if (units != null && other.units != null) {
             q.units = units.times(other.units);
         }
@@ -151,15 +151,6 @@ public class Quaternion {
      */
     public double absoluteValue() {
         return Math.sqrt(absoluteValueSquared());
-    }
-
-    /**
-     * A normalized version of this quaternion.
-     *
-     * @return the normalized quaternion
-     */
-    public Quaternion normalize() {
-        return scale(1.0 / absoluteValue());
     }
 
     /**
@@ -239,7 +230,7 @@ public class Quaternion {
     }
 
     /**
-     * Rotate a Vector using this quaternion as a rotator. A rotator quaterion has
+     * Rotate a Vector using this UNIT-LENGTH quaternion as a rotator. A rotator quaterion has
      * an {@link #absoluteValue()} of 1, so if this is not the case, normalize the
      * quaternion first.
      *
@@ -247,14 +238,24 @@ public class Quaternion {
      * @return the vector result
      */
     public Vector rotate(Vector v) {
+        return multiplyVector(v).multiply(inverse()).imaginaryPart;
+    }
+
+    /**
+     * A normalized version of this quaternion; do the scaling operation only if necessary.
+     *
+     * @return the normalized quaternion
+     */
+    public Quaternion normalize() {
         double h = 1.0e-6;
         double avs = absoluteValueSquared();
-        Quaternion q = this;
         if (avs < 1.0 - h || avs > 1.0 + h) {
-            q = q.scale(1 / Math.sqrt(avs));
+            return scale(1 / Math.sqrt(avs));
+        } else {
+            return this;
         }
-        return q.multiplyVector(v).multiply(q.inverse()).imaginaryPart;
     }
+
 
     /**
      * Sets the physical units.

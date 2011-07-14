@@ -8,8 +8,8 @@ import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Color;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.forcefields.ForceField;
+import net.willware.eurydice.view.DisplayListEntry;
 import net.willware.eurydice.view.DrawingEngine;
-import net.willware.eurydice.view.Entry;
 import net.willware.eurydice.view.ScreenSpace;
 
 /**
@@ -91,17 +91,17 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
 
     /**
      * When an object (together with many others) is done being rotated or moved, there is time to draw
-     * it in some more beautiful way, so call the {@link Entry#draw} method instead of.
+     * it in some more beautiful way, so call the {@link DisplayListEntry#draw} method instead of.
      *
      * @param screenspace the screenspace
      * @param struc the structure to be drawn
      * @param forceMultiplier a multiplier to scale force vectors (arbitrary, choose for esthetics)
      * @param ff the ff
-     * {@link Entry#quickDraw}.
+     * {@link DisplayListEntry#quickDraw}.
      */
     private void draw(final ScreenSpace screenspace, final Structure struc,
                       final double forceMultiplier, final ForceField ff) {
-        final List<Entry> dlist = new ArrayList<Entry>();
+        final List<DisplayListEntry> dlist = new ArrayList<DisplayListEntry>();
         final List<Bond> bondList = struc.inferBonds();
         if (ff != null) {
             ff.computeForces();
@@ -127,8 +127,14 @@ public abstract class DrawingEngineImpl implements DrawingEngine {
                 }
             }
         });
-        Entry.zsort(dlist);
-        for (Entry e : dlist)
+        // A List was needed previously because the size was unknown. Now that it's known we
+        // move to an array.
+        int n = dlist.size();
+        DisplayListEntry[] dlst = new DisplayListEntry[n];
+        for (int i = 0; i < n; i++)
+            dlst[i] = dlist.get(i);
+        DisplayListEntry.zsort(dlst);
+        for (DisplayListEntry e : dlst)
             e.draw();
     }
 
