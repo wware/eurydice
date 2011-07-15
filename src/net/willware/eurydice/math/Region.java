@@ -97,4 +97,11 @@ public class Region {
     public boolean exterior(Region other) {
         return exterior(other.minCorner) && exterior(other.maxCorner);
     }
+
+    public double getMaxDimension() {
+        Vector d = maxCorner.subtract(minCorner);
+        double r = d.getX();
+        r = (r > d.getY()) ? r : d.getY();
+        return (r > d.getZ()) ? r : d.getZ();
+    }
 }
