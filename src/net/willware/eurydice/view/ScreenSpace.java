@@ -16,13 +16,13 @@ public class ScreenSpace {
 
     /** The perspective. */
     private Perspective perspective;
-    
+
     /**
      * Constructor
      */
     public ScreenSpace() {
-    	orientation = new Orientation();
-    	perspective = new Perspective();
+        orientation = new Orientation();
+        perspective = new Perspective();
     }
 
     /**
@@ -96,6 +96,32 @@ public class ScreenSpace {
         xyz = perspective.unapply(xyz);
         // undo translation, rotation
         return orientation.unapply(xyz);
+    }
+
+    /**
+     * Determine the local scaling factor from angstroms to pixels after applying orientation,
+     * perspective, and scaling, in the neighborhood of a given position in atom space.
+     *
+     * @param p the position in atom space
+     * @return the local scaling factor of angstroms to pixels
+     */
+    public double scaleNear(Vector p) {
+        double h = 1.0e-6;
+        double x = xyzToScreen(p.add(new Vector(h, 0.0, 0.0))).subtract(xyzToScreen(p)).length();
+        return x / h;
+    }
+
+    /**
+     * Determine the local scaling factor from pixels to angstroms after applying orientation,
+     * perspective, and scaling, in the neighborhood of a given position in screen space.
+     *
+     * @param p the position in screen space
+     * @return the local scaling factor of pixels to angstroms
+     */
+    public double unscaleNear(Vector p) {
+        double h = 1.0e-6;
+        double x = screenToXyz(p.add(new Vector(h, 0.0, 0.0))).subtract(screenToXyz(p)).length();
+        return x / h;
     }
 
     /**

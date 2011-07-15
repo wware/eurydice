@@ -3,7 +3,9 @@ package net.willware.eurydice.view;
 import net.willware.eurydice.math.Vector;
 
 /**
- * Perspective is when farther-away objects appear a little smaller.
+ * Perspective is when farther-away objects appear a little smaller. As with
+ * {@link DisplayListEntry#zsort(DisplayListEntry[])}, the Z coordinate increases
+ * as the atom moves farther <i>CLOSER</i>.
  */
 public class Perspective {
 
@@ -35,7 +37,7 @@ public class Perspective {
      * @return the scaled distance in the viewing plane
      */
     public double apply(double x, double z) {
-        return (z * x) / (z + distance);
+        return (distance * x) / (distance - z);
     }
 
     /**
@@ -46,7 +48,7 @@ public class Perspective {
      * @return the scaled distance in the viewing plane
      */
     public double unapply(double x, double z) {
-        return ((z + distance) * x) / z;
+        return ((distance - z) * x) / distance;
     }
 
     /**
