@@ -28,13 +28,9 @@ public class Octree extends Region {
     public Octree(Region initial, double granularity) {
         super(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         this.granularity = granularity;
-        Vector cmax = initial.getMaxCorner();
-        Vector cmin = initial.getMinCorner();
-        Vector center = cmax.add(cmin).scale(0.5);
-        Vector d = cmax.subtract(center);
-        halfDimension = d.getX();
-        if (d.getY() > halfDimension) halfDimension = d.getY();
-        if (d.getZ() > halfDimension) halfDimension = d.getZ();
+        double dim = initial.getMaxDimension();
+        halfDimension = 0.5 * dim;
+        Vector center = initial.getCenter();
         Vector d3 = new Vector(halfDimension, halfDimension, halfDimension);
         children = new Octree[8];
         for (int i = 0; i < 8; i++)
