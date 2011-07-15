@@ -5,20 +5,27 @@ import net.willware.eurydice.math.Vector;
 /**
  * Perspective is when farther-away objects appear a little smaller.
  */
-public interface Perspective {
+public class Perspective {
+
+    private double distance = 1.0;
+
     /**
      * Get perspective distance in angstroms.
      *
      * @return perspective distance
      */
-    double getDistance();
+    public double getDistance() {
+        return distance;
+    }
 
     /**
      * Set perspective distance in angstroms.
      *
      * @param dist the new perspective distance
      */
-    void setDistance(double dist);
+    public void setDistance(double dist) {
+        this.distance = dist;
+    }
 
     /**
      * Apply perspective to a distance in the viewing plane, depending on its Z depth.
@@ -27,7 +34,9 @@ public interface Perspective {
      * @param z the Z distance which determines the scaling
      * @return the scaled distance in the viewing plane
      */
-    double apply(double x, double z);
+    public double apply(double x, double z) {
+        return (z * x) / (z + distance);
+    }
 
     /**
      * Un-apply perspective to a distance in the viewing plane, depending on its Z depth.
@@ -36,7 +45,9 @@ public interface Perspective {
      * @param z the Z distance which determines the scaling
      * @return the scaled distance in the viewing plane
      */
-    double unapply(double x, double z);
+    public double unapply(double x, double z) {
+        return ((z + distance) * x) / z;
+    }
 
     /**
      * Apply perspective translation to a vector.
@@ -44,7 +55,10 @@ public interface Perspective {
      * @param xyz the xyz
      * @return the vector
      */
-    Vector apply(Vector xyz);
+    public Vector apply(Vector xyz) {
+        double z = xyz.getZ();
+        return new Vector(apply(xyz.getX(), z), apply(xyz.getY(), z), z);
+    }
 
     /**
      * Unapply.
@@ -52,5 +66,8 @@ public interface Perspective {
      * @param xyz the xyz
      * @return the vector
      */
-    Vector unapply(Vector xyz);
+    public Vector unapply(Vector xyz) {
+        double z = xyz.getZ();
+        return new Vector(unapply(xyz.getX(), z), unapply(xyz.getY(), z), z);
+    }
 }

@@ -3,6 +3,11 @@ package net.willware.eurydice.core;
 import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Vector;
 
+// It's tempting to put this in the view package because it's
+// used in rotating a structure on-screen. But its more important
+// use is to position substructures within a structure, and that's
+// why it belongs in the core package.
+
 /**
  * An orientation is a translation and a rotation in 3-space.
  */
