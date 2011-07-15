@@ -14,9 +14,6 @@ public class Vector {
     /** The Z component of the vector. */
     private double z;
 
-    /** The units. */
-    private PhysicalUnit units = null;
-
     /**
      * Constructor, creates a zero-length vector.
      */
@@ -46,8 +43,6 @@ public class Vector {
      * @return true if the two vectors are approximately equal
      */
     public boolean approximatelyEqual(Vector v) {
-        if (!PhysicalUnit.matches(units, v.getUnits()))
-            return false;
         return subtract(v).length() < 1.0e-5;
     }
 
@@ -121,8 +116,6 @@ public class Vector {
      * @return the sum vector
      */
     public Vector add(Vector other) {
-        if (!PhysicalUnit.matches(units, other.getUnits()))
-            throw new PhysicalUnit.Mismatch();
         return new Vector(x + other.x, y + other.y, z + other.z);
     }
 
@@ -142,8 +135,6 @@ public class Vector {
      * @return the difference vector
      */
     public Vector subtract(Vector other) {
-        if (!PhysicalUnit.matches(units, other.getUnits()))
-            throw new PhysicalUnit.Mismatch();
         return new Vector(x - other.x, y - other.y, z - other.z);
     }
 
@@ -199,10 +190,7 @@ public class Vector {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        String r = "<" + x + " " + y + " " + z;
-        if (units != null)
-            r += " " + units;
-        return r + ">";
+        return "<" + x + " " + y + " " + z + ">";
     }
 
     /**
@@ -212,13 +200,9 @@ public class Vector {
      * @return the cross product result vector
      */
     public Vector crossProduct(Vector other) {
-        Vector v = new Vector(getY() * other.getZ() - other.getY() * getZ(),
-                              getZ() * other.getX() - other.getZ() * getX(),
-                              getX() * other.getY() - other.getX() * getY());
-        if (units != null && other.units != null) {
-            v.units = units.times(other.units);
-        }
-        return v;
+        return new Vector(getY() * other.getZ() - other.getY() * getZ(),
+                          getZ() * other.getX() - other.getZ() * getX(),
+                          getX() * other.getY() - other.getX() * getY());
     }
 
     /**
@@ -228,27 +212,6 @@ public class Vector {
      * @return the quaternion result
      */
     public Quaternion multiplyQuaternion(Quaternion q) {
-        Quaternion q2 = (new Quaternion(0.0, this)).multiply(q);
-        if (units != null && q.getUnits() != null)
-            q2.setUnits(units.times(q.getUnits()));
-        return q2;
-    }
-
-    /**
-     * Sets the physical units.
-     *
-     * @param units the new physical units
-     */
-    public void setUnits(PhysicalUnit units) {
-        this.units = units;
-    }
-
-    /**
-     * Gets the physical units.
-     *
-     * @return the physical units
-     */
-    public PhysicalUnit getUnits() {
-        return units;
+        return (new Quaternion(0.0, this)).multiply(q);
     }
 }

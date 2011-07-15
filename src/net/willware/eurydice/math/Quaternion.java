@@ -13,9 +13,6 @@ public class Quaternion {
     /** The imaginary part. */
     private Vector imaginaryPart;
 
-    /** The units. */
-    private PhysicalUnit units = null;
-
     /**
      * Constructor.
      *
@@ -39,10 +36,7 @@ public class Quaternion {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        String r = "<Quat " + realPart + " " + imaginaryPart.toString();
-        if (units != null)
-            r += " " + units;
-        return r + ">";
+        return "<Quat " + realPart + " " + imaginaryPart.toString() + ">";
     }
 
     /**
@@ -52,8 +46,6 @@ public class Quaternion {
      * @return the quaternion sum
      */
     public Quaternion add(Quaternion other) {
-        if (!PhysicalUnit.matches(units, other.getUnits()))
-            throw new PhysicalUnit.Mismatch();
         return new Quaternion(realPart + other.realPart,
                               imaginaryPart.add(other.imaginaryPart));
     }
@@ -65,8 +57,6 @@ public class Quaternion {
      * @return the quaternion difference
      */
     public Quaternion subtract(Quaternion other) {
-        if (!PhysicalUnit.matches(units, other.getUnits()))
-            throw new PhysicalUnit.Mismatch();
         return new Quaternion(realPart - other.realPart,
                               imaginaryPart.subtract(other.imaginaryPart));
     }
@@ -82,14 +72,10 @@ public class Quaternion {
         double c = imaginaryPart.getY(), d = imaginaryPart.getZ();
         double e = other.realPart, f = other.imaginaryPart.getX();
         double g = other.imaginaryPart.getY(), h = other.imaginaryPart.getZ();
-        Quaternion q = new Quaternion(a*e - b*f - c*g - d*h,
-                                      new Vector(a*f + b*e + c*h - d*g,
-                                                 a*g - b*h + c*e + d*f,
-                                                 a*h + b*g - c*f + d*e));
-        if (units != null && other.units != null) {
-            q.units = units.times(other.units);
-        }
-        return q;
+        return new Quaternion(a*e - b*f - c*g - d*h,
+                              new Vector(a*f + b*e + c*h - d*g,
+                                         a*g - b*h + c*e + d*f,
+                                         a*h + b*g - c*f + d*e));
     }
 
     /**
@@ -119,9 +105,6 @@ public class Quaternion {
      */
     public Quaternion multiplyVector(Vector other) {
         Quaternion q = multiply(new Quaternion(0.0, other));
-        if (units != null && other.getUnits() != null) {
-            q.units = units.times(other.getUnits());
-        }
         return q;
     }
 
@@ -160,10 +143,7 @@ public class Quaternion {
      */
     public Quaternion inverse() {
         double k = 1.0 / absoluteValueSquared();
-        Quaternion q = new Quaternion(k * realPart, imaginaryPart.scale(-k));
-        if (units != null)
-            q.units = units.inverse();
-        return q;
+        return new Quaternion(k * realPart, imaginaryPart.scale(-k));
     }
 
     /**
@@ -210,8 +190,6 @@ public class Quaternion {
      * @return true, if approximately equal
      */
     public boolean approximatelyEqual(Quaternion other) {
-        if (!PhysicalUnit.matches(units, other.getUnits()))
-            return false;
         other = subtract(other);
         return other.absoluteValueSquared() < 1.0e-6;
     }
@@ -230,8 +208,20 @@ public class Quaternion {
     }
 
     /**
+     * Test (quickly) whether the quaternion is very close to unit length. If it isn't, and
+     * you want to use it as a rotation quaternion, you need to call normalize on it.
+     *
+     * @return true if the quaternion is very close to unit length
+     */
+    public boolean closeToUnitLength() {
+        double h = 1.0e-6;
+        double avs = absoluteValueSquared();
+        return (avs > 1.0 - h && avs < 1.0 + h);
+    }
+
+    /**
      * Rotate a Vector using this UNIT-LENGTH quaternion as a rotator. A rotator quaterion has
-     * an {@link #absoluteValue()} of 1, so if this is not the case, normalize the
+     * an {@link #absoluteValue()} of 1, so if this is not the case, be sure to normalize the
      * quaternion first.
      *
      * @param v the vector to be rotated
@@ -247,32 +237,7 @@ public class Quaternion {
      * @return the normalized quaternion
      */
     public Quaternion normalize() {
-        double h = 1.0e-6;
-        double avs = absoluteValueSquared();
-        if (avs < 1.0 - h || avs > 1.0 + h) {
-            return scale(1 / Math.sqrt(avs));
-        } else {
-            return this;
-        }
-    }
-
-
-    /**
-     * Sets the physical units.
-     *
-     * @param units the new units
-     */
-    public void setUnits(PhysicalUnit units) {
-        this.units = units;
-    }
-
-    /**
-     * Gets the physical units.
-     *
-     * @return the units
-     */
-    public PhysicalUnit getUnits() {
-        return units;
+        return scale(1.0 / absoluteValue());
     }
 
     /**
