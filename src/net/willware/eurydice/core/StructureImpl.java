@@ -169,8 +169,11 @@ public class StructureImpl implements Structure {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Structure#getAtomList()
      */
-    public List<Atom> getAtomList() {
-        return atomList;
+    public Atom[] getAtomArray() {
+        Atom[] array = new Atom[atomList.size()];
+        for (int i = 0; i < atomList.size(); i++)
+            array[i] = atomList.get(i);
+        return array;
     }
 
     /* (non-Javadoc)

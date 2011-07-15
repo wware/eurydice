@@ -43,12 +43,12 @@ public interface Structure {
      */
     public int size();
     /**
-     * Returns a list of atoms, if the structure is small enough to fit all the atoms
-     * into a list; if not, returns null
+     * Returns an array of atoms, if the structure is small enough to fit all the atoms
+     * into an array; if not, returns null
      *
      * @return a list of the atoms in this structure, or null
      */
-    public List<Atom> getAtomList();
+    public Atom[] getAtomArray();
     /**
      * Give the index of an atom in the atom list, -1 if not found.
      * @param a the atom to be found
