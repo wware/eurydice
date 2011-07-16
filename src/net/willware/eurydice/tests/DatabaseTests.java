@@ -13,10 +13,11 @@ import junit.textui.TestRunner;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
+import net.willware.eurydice.core.ImplFactory;
 import net.willware.eurydice.core.Jig;
 import net.willware.eurydice.core.Properties;
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.core.StructureImpl;
+import net.willware.eurydice.core.StructureMutableImpl;
 import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.db.StructureDatabase;
 import net.willware.eurydice.math.Region;
@@ -75,7 +76,7 @@ public class DatabaseTests extends TestCase {
     /**
      * The Class TestSmallStructure.
      */
-    private class TestSmallStructure extends StructureImpl {
+    private class TestSmallStructure extends StructureMutableImpl {
 
         /** The metadata. */
         Properties metadata;
@@ -86,7 +87,7 @@ public class DatabaseTests extends TestCase {
          * @param parentID the parent unique id
          */
         public TestSmallStructure(UniqueId parentID) {
-            super(parentID);
+            setParentUniqueId(parentID);
         }
 
         /* (non-Javadoc)
@@ -100,7 +101,7 @@ public class DatabaseTests extends TestCase {
          * @see java.lang.Object#clone()
          */
         public TestSmallStructure clone() {
-            UniqueId uid = new UniqueIdImpl();
+            UniqueId uid = (UniqueId) ImplFactory.getInstance().get(UniqueId.class);
             TestSmallStructure newguy = new TestSmallStructure(uid);
             // same unique ID? different unique ID?
             newguy.metadata = metadata;
@@ -182,7 +183,7 @@ public class DatabaseTests extends TestCase {
     /**
      * The Class TestBigPositionList.
      */
-    private class TestBigPositionList extends StructureImpl {
+    private class TestBigPositionList extends StructureMutableImpl {
 
         /** The metadata. */
         Properties metadata;
@@ -196,7 +197,7 @@ public class DatabaseTests extends TestCase {
          * @param parentID the parent unique id
          */
         public TestBigPositionList(UniqueId parentID) {
-            super(parentID);
+            setParentUniqueId(parentID);
             lst = new ArrayList<Vector>();
         }
 

@@ -26,63 +26,69 @@ public interface Atom {
     /** NONE hybridization type. */
     public static final int NONE = 3;
 
-    // these should be defined within elements, as class variables
+    /**
+     * Get the unique ID for this atom.
+     *
+     * @return the unique ID
+     */
+    UniqueId getUniqueId();
+
     /**
      * Name.
      *
      * @return the name of the element, such as "Carbon" or "Hydrogen"
      */
-    String name();
+    String getName();
 
     /**
      * Symbol.
      *
      * @return the official chemical symbol, such as "C" or "H"
      */
-    String symbol();
+    String getSymbol();
 
     /**
      * Atomic number.
      *
      * @return the atomic number of this element
      */
-    int atomicNumber();
+    int getAtomicNumber();
 
     /**
      * Mass.
      *
      * @return the mass of this element (ignoring isotopes)
      */
-    double mass();
+    double getMass();
 
     /**
      * Color.
      *
-     * @param de an instance of a DrawingEngine
      * @return the display color of this atom
      */
-    Color color();
+    Color getColor();
 
     /**
      * Covalent radius.
      *
      * @return the covalent radius of this atom, in angstroms
      */
-    double covalentRadius();
+    double getCovalentRadius();
 
     /**
-     * Vdw energy.
+     * Van-der-Waals energy; see Table 3.1 and Equation 3.8 in <i>Nanosystems</i>
+     * by Drexler.
      *
      * @return the van-der-Waals energy
      */
-    double vdwEnergy();
+    double getVdwEnergy();
 
     /**
      * Vdw radius.
      *
      * @return the van-der-Waals radius of this atom
      */
-    double vdwRadius();
+    double getVdwRadius();
 
     /**
      * Correct num bonds.
@@ -90,7 +96,7 @@ public interface Atom {
      * @return the number of single bonds for this atom when SP3-hybridized,
      * such as 4 for carbon or 3 for nitrogen
      */
-    int correctNumBonds();
+    int getCorrectNumBonds();
 
     // overload me, unless I'm hydrogen
     /**
@@ -131,7 +137,7 @@ public interface Atom {
     double getFractionalCharge();
 
     /**
-     * Sets the hybridization of this atom.
+     * Sets the hybridization of this atom. Needed for rehybridization.
      *
      * @param hybridization the new hybridization
      */
@@ -213,18 +219,4 @@ public interface Atom {
      * @return the force
      */
     Vector getForce();
-
-    /**
-     * Set the unique ID for this atom.
-     *
-     * @param id the new unique id
-     */
-    void setUniqueId(UniqueId id);
-
-    /**
-     * Get the unique ID for this atom.
-     *
-     * @return the unique ID
-     */
-    UniqueId getUniqueId();
 }

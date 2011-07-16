@@ -46,11 +46,11 @@ public class BondEntry extends DisplayListEntry {
 
         Vector pos1 = myBond.getFirstAtom().getPosition();
         x1 = screenspace.xyzToScreen(pos1);
-        r1 = AtomEntry.radiusRatio * myBond.getFirstAtom().covalentRadius() * screenspace.getZoomFactor();
+        r1 = AtomEntry.radiusRatio * myBond.getFirstAtom().getCovalentRadius() * screenspace.getZoomFactor();
         r1 = screenspace.getPerspective().apply(r1, x1.getZ());
 
         x2 = screenspace.xyzToScreen(myBond.getSecondAtom().getPosition());
-        r2 = AtomEntry.radiusRatio * myBond.getSecondAtom().covalentRadius() * screenspace.getZoomFactor();
+        r2 = AtomEntry.radiusRatio * myBond.getSecondAtom().getCovalentRadius() * screenspace.getZoomFactor();
         r1 = screenspace.getPerspective().apply(r1, x2.getZ());
 
         // compute a perpendicular vector in screen space
@@ -78,8 +78,8 @@ public class BondEntry extends DisplayListEntry {
     public void quickDraw() {
         Color black = Color.getColor("black");
         Color gray = Color.getColor("gray50");
-        Color c1 = myBond.getFirstAtom().color();
-        Color c2 = myBond.getSecondAtom().color();
+        Color c1 = myBond.getFirstAtom().getColor();
+        Color c2 = myBond.getSecondAtom().getColor();
         // Gray isn't quite dark enough to look good in a wireframe
         if (c1.equals(gray))
             c1 = black;
@@ -98,9 +98,9 @@ public class BondEntry extends DisplayListEntry {
         Vector v2 = x2.add(xdiff.scale(r2 / len));
         Color black = Color.getColor("black");
         Vector perpGapHalf = null;
-        if (myBond.order() > 1)
+        if (myBond.getOrder() > 1)
             perpGapHalf = perpendicularGap.scale(0.5);
-        switch (myBond.order()) {
+        switch (myBond.getOrder()) {
         default:
         case 1:
             drawBondLine(engine, black, black, v1, v2);

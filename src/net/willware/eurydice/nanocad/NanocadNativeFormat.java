@@ -8,10 +8,7 @@ import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.elements.Carbon;
-import net.willware.eurydice.elements.Hydrogen;
-import net.willware.eurydice.elements.Nitrogen;
-import net.willware.eurydice.elements.Oxygen;
+import net.willware.eurydice.elements.ElementFactory;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.serialization.Filetype;
 
@@ -48,7 +45,6 @@ public class NanocadNativeFormat extends Filetype {
         while (numatoms-- > 0) {
             String zs, symbol, hybrid;
             double x, y, z;
-            int h = Atom.SP3;
             if (nextChar() != '<') {
                 continue;
             }
@@ -65,24 +61,16 @@ public class NanocadNativeFormat extends Filetype {
             } catch (Exception e) {
                 z = 0.0;
             }
-            /* hybridizations */
+            Atom a = ElementFactory.getInstance().get(symbol);
             if (hybrid.equals("NONE"))
-                h = Atom.NONE;
-            else if (hybrid.equals("SP3"))
-                h = Atom.SP3;
-            else if (hybrid.equals("SP2"))
-                h = Atom.SP2;
+                a.setHybridization(Atom.NONE);
             else if (hybrid.equals("SP"))
-                h = Atom.SP;
-            /* which element */
-            if (symbol.equals("H"))
-                struc.addAtom(new Hydrogen(), new Vector(x, y, z));
-            else if (symbol.equals("C"))
-                struc.addAtom(new Carbon(h), new Vector(x, y, z));
-            else if (symbol.equals("O"))
-                struc.addAtom(new Oxygen(h), new Vector(x, y, z));
-            else if (symbol.equals("N"))
-                struc.addAtom(new Nitrogen(h), new Vector(x, y, z));
+                a.setHybridization(Atom.SP);
+            else if (hybrid.equals("SP2"))
+                a.setHybridization(Atom.SP2);
+            else
+                a.setHybridization(Atom.SP3);
+            a.setPosition(new Vector(x, y, z));
             bagLine();
         }
 

@@ -14,7 +14,7 @@ import javax.swing.JApplet;
 import javax.swing.JFrame;
 
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.library.*;
+import net.willware.eurydice.library.StructureLibrary;
 
 /**
  * An applet to test AWT drawing using {@link AWTEngine}.
@@ -25,7 +25,7 @@ public class AWTApplet extends JApplet implements MouseListener, MouseMotionList
     private Graphics gr;
 
     /** The struc. */
-    private Structure struc = new Aspirin();
+    private Structure struc = StructureLibrary.get("Aspirin");
     //private Structure struc = new DiamondRod();
     //private Structure struc = new Diamond();
     /** The oldx. */

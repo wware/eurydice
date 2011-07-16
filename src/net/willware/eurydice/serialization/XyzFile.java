@@ -7,10 +7,7 @@ import java.io.PushbackInputStream;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Structure;
-import net.willware.eurydice.elements.Carbon;
-import net.willware.eurydice.elements.Hydrogen;
-import net.willware.eurydice.elements.Nitrogen;
-import net.willware.eurydice.elements.Oxygen;
+import net.willware.eurydice.elements.ElementFactory;
 import net.willware.eurydice.math.Vector;
 import net.willware.eurydice.nanocad.NanocadStyleStructure;
 
@@ -39,7 +36,7 @@ public class XyzFile extends Filetype {
         ps.print("Icky sticky goo\n");
         for (i = 0; i < struc.size(); i++) {
             Atom a = struc.get(i);
-            ps.print(a.symbol() + " " +
+            ps.print(a.getSymbol() + " " +
                      formatDouble(a.getPosition().getX(), 4, 3) +
                      formatDouble(a.getPosition().getY(), 4, 3) +
                      formatDouble(a.getPosition().getZ(), 4, 3) + "\n");
@@ -62,14 +59,9 @@ public class XyzFile extends Filetype {
             x = scanDouble();
             y = scanDouble();
             z = scanDouble();
-            if (symbol.equals("H"))
-                struc.addAtom(new Hydrogen(), new Vector(x, y, z));
-            else if (symbol.equals("C"))
-                struc.addAtom(new Carbon(Atom.SP3), new Vector(x, y, z));
-            else if (symbol.equals("O"))
-                struc.addAtom(new Oxygen(Atom.SP3), new Vector(x, y, z));
-            else if (symbol.equals("N"))
-                struc.addAtom(new Nitrogen(Atom.SP3), new Vector(x, y, z));
+            Atom a = ElementFactory.getInstance().get(symbol);
+            a.setPosition(new Vector(x, y, z));
+            struc.addAtom(a);
         }
         struc.inferBonds();
         return struc;

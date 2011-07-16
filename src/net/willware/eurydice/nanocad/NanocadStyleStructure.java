@@ -6,8 +6,8 @@
 package net.willware.eurydice.nanocad;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.JigImpl;
-import net.willware.eurydice.core.StructureImpl;
+import net.willware.eurydice.core.JigMutableImpl;
+import net.willware.eurydice.core.StructureMutableImpl;
 import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.math.Vector;
@@ -16,7 +16,7 @@ import net.willware.eurydice.math.Vector;
  * NanoCAD was a Java applet I wrote in 1997, hoping that I'd find the time and energy
  * to make it a useful tool for nanotechnological design.
  */
-public class NanocadStyleStructure extends StructureImpl {
+public class NanocadStyleStructure extends StructureMutableImpl {
 
     /** flag indicating the structure has changed since the last time it was saved. */
     private boolean changedSinceLastSave = false;
@@ -34,7 +34,6 @@ public class NanocadStyleStructure extends StructureImpl {
      * Constructor.
      */
     public NanocadStyleStructure() {
-        super(null);
         empty();
     }
 
@@ -44,7 +43,7 @@ public class NanocadStyleStructure extends StructureImpl {
      * @param pid the parent unique id
      */
     public NanocadStyleStructure(UniqueId pid) {
-        super(pid);
+        setParentUniqueId(pid);
         empty();
     }
 
@@ -53,7 +52,7 @@ public class NanocadStyleStructure extends StructureImpl {
      */
     public void empty() {
         changedSinceLastSave = true;
-        setForceField((ForceField) JigImpl.getJig(this,
+        setForceField((ForceField) JigMutableImpl.getJig(this,
                       "net.willware.eurydice.forcefields.mm2.MM2"));
     }
 

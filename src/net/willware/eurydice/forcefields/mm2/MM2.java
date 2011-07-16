@@ -7,7 +7,8 @@ import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.BondChainProcessor;
-import net.willware.eurydice.core.JigImpl;
+import net.willware.eurydice.core.JigMutable;
+import net.willware.eurydice.core.JigMutableImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.core.Structure.AtomProcessor;
@@ -18,7 +19,7 @@ import net.willware.eurydice.forcefields.ForceField;
  * Drexler's book <i>Nanosystems</i>, around page 44 if memory serves.
  * @see <a href="http://en.wikipedia.org/wiki/Molecular_modelling">Wikipedia article on molecular modeling</a>
  */
-public class MM2 extends JigImpl implements ForceField {
+public class MM2 extends JigMutableImpl implements JigMutable, ForceField {
 
     /** A list of the energy terms used to compute forces on the atoms in {@link #struc}. */
     private List<Term> termList;
@@ -35,8 +36,8 @@ public class MM2 extends JigImpl implements ForceField {
     /**
      * Constructor.
      */
-    public MM2(Structure struc) {
-        super(struc);
+    public MM2() {
+        super();
         termList = new ArrayList<Term>();
         longRange = new LongRangeForces(struc);
         hasTopologyChanged = true;
@@ -52,8 +53,8 @@ public class MM2 extends JigImpl implements ForceField {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.IJig#atomIndices()
      */
-    public List<UniqueId> atomIndices() {
-        Iterator<Atom> iter = getStruc().getIterator();
+    public List<UniqueId> getAtomIndices() {
+        Iterator<Atom> iter = getStructure().getIterator();
         List<UniqueId> lst = new ArrayList<UniqueId>();
         while (iter.hasNext())
             lst.add(iter.next().getUniqueId());
@@ -68,13 +69,13 @@ public class MM2 extends JigImpl implements ForceField {
             hasTopologyChanged = false;
             enumerateTerms();
         }
-        getStruc().process(new AtomProcessor() {
+        getStructure().process(new AtomProcessor() {
             public void process(Atom a) {
                 a.zeroForce();
             }
         });
         for (int i = 0; i < termList.size(); i++)
-            termList.get(i).computeForces(getStruc());
+            termList.get(i).computeForces(getStructure());
         longRange.computeForces();
     }
 
@@ -83,11 +84,11 @@ public class MM2 extends JigImpl implements ForceField {
      */
     private void enumerateTerms() {
         int i;
-        List<Bond> bondlist = getStruc().inferBonds();
-        for (i = 0; i < getStruc().size(); i++)
-            getStruc().get(i).rehybridize(bondlist);
+        List<Bond> bondlist = getStructure().inferBonds();
+        for (i = 0; i < getStructure().size(); i++)
+            getStructure().get(i).rehybridize(bondlist);
         termList = new ArrayList<Term>();
-        getStruc().processBondChains(new BondChainProcessor() {
+        getStructure().processBondChains(new BondChainProcessor() {
             public void process2(Atom a1, Atom a2) {
                 if (a1.getUniqueId().compareTo(a2.getUniqueId()) < 0) {
                     termList.add(new LengthTerm(a1, a2));
@@ -106,5 +107,11 @@ public class MM2 extends JigImpl implements ForceField {
                     termList.add(new TorsionTerm(a1, a2, a3, a4));
             }
         });
+    }
+
+    @Override
+    public void setStructure(Structure struc) {
+        // TODO Auto-generated method stub
+
     }
 }

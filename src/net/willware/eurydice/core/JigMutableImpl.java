@@ -7,12 +7,12 @@ package net.willware.eurydice.core;
  * forces to some of the atoms in a structure. Examples of measurements could be temperature
  * (averaging Brownian motion over a few time steps), or lengths or angles.
  */
-public abstract class JigImpl implements Jig {
+public abstract class JigMutableImpl implements Jig {
 
     /** The properties. */
     private Properties properties;
     /** The structure to which this jig applies. */
-    private Structure struc;
+    protected Structure struc;
 
     /**
      * Creates an instance of a jig, given the name.
@@ -37,7 +37,7 @@ public abstract class JigImpl implements Jig {
      * }
      */
 
-    protected JigImpl(Structure struc) {
+    public void setStructure(Structure struc) {
         this.struc = struc;
     }
 
@@ -48,11 +48,16 @@ public abstract class JigImpl implements Jig {
      * @param jigName the jig name
      * @return the jig
      */
-    public static JigImpl getJig(Structure struc, String jigName) {
+    public static JigMutable getJig(Structure struc, String jigName) {
         if (!"net.willware.eurydice.forcefields.mm2.MM2".equals(jigName))
             throw new RuntimeException("cannot handle jig named " + jigName);
-        JigImpl j = new net.willware.eurydice.forcefields.mm2.MM2(struc);
-        j.properties = new Properties();
+        Class<?> cls = net.willware.eurydice.forcefields.mm2.MM2.class;
+        JigMutable j = null;
+        try {
+            j = (JigMutable) cls.newInstance();
+            j.setStructure(struc);
+            j.setProperties(new Properties());
+        } catch (Exception e) { }
         return j;
     }
 
@@ -100,7 +105,7 @@ public abstract class JigImpl implements Jig {
      * @return the struc
      * @returns the structure to which this jig applies
      */
-    public Structure getStruc() {
+    public Structure getStructure() {
         return struc;
     }
 }

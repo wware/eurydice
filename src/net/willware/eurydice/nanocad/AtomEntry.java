@@ -42,7 +42,7 @@ public class AtomEntry extends DisplayListEntry {
         atom = a;
         engine = e;
         screencoords = screenspace.xyzToScreen(a.getPosition());
-        radius = screenspace.getPerspective().apply(AtomEntry.radiusRatio * a.covalentRadius()
+        radius = screenspace.getPerspective().apply(AtomEntry.radiusRatio * a.getCovalentRadius()
                  * screenspace.getZoomFactor(), screencoords.getZ());
         screencoords = screencoords.subtract(new Vector(radius, radius, 0.0));
         //bogus = a.currentNumBonds() != a.correctNumBonds();
@@ -68,7 +68,7 @@ public class AtomEntry extends DisplayListEntry {
      * @see net.willware.eurydice.view.Entry#paint()
      */
     public void draw() {
-        engine.setCurrentColor(atom.color());
+        engine.setCurrentColor(atom.getColor());
         engine.fillCircle(screencoords.getX(), screencoords.getY(), 2 * radius);
         if (bogus)
             engine.setCurrentColor(Color.getColor("orange"));

@@ -24,7 +24,7 @@ public interface Jig {
      *
      * @return the list
      */
-    public List<UniqueId> atomIndices();
+    public List<UniqueId> getAtomIndices();
 
     /**
      * Jigs have properties.
@@ -62,5 +62,5 @@ public interface Jig {
      * @return the struc
      * @returns the structure to which this jig applies
      */
-    public Structure getStruc();
+    public Structure getStructure();
 }

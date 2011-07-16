@@ -1,6 +1,7 @@
 package net.willware.eurydice.externals;
 
 import java.io.File;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,6 +11,7 @@ import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.forcefields.ForceField;
 import net.willware.eurydice.serialization.PdbFile;
 import net.willware.eurydice.view.DrawingEngine;
+import net.willware.eurydice.library.StructureLibrary;
 
 /**
  * A drawing engine that exports a file to RasMol, which does a lovely job.
@@ -47,6 +49,7 @@ public class RasmolDrawing implements DrawingEngine {
             // a little script to make it space-filling
             scriptFile = File.createTempFile("rasmol", ".txt");
             String scriptname = scriptFile.getAbsolutePath();
+            //System.out.println("rasmol -script " + scriptname);
             PrintStream out2 = new PrintStream(new FileOutputStream(scriptFile));
             out2.println("load " + filename);
             out2.println("spacefill on");
@@ -70,7 +73,6 @@ public class RasmolDrawing implements DrawingEngine {
             OutputStream out = new FileOutputStream(moleculeFile);
             new PdbFile().dump(out, s);
             out.close();
-            // call Rasmol
             String[] cmd = new String[] { "/usr/bin/rasmol", filename };
             Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
@@ -83,7 +85,6 @@ public class RasmolDrawing implements DrawingEngine {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        //new RasmolDrawing().draw(null, new net.willware.eurydice.library.Aspirin());
-        new RasmolDrawing().draw(new net.willware.eurydice.library.DiamondRod());
+        new RasmolDrawing().draw(StructureLibrary.get("Aspirin"));
     }
 }

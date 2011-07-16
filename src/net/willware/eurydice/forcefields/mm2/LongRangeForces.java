@@ -91,17 +91,17 @@ public class LongRangeForces {
                 for (i = 0, found = false;
                         i < dipoleMoments.length && !found;
                         i++) {
-                    if (a1.atomicNumber() == dipoleMoments[i][0] &&
+                    if (a1.getAtomicNumber() == dipoleMoments[i][0] &&
                             a1.getHybridization() == dipoleMoments[i][1] &&
-                            a2.atomicNumber() == dipoleMoments[i][2] &&
+                            a2.getAtomicNumber() == dipoleMoments[i][2] &&
                             a2.getHybridization() == dipoleMoments[i][3]) {
                         double diffCharge = dontKnowCorrectUnits * dipoleMoments[i][4];
                         found = true;
                         a1.setFractionalCharge(a1.getFractionalCharge() + diffCharge);
                         a2.setFractionalCharge(a2.getFractionalCharge() - diffCharge);
-                    } else if (a1.atomicNumber() == dipoleMoments[i][2] &&
+                    } else if (a1.getAtomicNumber() == dipoleMoments[i][2] &&
                                a1.getHybridization() == dipoleMoments[i][3] &&
-                               a2.atomicNumber() == dipoleMoments[i][0] &&
+                               a2.getAtomicNumber() == dipoleMoments[i][0] &&
                                a2.getHybridization() == dipoleMoments[i][1]) {
                         double diffCharge = dontKnowCorrectUnits * dipoleMoments[i][4];
                         found = true;
@@ -151,8 +151,8 @@ public class LongRangeForces {
      * @param struc the structure the atoms belong to
      */
     private void computeForces(Atom a1, Atom a2) {
-        double rvdw = a1.vdwRadius() + a2.vdwRadius();
-        double evdw = (a1.vdwEnergy() + a2.vdwEnergy()) / 2;
+        double rvdw = a1.getVdwRadius() + a2.getVdwRadius();
+        double evdw = (a1.getVdwEnergy() + a2.getVdwEnergy()) / 2;
         // let's ignore integer charge for the time being
         //double q1q2 = a1.fractionalCharge * a2.fractionalCharge;
         Vector diff = a1.getPosition().subtract(a2.getPosition());

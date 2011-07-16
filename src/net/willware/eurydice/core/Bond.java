@@ -32,7 +32,7 @@ public interface Bond {
      *
      * @return the order of this bond as an integer
      */
-    public int order();
+    public int getOrder();
 
     /**
      * Increment the order of this bond, if it's less than triple.

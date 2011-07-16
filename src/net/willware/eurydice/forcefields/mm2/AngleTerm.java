@@ -45,17 +45,17 @@ public class AngleTerm extends TermImpl {
         myAtoms[2] = a3;
         for (i = 0, found = false;
                 i < angleCoeffs.length && !found; i++)
-            if ((a1.atomicNumber() == angleCoeffs[i][0]
+            if ((a1.getAtomicNumber() == angleCoeffs[i][0]
                     && a1.getHybridization() == angleCoeffs[i][1]
-                    && a2.atomicNumber() == angleCoeffs[i][2]
+                    && a2.getAtomicNumber() == angleCoeffs[i][2]
                     && a2.getHybridization() == angleCoeffs[i][3]
-                    && a3.atomicNumber() == angleCoeffs[i][4]
+                    && a3.getAtomicNumber() == angleCoeffs[i][4]
                     && a3.getHybridization() == angleCoeffs[i][5])
-                    || (a1.atomicNumber() == angleCoeffs[i][4]
+                    || (a1.getAtomicNumber() == angleCoeffs[i][4]
                         && a1.getHybridization() == angleCoeffs[i][5]
-                        && a2.atomicNumber() == angleCoeffs[i][2]
+                        && a2.getAtomicNumber() == angleCoeffs[i][2]
                         && a2.getHybridization() == angleCoeffs[i][3]
-                        && a3.atomicNumber() == angleCoeffs[i][0]
+                        && a3.getAtomicNumber() == angleCoeffs[i][0]
                         && a3.getHybridization() == angleCoeffs[i][1])) {
                 found = true;
                 kth = angleCoeffs[i][6];

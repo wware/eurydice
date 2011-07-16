@@ -41,13 +41,13 @@ public class LengthTerm extends TermImpl {
         myAtoms[1] = a2;
         for (i = 0, found = false;
                 i < lengthCoeffs.length && !found; i++)
-            if ((a1.atomicNumber() == lengthCoeffs[i][0]
+            if ((a1.getAtomicNumber() == lengthCoeffs[i][0]
                     && a1.getHybridization() == lengthCoeffs[i][1]
-                    && a2.atomicNumber() == lengthCoeffs[i][2]
+                    && a2.getAtomicNumber() == lengthCoeffs[i][2]
                     && a2.getHybridization() == lengthCoeffs[i][3])
-                    || (a1.atomicNumber() == lengthCoeffs[i][2]
+                    || (a1.getAtomicNumber() == lengthCoeffs[i][2]
                         && a1.getHybridization() == lengthCoeffs[i][3]
-                        && a2.atomicNumber() == lengthCoeffs[i][0]
+                        && a2.getAtomicNumber() == lengthCoeffs[i][0]
                         && a2.getHybridization() == lengthCoeffs[i][1])) {
                 found = true;
                 ks = lengthCoeffs[i][4];

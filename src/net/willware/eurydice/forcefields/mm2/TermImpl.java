@@ -25,7 +25,7 @@ public abstract class TermImpl implements Term {
             return "<Term ???>";
         String s = "<Term";
         for (i = 0; i < myAtoms.length; i++)
-            s += " " + myAtoms[i].symbol();
+            s += " " + myAtoms[i].getSymbol();
         return s + toStringHelper() + ">";
     }
 

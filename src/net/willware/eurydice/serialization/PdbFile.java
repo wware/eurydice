@@ -43,7 +43,7 @@ public class PdbFile extends Filetype {
             ps.print("ATOM  " +
                      formatInt(i + 1, 5, RIGHT) +
                      "  " +
-                     formatString(a.symbol(), 4, LEFT) +
+                     formatString(a.getSymbol(), 4, LEFT) +
                      "UNK     1    " +
                      formatDouble(struc.get(i).getPosition().getX(), 4, 3) +
                      formatDouble(struc.get(i).getPosition().getY(), 4, 3) +

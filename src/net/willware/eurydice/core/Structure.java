@@ -195,4 +195,9 @@ public interface Structure {
      * @param proc an implementor of {@link BondChainProcessor}
      */
     public void processBondChains(BondChainProcessor proc);
+
+    /**
+     * Generate a terse serial form, suitable for compact text files.
+     */
+    public String serialize();
 }

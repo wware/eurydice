@@ -13,7 +13,7 @@ import net.willware.eurydice.forcefields.ForceField;
  * portions of large structures that are small enough to reside in the memory
  * of a single computer.
  */
-public class StructureImpl implements Structure {
+public class StructureMutableImpl implements StructureMutable {
 
     /** The atom list. */
     private List<Atom> atomList;
@@ -25,10 +25,10 @@ public class StructureImpl implements Structure {
     private Properties metadata;
 
     /** The unique ID that identifies this structure. */
-    protected final UniqueId id;   // might need access to implement clone method
+    private UniqueId id;   // might need access to implement clone method
 
     /** The unique ID of the parent structure, if this structure has a parent. */
-    protected final UniqueId parentID;
+    private UniqueId parentID;
 
     /** The force field used to compute interatomic forces for this structure. */
     private ForceField forceField;
@@ -44,9 +44,8 @@ public class StructureImpl implements Structure {
      *
      * @param parentID the unique ID of the parent structure, or null
      */
-    public StructureImpl(UniqueId parentID) {
-        id = new UniqueIdImpl();
-        this.parentID = parentID;
+    public StructureMutableImpl() {
+        id = (UniqueId) ImplFactory.getInstance().get(UniqueId.class);
         forceField = null;
         atomList = new ArrayList<Atom>();
         jigList = new ArrayList<Jig>();
@@ -109,7 +108,7 @@ public class StructureImpl implements Structure {
             Vector p = a.getPosition();
             sb.append("\"atom" + numAtoms + "\":{");
             sb.append("\"symbol\":\"");
-            sb.append(a.symbol());
+            sb.append(a.getSymbol());
             sb.append("\",\"x\":");
             sb.append(p.getX());
             sb.append(",\"y\":");
@@ -129,13 +128,13 @@ public class StructureImpl implements Structure {
      */
     public boolean equals(Object obj) {
         try {
-            StructureImpl other = (StructureImpl) obj;
+            StructureMutableImpl other = (StructureMutableImpl) obj;
             Iterator<Atom> iter1 = getIterator();
             Iterator<Atom> iter2 = other.getIterator();
             while (iter1.hasNext()) {
                 Atom a1 = iter1.next();
                 Atom a2 = iter2.next();
-                if (!a1.name().equals(a2.name()))
+                if (!a1.getName().equals(a2.getName()))
                     throw new Exception();
                 if (a1.getHybridization() != a2.getHybridization())
                     throw new Exception();
@@ -188,7 +187,7 @@ public class StructureImpl implements Structure {
                 Vector previous = a.getPreviousPosition();
                 if (previous == null)
                     previous = pos;
-                Vector accel = a.getForce().scale(1.0 / a.mass());
+                Vector accel = a.getForce().scale(1.0 / a.getMass());
                 Vector newPos = pos.scale(2.0)
                                 .subtract(previous).add(accel.scale(dt * dt));
                 a.setPreviousPosition(pos);
@@ -282,8 +281,10 @@ public class StructureImpl implements Structure {
      * @see net.willware.eurydice.core.Structure#get(long)
      */
     public Atom get(int index) {
-        //return get(UniqueIdImpl.makeTempId(index));
-        return get(makeTempId(index));
+        UniqueIdSettable id = (UniqueIdSettable)
+                              ImplFactory.getInstance().get(UniqueIdSettable.class);
+        id.setNumericValue(index);
+        return get(id);
     }
 
     /**
@@ -296,6 +297,7 @@ public class StructureImpl implements Structure {
      * @return the list of bonds inferred from atom types and positions
      */
     public List<Bond> inferBonds() {
+        ImplFactory ifactory = ImplFactory.getInstance();
         if (previousBondList != null)
             return previousBondList;
         int i, j;
@@ -306,8 +308,14 @@ public class StructureImpl implements Structure {
             for (j = i + 1; j < n; j++) {
                 Atom a2 = get(j);
                 if (a1.getPosition().subtract(a2.getPosition()).length() <
-                        (a1.covalentRadius() + a2.covalentRadius() + 0.5)) {
-                    bondList.add(new BondImpl(a1, a2, bondList));  // TODO figure out correct bond order
+                        (a1.getCovalentRadius() + a2.getCovalentRadius() + 0.5)) {
+                    BondMutable bond = (BondMutable) ifactory.get(BondMutable.class);
+                    bond.setFirstAtom(a1);
+                    bond.setFirstAtom(a2);
+                    // TODO figure out correct bond order
+                    bondList.add(bond);
+                    a1.rehybridize(bondList);
+                    a2.rehybridize(bondList);
                 }
             }
         }
@@ -358,7 +366,7 @@ public class StructureImpl implements Structure {
      * @param a the atom to be added
      */
     public void addAtom(Atom a) {
-        addAtom(a, new UniqueIdImpl());
+        addAtom(a, new UniqueIdSettableImpl());
     }
 
     /**
@@ -368,7 +376,7 @@ public class StructureImpl implements Structure {
      * @param id the unique ID for this atom
      */
     public void addAtom(Atom a, UniqueId id) {
-        a.setUniqueId(id);
+        ((AtomMutable)a).setUniqueId(id);
         atomList.add(a);
         announceChange();
     }
@@ -422,88 +430,46 @@ public class StructureImpl implements Structure {
         jigList.add(j);
     }
 
-    /**
-     * For small structures, a 32-bit int is fine for a unique ID. For larger structures
-     * that don't fit in the memory of a single computer, something larger will be needed,
-     * maybe a 64-bit long, or maybe a UUID.
-     */
-    public static class UniqueIdImpl implements UniqueId {
-
-        /** The myvalue. */
-        private int myvalue;
-
-        /**
-         * Instantiates a new unique id impl.
-         */
-        public UniqueIdImpl() {
-            myvalue = uniqueIdCounter++;
-        }
-
-        /**
-         * Instantiates a new unique id impl.
-         *
-         * @param count the count
-         */
-        public UniqueIdImpl(int count) {
-            if (count < uniqueIdCounter)
-                throw new RuntimeException("Unique IDs may not be unique");
-            uniqueIdCounter = count;
-            myvalue = uniqueIdCounter++;
-        }
-
-        /* (non-Javadoc)
-         * @see java.lang.Object#toString()
-         */
-        public String toString() {
-            return "" + myvalue;
-        }
-
-        /* (non-Javadoc)
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
-        public boolean equals(Object obj) {
-            try {
-                return ((UniqueIdImpl) obj).myvalue == myvalue;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        /* (non-Javadoc)
-         * @see net.willware.eurydice.core.UniqueId#toInteger()
-         */
-        public int toInteger() {
-            return myvalue;
-        }
-
-        @Override
-        public int compareTo(UniqueId arg) {
-            try {
-                UniqueIdImpl other = (UniqueIdImpl) arg;
-                if (myvalue < other.myvalue)
-                    return -1;
-                else if (myvalue > other.myvalue)
-                    return -1;
-                return 0;
-            } catch (ClassCastException e) {
-                return -1;
-            }
-        }
+    @Override
+    public void getUniqueId(UniqueId uid) {
+        this.id = uid;
     }
 
-    /** The unique id counter. */
-    private static int uniqueIdCounter = 0;
+    @Override
+    public void setParentUniqueId(UniqueId puid) {
+        this.parentID = puid;
+    }
 
-    /**
-     * Make temp id.
-     *
-     * @param x the x
-     * @return the unique id
-     */
-    public static UniqueId makeTempId(int x) {
-        UniqueIdImpl uii = new UniqueIdImpl();
-        uii.myvalue = x;
-        uniqueIdCounter--;
-        return uii;
+    @Override
+    public String serialize() {
+        final StringBuilder sb = new StringBuilder();
+        final boolean firstAtom[] = new boolean[1];
+        firstAtom[0] = true;
+        process(new AtomProcessor() {
+            @Override
+            public void process(Atom a) {
+                if (firstAtom[0]) {
+                    firstAtom[0] = false;
+                } else {
+                    sb.append("\n");
+                }
+                sb.append(a.getSymbol());
+                sb.append(":");
+                sb.append(a.getHybridizationString());
+                sb.append(":");
+                Vector pos = a.getPosition();
+                sb.append(doubleAsString(pos.getX()));
+                sb.append(":");
+                sb.append(doubleAsString(pos.getY()));
+                sb.append(":");
+                sb.append(doubleAsString(pos.getZ()));
+            }
+            private String doubleAsString(double x) {
+                String s = "" + x;
+                int endIndex = (s.length() < 8) ? s.length() : 8;
+                return ("" + x).substring(0, endIndex);
+            }
+        });
+        return sb.toString();
     }
 }

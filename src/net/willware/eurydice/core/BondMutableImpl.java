@@ -11,30 +11,15 @@ import java.util.List;
 /**
  * The Class BondImpl.
  */
-public class BondImpl implements Bond {
+public class BondMutableImpl implements BondMutable {
 
     /** The order. */
-    private int order;
+    private int order = 1;
 
     /** One of the two atoms participating in this bond. */
     private Atom a1;
     /** One of the two atoms participating in this bond. */
     private Atom a2;
-
-    /**
-     * Constructor.
-     *
-     * @param atm1 one atom
-     * @param atm2 another atom
-     * @param bonds a list of bonds which will be used to rehybridize these atoms
-     */
-    public BondImpl(Atom atm1, Atom atm2, List<Bond> bonds) {
-        a1 = atm1;
-        a2 = atm2;
-        order = 1;
-        a1.rehybridize(bonds);
-        a2.rehybridize(bonds);
-    }
 
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Bond#getFirstAtom()
@@ -53,7 +38,7 @@ public class BondImpl implements Bond {
     /* (non-Javadoc)
      * @see net.willware.eurydice.core.Bond#order()
      */
-    public int order() {
+    public int getOrder() {
         return order;
     }
 
@@ -127,5 +112,20 @@ public class BondImpl implements Bond {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public void setFirstAtom(Atom a) {
+        a1 = a;
+    }
+
+    @Override
+    public void setOrder(int o) {
+        order = o;
+    }
+
+    @Override
+    public void setSecondAtom(Atom a) {
+        a2 = a;
     }
 }

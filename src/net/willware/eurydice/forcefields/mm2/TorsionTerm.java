@@ -42,21 +42,21 @@ public class TorsionTerm extends TermImpl {
         myAtoms[3] = a4;
         for (i = 0, found = false;
                 i < torsionCoeffs.length && !found; i++)
-            if ((a1.atomicNumber() == torsionCoeffs[i][0]
+            if ((a1.getAtomicNumber() == torsionCoeffs[i][0]
                     && a1.getHybridization() == torsionCoeffs[i][1]
-                    && a2.atomicNumber() == torsionCoeffs[i][2]
+                    && a2.getAtomicNumber() == torsionCoeffs[i][2]
                     && a2.getHybridization() == torsionCoeffs[i][3]
-                    && a3.atomicNumber() == torsionCoeffs[i][4]
+                    && a3.getAtomicNumber() == torsionCoeffs[i][4]
                     && a3.getHybridization() == torsionCoeffs[i][5]
-                    && a4.atomicNumber() == torsionCoeffs[i][6]
+                    && a4.getAtomicNumber() == torsionCoeffs[i][6]
                     && a4.getHybridization() == torsionCoeffs[i][7])
-                    || (a1.atomicNumber() == torsionCoeffs[i][6]
+                    || (a1.getAtomicNumber() == torsionCoeffs[i][6]
                         && a1.getHybridization() == torsionCoeffs[i][7]
-                        && a2.atomicNumber() == torsionCoeffs[i][4]
+                        && a2.getAtomicNumber() == torsionCoeffs[i][4]
                         && a2.getHybridization() == torsionCoeffs[i][5]
-                        && a3.atomicNumber() == torsionCoeffs[i][2]
+                        && a3.getAtomicNumber() == torsionCoeffs[i][2]
                         && a3.getHybridization() == torsionCoeffs[i][3]
-                        && a4.atomicNumber() == torsionCoeffs[i][0]
+                        && a4.getAtomicNumber() == torsionCoeffs[i][0]
                         && a4.getHybridization() ==
                         torsionCoeffs[i][1])) {
                 found = true;

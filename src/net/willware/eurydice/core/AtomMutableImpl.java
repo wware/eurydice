@@ -7,39 +7,16 @@ package net.willware.eurydice.core;
 
 import java.util.List;
 
-import net.willware.eurydice.elements.Carbon;
-import net.willware.eurydice.elements.Hydrogen;
-import net.willware.eurydice.elements.Nitrogen;
-import net.willware.eurydice.elements.Oxygen;
 import net.willware.eurydice.math.Vector;
 
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
-public abstract class AtomImpl implements Atom {
+public class AtomMutableImpl implements AtomMutable {
     /** The Constant hybridnames. */
     private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
-    /** The id. */
     private UniqueId id;
-
-    /**
-     * Gets the element.
-     *
-     * @param elementName the element name
-     * @return the element
-     */
-    public static AtomImpl getElement(String elementName) {
-        if ("C".equals(elementName))
-            return new Carbon();
-        if ("H".equals(elementName))
-            return new Hydrogen();
-        if ("O".equals(elementName))
-            return new Oxygen();
-        if ("N".equals(elementName))
-            return new Nitrogen();
-        return null;
-    }
 
     /** The force. */
     private Vector position, previousPosition, force;
@@ -59,7 +36,7 @@ public abstract class AtomImpl implements Atom {
     /**
      * Instantiates a new atom.
      */
-    public AtomImpl() {
+    public AtomMutableImpl() {
         position = new Vector();
         force = new Vector();
         previousPosition = null;
@@ -72,7 +49,7 @@ public abstract class AtomImpl implements Atom {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<" + symbol() + " " + id + " " + hybridnames[getHybridization()] + ">";
+        return "<" + getSymbol() + " " + id + " " + hybridnames[getHybridization()] + ">";
     }
 
     /**
@@ -102,7 +79,7 @@ public abstract class AtomImpl implements Atom {
         bi.doubles = 0;
         bi.triples = 0;
         for (Bond b: bonds) {
-            switch (b.order()) {
+            switch (b.getOrder()) {
             default:
                 bi.singles++;
                 break;
@@ -303,5 +280,105 @@ public abstract class AtomImpl implements Atom {
      */
     public UniqueId getUniqueId() {
         return id;
+    }
+
+    private int atomicnumber;
+    private Color color;
+    private int numbonds;
+    private double covalentradius;
+    private double vdwradius;
+    private double vdwenergy;
+    private double mass;
+    private String name;
+    private String symbol;
+
+    @Override
+    public void setAtomicNumber(int n) {
+        atomicnumber = n;
+    }
+
+    @Override
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
+    @Override
+    public void setCorrectNumBonds(int n) {
+        numbonds = n;
+    }
+
+    @Override
+    public void setCovalentRadius(double r) {
+        covalentradius = r;
+    }
+
+    @Override
+    public void setMass(double mass) {
+        this.mass = mass;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public void setVdwEnergy(double e) {
+        vdwenergy = e;
+    }
+
+    @Override
+    public void setVdwRadius(double r) {
+        vdwradius = r;
+    }
+
+    @Override
+    public int getAtomicNumber() {
+        return atomicnumber;
+    }
+
+    @Override
+    public Color getColor() {
+        return color;
+    }
+
+    @Override
+    public int getCorrectNumBonds() {
+        return numbonds;
+    }
+
+    @Override
+    public double getCovalentRadius() {
+        return covalentradius;
+    }
+
+    @Override
+    public double getMass() {
+        return mass;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getSymbol() {
+        return symbol;
+    }
+
+    @Override
+    public double getVdwEnergy() {
+        return vdwenergy;
+    }
+
+    @Override
+    public double getVdwRadius() {
+        return vdwradius;
     }
 }
