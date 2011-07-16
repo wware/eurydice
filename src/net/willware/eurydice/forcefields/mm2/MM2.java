@@ -7,8 +7,6 @@ import java.util.List;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
 import net.willware.eurydice.core.BondChainProcessor;
-import net.willware.eurydice.core.JigMutable;
-import net.willware.eurydice.core.JigMutableImpl;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.UniqueId;
 import net.willware.eurydice.core.Structure.AtomProcessor;
@@ -19,7 +17,7 @@ import net.willware.eurydice.forcefields.ForceField;
  * Drexler's book <i>Nanosystems</i>, around page 44 if memory serves.
  * @see <a href="http://en.wikipedia.org/wiki/Molecular_modelling">Wikipedia article on molecular modeling</a>
  */
-public class MM2 extends JigMutableImpl implements JigMutable, ForceField {
+public class MM2 extends ForceField {
 
     /** A list of the energy terms used to compute forces on the atoms in {@link #struc}. */
     private List<Term> termList;

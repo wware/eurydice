@@ -12,7 +12,7 @@ import net.willware.eurydice.math.Vector;
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
-public class AtomMutableImpl implements AtomMutable {
+public class AtomMutableImpl extends AtomMutable {
     /** The Constant hybridnames. */
     private static final String hybridnames[] = { "SP3", "SP2", "SP", "NONE" };
 
@@ -93,6 +93,7 @@ public class AtomMutableImpl implements AtomMutable {
         }
         return bi;
     }
+
     // overload me, unless I'm hydrogen
     /**
      * Rehybridize this atom, given a list of bonds.

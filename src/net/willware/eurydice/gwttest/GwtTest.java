@@ -7,7 +7,6 @@ import net.willware.eurydice.elements.ElementFactory;
 import net.willware.eurydice.forcefields.mm2.MM2;
 import net.willware.eurydice.math.Quaternion;
 import net.willware.eurydice.math.Vector;
-import net.willware.eurydice.core.ImplFactory;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.StructureMutable;
 
@@ -18,7 +17,7 @@ public class GwtTest implements EntryPoint {
     private MM2 mm2;
     public void onModuleLoad() {
         a = ElementFactory.getInstance().get("Carbon");
-        s = (StructureMutable) ImplFactory.getInstance().get(Structure.class);
+        s = (StructureMutable) Structure.newInstance();
         s.addAtom(a);
         s.getMetadata().put("here is", "some metadata");
         q = new Quaternion(1, new Vector());

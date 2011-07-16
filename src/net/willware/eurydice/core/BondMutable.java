@@ -10,25 +10,25 @@ package net.willware.eurydice.core;
  * can be single, double or triple, or in some cases it may be fractional, for instance
  * graphene has bonds of approximate order 1.5.
  */
-public interface BondMutable extends Bond {
+public abstract class BondMutable extends Bond {
 
     /**
      * Set the first of the two atoms.
      *
      * @return the first atom
      */
-    void setFirstAtom(Atom a);
+    public abstract void setFirstAtom(Atom a);
 
     /**
      * Set the second of the two atoms.
      *
      * @return the second atom
      */
-    void setSecondAtom(Atom a);
+    public abstract void setSecondAtom(Atom a);
 
     /**
      * Set the numerical order of this bond, for example 1 for a single bond, 2 for a
      * double bond, etc.
      */
-    void setOrder(int o);
+    public abstract void setOrder(int o);
 }

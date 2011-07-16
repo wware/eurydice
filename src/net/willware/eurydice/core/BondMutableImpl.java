@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * The Class BondImpl.
  */
-public class BondMutableImpl implements BondMutable {
+public class BondMutableImpl extends BondMutable {
 
     /** The order. */
     private int order = 1;
@@ -79,8 +79,7 @@ public class BondMutableImpl implements BondMutable {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "<Bond " + a1.getUniqueId() + " " + a2.getUniqueId() + " " +
-               (new Integer(order)).toString() + ">";
+        return "<Bond " + a1 + " " + a2 + " " + order + ">";
     }
 
     /**

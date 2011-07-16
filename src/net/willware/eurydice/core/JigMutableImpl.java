@@ -7,7 +7,7 @@ package net.willware.eurydice.core;
  * forces to some of the atoms in a structure. Examples of measurements could be temperature
  * (averaging Brownian motion over a few time steps), or lengths or angles.
  */
-public abstract class JigMutableImpl implements Jig {
+public abstract class JigMutableImpl extends JigMutable {
 
     /** The properties. */
     private Properties properties;
@@ -39,26 +39,6 @@ public abstract class JigMutableImpl implements Jig {
 
     public void setStructure(Structure struc) {
         this.struc = struc;
-    }
-
-    /**
-     * Creates an instance of a jig, given the name
-     *
-     * @param struc the struc
-     * @param jigName the jig name
-     * @return the jig
-     */
-    public static JigMutable getJig(Structure struc, String jigName) {
-        if (!"net.willware.eurydice.forcefields.mm2.MM2".equals(jigName))
-            throw new RuntimeException("cannot handle jig named " + jigName);
-        Class<?> cls = net.willware.eurydice.forcefields.mm2.MM2.class;
-        JigMutable j = null;
-        try {
-            j = (JigMutable) cls.newInstance();
-            j.setStructure(struc);
-            j.setProperties(new Properties());
-        } catch (Exception e) { }
-        return j;
     }
 
     /**

@@ -9,7 +9,7 @@ import java.util.List;
  * forces to some of the atoms in a structure. Examples of measurements could be temperature
  * (averaging Brownian motion over a few time steps), or lengths or angles.
  */
-public interface Jig {
+public abstract class Jig {
 
     /**
      * Compute a map of force vector based on atom positions. The keys are atom indices
@@ -17,28 +17,28 @@ public interface Jig {
      *
      * @param struc the struc
      */
-    public void computeForces();
+    public abstract void computeForces();
 
     /**
      * Return a list of indices for the atoms this jig is connected to.
      *
      * @return the list
      */
-    public List<UniqueId> getAtomIndices();
+    public abstract List<UniqueId> getAtomIndices();
 
     /**
      * Jigs have properties.
      *
      * @param str a stringified Properties instance to import stuff from
      */
-    public void loadProperties(String str);
+    public abstract void loadProperties(String str);
 
     /**
      * Set all the properties of this jig.
      *
      * @param p the new Properties for this jig
      */
-    public void setProperties(Properties p);
+    public abstract void setProperties(Properties p);
 
     /**
      * Set a property of this jig.
@@ -46,7 +46,7 @@ public interface Jig {
      * @param key the key of the property
      * @param value the value of the property
      */
-    public void setProperty(String key, String value);
+    public abstract void setProperty(String key, String value);
 
     /**
      * Jigs have properties.
@@ -54,7 +54,7 @@ public interface Jig {
      * @return the properties
      * @returns the properties of this jig
      */
-    public Properties getProperties();
+    public abstract Properties getProperties();
 
     /**
      * Jigs refer to specific Structures.
@@ -62,5 +62,23 @@ public interface Jig {
      * @return the struc
      * @returns the structure to which this jig applies
      */
-    public Structure getStructure();
+    public abstract Structure getStructure();
+
+    /**
+     * Creates an instance of a jig, given the name
+     *
+     * @param struc the struc
+     * @param jigName the jig name
+     * @return the jig
+     */
+    public static JigMutable getJig(Structure struc, String jigName) {
+        JigMutable j;
+        if ("net.willware.eurydice.forcefields.mm2.MM2".equals(jigName))
+            j = new net.willware.eurydice.forcefields.mm2.MM2();
+        else
+            throw new RuntimeException("cannot find jig: " + jigName);
+        j.setStructure(struc);
+        j.setProperties(new Properties());
+        return j;
+    }
 }

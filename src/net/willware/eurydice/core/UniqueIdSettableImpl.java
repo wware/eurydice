@@ -5,7 +5,7 @@ package net.willware.eurydice.core;
  * that don't fit in the memory of a single computer, something larger will be needed,
  * maybe a 64-bit long, or maybe a UUID.
  */
-public class UniqueIdSettableImpl implements UniqueIdSettable {
+public class UniqueIdSettableImpl extends UniqueIdSettable {
 
     private int myvalue;
     private static int counter = 0;

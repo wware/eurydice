@@ -8,15 +8,15 @@ package net.willware.eurydice.core;
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
-public interface AtomMutable extends Atom {
-    void setUniqueId(UniqueId id);
-    void setName(String name);
-    void setSymbol(String symbol);
-    void setAtomicNumber(int n);
-    void setMass(double mass);
-    void setColor(Color color);
-    void setCovalentRadius(double r);
-    void setVdwEnergy(double e);
-    void setVdwRadius(double r);
-    void setCorrectNumBonds(int n);
+public abstract class AtomMutable extends Atom {
+    public abstract void setUniqueId(UniqueId id);
+    public abstract void setName(String name);
+    public abstract void setSymbol(String symbol);
+    public abstract void setAtomicNumber(int n);
+    public abstract void setMass(double mass);
+    public abstract void setColor(Color color);
+    public abstract void setCovalentRadius(double r);
+    public abstract void setVdwEnergy(double e);
+    public abstract void setVdwRadius(double r);
+    public abstract void setCorrectNumBonds(int n);
 }

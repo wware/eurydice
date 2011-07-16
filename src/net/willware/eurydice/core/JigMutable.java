@@ -7,19 +7,19 @@ package net.willware.eurydice.core;
  * forces to some of the atoms in a structure. Examples of measurements could be temperature
  * (averaging Brownian motion over a few time steps), or lengths or angles.
  */
-public interface JigMutable extends Jig {
+public abstract class JigMutable extends Jig {
 
     /**
      * Set the properties.
      *
      * @param the properties
      */
-    void setProperties(Properties properties);
+    public abstract void setProperties(Properties properties);
 
     /**
      * Set the structure to which this jig refers.
      *
      * @param the struc
      */
-    void setStructure(Structure struc);
+    public abstract void setStructure(Structure struc);
 }

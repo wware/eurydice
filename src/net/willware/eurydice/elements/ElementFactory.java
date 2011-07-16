@@ -3,15 +3,9 @@ package net.willware.eurydice.elements;
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.AtomMutable;
 import net.willware.eurydice.core.Color;
-import net.willware.eurydice.core.ImplFactory;
 import net.willware.eurydice.core.UniqueId;
 
 public class ElementFactory {
-
-    private final ImplFactory ifactory;
-    private ElementFactory() {
-        ifactory = ImplFactory.getInstance();
-    }
 
     private static ElementFactory instance;
     public static ElementFactory getInstance() {
@@ -23,8 +17,8 @@ public class ElementFactory {
 
     private Atom makeAtom(String name, String symbol, int num, double mass,
                           String colorname, double cr, double vdwr, double vdwe, int bonds) {
-        AtomMutable a = (AtomMutable) ifactory.get(AtomMutable.class);
-        a.setUniqueId((UniqueId) ifactory.get(UniqueId.class));
+        AtomMutable a = (AtomMutable) Atom.newInstance();
+        a.setUniqueId(UniqueId.newInstance());
         a.setName(name);
         a.setSymbol(symbol);
         a.setMass(mass);

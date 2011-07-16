@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 import net.willware.eurydice.core.Atom;
-import net.willware.eurydice.core.ImplFactory;
 import net.willware.eurydice.core.Structure;
 import net.willware.eurydice.core.StructureMutable;
 import net.willware.eurydice.elements.ElementFactory;
@@ -13,14 +12,18 @@ import net.willware.eurydice.math.Vector;
 public abstract class StructureLibrary {
 
     private static ElementFactory factory = ElementFactory.getInstance();
+    private static String preamble =
+        "/home/wware/eurydice/src/net/willware/eurydice/library/structures/";
+    public static void setPreamble(String s) {
+        preamble = s;
+    }
 
     private static String getTextFilename(String strucname) {
-        // TODO get this figured out correctly
-        return "/home/wware/eurydice/src/net/willware/eurydice/library/structures/" + strucname + ".txt";
+        return preamble + strucname + ".txt";
     }
 
     public static Structure get(String strucname) {
-        StructureMutable s = (StructureMutable) ImplFactory.getInstance().get(StructureMutable.class);
+        StructureMutable s = (StructureMutable) Structure.newInstance();
         try {
             FileReader fr = new FileReader(getTextFilename(strucname));
             BufferedReader br = new BufferedReader(fr);

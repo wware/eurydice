@@ -12,7 +12,7 @@ import net.willware.eurydice.math.Vector;
 /**
  * Atoms are those little bitty things that all (baryonic) stuff is made out of.
  */
-public interface Atom {
+public abstract class Atom {
     // hybridizations are a virtual enum
     /** SP3 hybridization type. */
     public static final int SP3 = 0;
@@ -31,49 +31,49 @@ public interface Atom {
      *
      * @return the unique ID
      */
-    UniqueId getUniqueId();
+    public abstract UniqueId getUniqueId();
 
     /**
      * Name.
      *
      * @return the name of the element, such as "Carbon" or "Hydrogen"
      */
-    String getName();
+    public abstract String getName();
 
     /**
      * Symbol.
      *
      * @return the official chemical symbol, such as "C" or "H"
      */
-    String getSymbol();
+    public abstract String getSymbol();
 
     /**
      * Atomic number.
      *
      * @return the atomic number of this element
      */
-    int getAtomicNumber();
+    public abstract int getAtomicNumber();
 
     /**
      * Mass.
      *
      * @return the mass of this element (ignoring isotopes)
      */
-    double getMass();
+    public abstract double getMass();
 
     /**
      * Color.
      *
      * @return the display color of this atom
      */
-    Color getColor();
+    public abstract Color getColor();
 
     /**
      * Covalent radius.
      *
      * @return the covalent radius of this atom, in angstroms
      */
-    double getCovalentRadius();
+    public abstract double getCovalentRadius();
 
     /**
      * Van-der-Waals energy; see Table 3.1 and Equation 3.8 in <i>Nanosystems</i>
@@ -81,14 +81,14 @@ public interface Atom {
      *
      * @return the van-der-Waals energy
      */
-    double getVdwEnergy();
+    public abstract double getVdwEnergy();
 
     /**
      * Vdw radius.
      *
      * @return the van-der-Waals radius of this atom
      */
-    double getVdwRadius();
+    public abstract double getVdwRadius();
 
     /**
      * Correct num bonds.
@@ -96,14 +96,14 @@ public interface Atom {
      * @return the number of single bonds for this atom when SP3-hybridized,
      * such as 4 for carbon or 3 for nitrogen
      */
-    int getCorrectNumBonds();
+    public abstract int getCorrectNumBonds();
 
     // overload me, unless I'm hydrogen
     /**
      * Rehybridize this atom, given a list of bonds.
      * @param bonds a bond list
      */
-    void rehybridize(List<Bond> bonds);
+    public abstract void rehybridize(List<Bond> bonds);
 
     /**
      * Sets the electrostatic charge for an ionized atom. This is not the
@@ -111,14 +111,14 @@ public interface Atom {
      * of differing electronegativity, which forms an electric dipole moment.
      * @param charge the new charge
      */
-    void setCharge(int charge);
+    public abstract void setCharge(int charge);
 
     /**
      * Gets the atom's charge due to ionization.
      *
      * @return the charge
      */
-    int getCharge();
+    public abstract int getCharge();
 
     /**
      * Sets the fractional charge resulting from a bond with an atom
@@ -126,7 +126,7 @@ public interface Atom {
      *
      * @param fractionalCharge the new fractional charge
      */
-    void setFractionalCharge(double fractionalCharge);
+    public abstract void setFractionalCharge(double fractionalCharge);
 
     /**
      * Gets the fractional charge resulting from a bond with an atom
@@ -134,14 +134,14 @@ public interface Atom {
      *
      * @return the fractional charge
      */
-    double getFractionalCharge();
+    public abstract double getFractionalCharge();
 
     /**
      * Sets the hybridization of this atom. Needed for rehybridization.
      *
      * @param hybridization the new hybridization
      */
-    void setHybridization(int hybridization);
+    public abstract void setHybridization(int hybridization);
 
     /**
      * Gets the hybridization of this atom using one of the integer constants
@@ -149,7 +149,7 @@ public interface Atom {
      *
      * @return the hybridization as an integer
      */
-    int getHybridization();
+    public abstract int getHybridization();
 
     /**
      * Gets the hybridization of this atom as a string, for example
@@ -157,66 +157,84 @@ public interface Atom {
      *
      * @return the hybridization as a string
      */
-    String getHybridizationString();
+    public abstract String getHybridizationString();
 
     /**
      * Sets the position vector of this atom.
      *
      * @param position the new position
      */
-    void setPosition(Vector position);
+    public abstract void setPosition(Vector position);
 
     /**
      * Move this atom by a delta position vector.
      *
      * @param delta the delta position vector
      */
-    void move(Vector delta);
+    public abstract void move(Vector delta);
 
     /**
      * Gets the position vector of this atom.
      *
      * @return the position
      */
-    Vector getPosition();
+    public abstract Vector getPosition();
 
     /**
      * Sets the previous position of this atom, used in Verlet integration.
      *
      * @param previousPosition the new previous position
      */
-    void setPreviousPosition(Vector previousPosition);
+    public abstract void setPreviousPosition(Vector previousPosition);
 
     /**
      * Gets the previous position of this atom, used in Verlet integration.
      *
      * @return the previous position
      */
-    Vector getPreviousPosition();
+    public abstract Vector getPreviousPosition();
 
     /**
      * Sets the force vector acting on this atom.
      *
      * @param force the new force
      */
-    void setForce(Vector force);
+    public abstract void setForce(Vector force);
 
     /**
      * Set the force vector of this atom to zero.
      */
-    void zeroForce();
+    public abstract void zeroForce();
 
     /**
      * Adds an increment vector to this atom's force vector.
      *
      * @param dforce the dforce
      */
-    void addForce(Vector dforce);
+    public abstract void addForce(Vector dforce);
 
     /**
      * Gets the force vector acting on this atom.
      *
      * @return the force
      */
-    Vector getForce();
+    public abstract Vector getForce();
+
+    public interface Factory {
+        public Atom newInstance();
+    }
+    private static class DefaultFactory implements Factory {
+        public Atom newInstance() {
+            return new AtomMutableImpl();
+        }
+    }
+    private static Factory factory = null;
+    public static void setFactory(Factory f) {
+        factory = f;
+    }
+    public static Atom newInstance() {
+        if (factory == null)
+            factory = new DefaultFactory();
+        return factory.newInstance();
+    }
 }

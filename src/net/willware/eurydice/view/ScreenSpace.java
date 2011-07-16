@@ -106,9 +106,8 @@ public class ScreenSpace {
      * @return the local scaling factor of angstroms to pixels
      */
     public double scaleNear(Vector p) {
-        double h = 1.0e-6;
-        double x = xyzToScreen(p.add(new Vector(h, 0.0, 0.0))).subtract(xyzToScreen(p)).length();
-        return x / h;
+        p = orientation.apply(p);
+        return perspective.apply(zoomFactor, p.getZ());
     }
 
     /**
@@ -119,9 +118,8 @@ public class ScreenSpace {
      * @return the local scaling factor of pixels to angstroms
      */
     public double unscaleNear(Vector p) {
-        double h = 1.0e-6;
-        double x = screenToXyz(p.add(new Vector(h, 0.0, 0.0))).subtract(screenToXyz(p)).length();
-        return x / h;
+        p = orientation.unapply(p);
+        return perspective.unapply(1.0 / zoomFactor, p.getZ());
     }
 
     /**

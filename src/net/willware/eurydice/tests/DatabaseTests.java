@@ -13,7 +13,6 @@ import junit.textui.TestRunner;
 
 import net.willware.eurydice.core.Atom;
 import net.willware.eurydice.core.Bond;
-import net.willware.eurydice.core.ImplFactory;
 import net.willware.eurydice.core.Jig;
 import net.willware.eurydice.core.Properties;
 import net.willware.eurydice.core.Structure;
@@ -101,7 +100,7 @@ public class DatabaseTests extends TestCase {
          * @see java.lang.Object#clone()
          */
         public TestSmallStructure clone() {
-            UniqueId uid = (UniqueId) ImplFactory.getInstance().get(UniqueId.class);
+            UniqueId uid = UniqueId.newInstance();
             TestSmallStructure newguy = new TestSmallStructure(uid);
             // same unique ID? different unique ID?
             newguy.metadata = metadata;

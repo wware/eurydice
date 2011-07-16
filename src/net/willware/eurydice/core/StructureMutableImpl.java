@@ -1,8 +1,10 @@
 package net.willware.eurydice.core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import net.willware.eurydice.math.Region;
 import net.willware.eurydice.math.Vector;
@@ -13,10 +15,13 @@ import net.willware.eurydice.forcefields.ForceField;
  * portions of large structures that are small enough to reside in the memory
  * of a single computer.
  */
-public class StructureMutableImpl implements StructureMutable {
+public class StructureMutableImpl extends StructureMutable {
+
+    private static Logger logger = Logger.getLogger("eurydice");
 
     /** The atom list. */
-    private List<Atom> atomList;
+    private ArrayList<Integer> atomIds;
+    private HashMap<Integer,Atom> atomList;
 
     /** The jig list. */
     private List<Jig> jigList;
@@ -45,9 +50,10 @@ public class StructureMutableImpl implements StructureMutable {
      * @param parentID the unique ID of the parent structure, or null
      */
     public StructureMutableImpl() {
-        id = (UniqueId) ImplFactory.getInstance().get(UniqueId.class);
+        id = UniqueId.newInstance();
         forceField = null;
-        atomList = new ArrayList<Atom>();
+        atomList = new HashMap<Integer,Atom>();
+        atomIds = new ArrayList<Integer>();
         jigList = new ArrayList<Jig>();
         metadata = new Properties();
         substructures = new java.util.ArrayList<Substructure>();
@@ -103,22 +109,25 @@ public class StructureMutableImpl implements StructureMutable {
         StringBuilder sb = new StringBuilder();
         Iterator<Atom> iter = getIterator();
         sb.append("{");
+        sb.append("\"numAtoms\":" + numAtoms);
         while (iter.hasNext()) {
             Atom a = iter.next();
             Vector p = a.getPosition();
+            sb.append(",");
             sb.append("\"atom" + numAtoms + "\":{");
-            sb.append("\"symbol\":\"");
-            sb.append(a.getSymbol());
-            sb.append("\",\"x\":");
+            sb.append("\"symbol\":");
+            sb.append("\"" + a.getSymbol() + "\"");
+            sb.append(",\"uniqueid\":");
+            sb.append(a.getUniqueId());
+            sb.append(",\"position\":{\"x\":");
             sb.append(p.getX());
             sb.append(",\"y\":");
             sb.append(p.getY());
             sb.append(",\"z\":");
             sb.append(p.getZ());
-            sb.append("},");
+            sb.append("}}");
             numAtoms++;
         }
-        sb.append("\"numAtoms\":" + numAtoms);
         sb.append("}");
         return sb.toString();
     }
@@ -222,14 +231,13 @@ public class StructureMutableImpl implements StructureMutable {
      * @see net.willware.eurydice.core.Structure#getBoundingBox()
      */
     public Region getBoundingBox() {
-        Vector pos = atomList.get(0).getPosition();
-        double xmin = pos.getX();
-        double ymin = pos.getY();
-        double zmin = pos.getZ();
-        double xmax = xmin;
-        double ymax = ymin;
-        double zmax = zmin;
-        for (Atom a: atomList) {
+        double xmin = 1.0e20;
+        double ymin = 1.0e20;
+        double zmin = 1.0e20;
+        double xmax = -1.0e20;
+        double ymax = -1.0e20;
+        double zmax = -1.0e20;
+        for (Atom a: atomList.values()) {
             Vector v = a.getPosition();
             xmin = (xmin < v.getX()) ? xmin : v.getX();
             ymin = (ymin < v.getY()) ? ymin : v.getY();
@@ -260,7 +268,7 @@ public class StructureMutableImpl implements StructureMutable {
      * @see net.willware.eurydice.core.Structure#getIterator()
      */
     public Iterator<Atom> getIterator() {
-        return atomList.iterator();
+        return atomList.values().iterator();
     }
 
     /* (non-Javadoc)
@@ -281,10 +289,12 @@ public class StructureMutableImpl implements StructureMutable {
      * @see net.willware.eurydice.core.Structure#get(long)
      */
     public Atom get(int index) {
-        UniqueIdSettable id = (UniqueIdSettable)
-                              ImplFactory.getInstance().get(UniqueIdSettable.class);
+    	/*
+        UniqueIdSettable id = (UniqueIdSettable) UniqueId.newInstance();
         id.setNumericValue(index);
         return get(id);
+        */
+    	return atomList.get(index);
     }
 
     /**
@@ -297,21 +307,20 @@ public class StructureMutableImpl implements StructureMutable {
      * @return the list of bonds inferred from atom types and positions
      */
     public List<Bond> inferBonds() {
-        ImplFactory ifactory = ImplFactory.getInstance();
         if (previousBondList != null)
             return previousBondList;
         int i, j;
-        final int n = atomList.size();
+        final int n = atomIds.size();
         List<Bond> bondList = new ArrayList<Bond>();
         for (i = 0; i < n - 1; i++) {
-            Atom a1 = get(i);
+            Atom a1 = get(atomIds.get(i));
             for (j = i + 1; j < n; j++) {
-                Atom a2 = get(j);
+                Atom a2 = get(atomIds.get(j));
                 if (a1.getPosition().subtract(a2.getPosition()).length() <
                         (a1.getCovalentRadius() + a2.getCovalentRadius() + 0.5)) {
-                    BondMutable bond = (BondMutable) ifactory.get(BondMutable.class);
+                    BondMutable bond = (BondMutable) Bond.newInstance();
                     bond.setFirstAtom(a1);
-                    bond.setFirstAtom(a2);
+                    bond.setSecondAtom(a2);
                     // TODO figure out correct bond order
                     bondList.add(bond);
                     a1.rehybridize(bondList);
@@ -328,7 +337,7 @@ public class StructureMutableImpl implements StructureMutable {
      */
     public void processBondChains(BondChainProcessor proc) {
         inferBonds();
-        for (Atom a : atomList)
+        for (Atom a : atomList.values())
             processBondChainHelper(a, proc, 3);
     }
 
@@ -366,7 +375,17 @@ public class StructureMutableImpl implements StructureMutable {
      * @param a the atom to be added
      */
     public void addAtom(Atom a) {
-        addAtom(a, new UniqueIdSettableImpl());
+    	UniqueId id = a.getUniqueId();
+    	if (id != null) {
+    		if (atomList.containsKey(id))
+    			throw new RuntimeException("duplicate atom ID?");
+    	} else {
+            id = UniqueId.newInstance();
+            ((AtomMutable)a).setUniqueId(id);
+    	}
+    	atomIds.add(id.toInteger());
+        atomList.put(id.toInteger(), a);
+        announceChange();
     }
 
     /**
@@ -377,7 +396,8 @@ public class StructureMutableImpl implements StructureMutable {
      */
     public void addAtom(Atom a, UniqueId id) {
         ((AtomMutable)a).setUniqueId(id);
-        atomList.add(a);
+    	atomIds.add(id.toInteger());
+        atomList.put(id.toInteger(), a);
         announceChange();
     }
 
@@ -387,6 +407,7 @@ public class StructureMutableImpl implements StructureMutable {
      * @param a the atom to be removed
      */
     public void removeAtom(Atom a) {
+    	atomIds.remove(a.getUniqueId().toInteger());
         atomList.remove(a);
         announceChange();
     }
@@ -404,7 +425,7 @@ public class StructureMutableImpl implements StructureMutable {
      * @see net.willware.eurydice.core.Structure#indexOf(net.willware.eurydice.core.Atom)
      */
     public long indexOf(Atom a) {
-        return atomList.indexOf(a);
+        return a.getUniqueId().toInteger();
     }
 
     /* (non-Javadoc)
