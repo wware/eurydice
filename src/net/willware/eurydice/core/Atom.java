@@ -14,17 +14,17 @@ import net.willware.eurydice.math.Vector;
  */
 public abstract class Atom {
     // hybridizations are a virtual enum
-    /** SP3 hybridization type. */
-    public static final int SP3 = 0;
-
-    /** SP2 hybridization type. */
-    public static final int SP2 = 1;
+    /** NONE hybridization type. */
+    public static final int NONE = 0;
 
     /** SP hybridization type. */
-    public static final int SP = 2;
+    public static final int SP = 1;
 
-    /** NONE hybridization type. */
-    public static final int NONE = 3;
+    /** SP2 hybridization type. */
+    public static final int SP2 = 2;
+
+    /** SP3 hybridization type. */
+    public static final int SP3 = 3;
 
     /**
      * Get the unique ID for this atom.
