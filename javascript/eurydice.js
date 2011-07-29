@@ -1,5 +1,5 @@
 /*
- * * * * * * * * * * * * * * INHERITANCE * * * * * * * * * * * * * *
+ * * * * * * * * * * * * * * PRELIMINARIES * * * * * * * * * * * * * *
  */
 
 var pixelAtomHash;  // keyed by coarse (x,y) screen location
@@ -8,12 +8,88 @@ var scalar;
 var orientation;
 var hydrogenCovalentRadius = 0.3;  // angstroms
 
+var stepsBetweenRedraws = 10;
+var timeStep = 0.02;
+
+// The following variables should probably be instance variables of a Structure class.
+var atomArray;
+var rotArray;  // used for pretty drawing when mouse is up, reused for tooltip
+var bondsByAtom;   // bidirectional hashmap: atom -> [atom, atom, atom...]
+// end of putative Structure instance variables
+
 // The atomBuckets data structure helps to speed up bond inference. For very large
 // structures, an octree might do better, but this will do for now.
 var BUCKET_LINEAR_DIMENSION = 3;   // angstroms
 
+var dynamicsPaused = false;
+var damping = false;
+
+function map(f,lst) {
+    var newlst = [ ];
+    for (var i in lst) {
+        newlst[i] = f(lst[i]);
+    }
+    return newlst;
+}
+
+function filter(f,lst) {
+    var newlst = [ ];
+    for (var i in lst) {
+        var x = lst[i];
+        if (f(x))
+            newlst.push(x);
+    }
+    return newlst;
+}
+
+if (typeof(String.prototype.trim) === "undefined")
+{
+    String.prototype.trim = function() 
+    {
+        return String(this).replace(/^\s+|\s+$/g, '');
+    };
+}
+
+function toString(obj) {
+    var str;
+    try {
+        return obj.toString();
+    }
+    catch (e) { }
+    if (obj instanceof Array) {
+        str = "[";
+        var first = true;
+        for (var i in obj) {
+            if (first) {
+                first = false;
+            } else {
+                str += ",";
+            }
+            var x = "" + toString(obj[i]);
+            str += x;
+        }
+        return str + "]";
+    }
+    if (obj instanceof Object) {
+        str = "{";
+        var first = true;
+        for (key in obj) {
+            if (first) {
+                first = false;
+            } else {
+                str += ",";
+            }
+            var x = toString(key);
+            var y = toString(obj[key]);
+            str += x + ":" + y;
+        }
+        return str + "}";
+    }
+    return "" + obj;
+}
+
 function extend(base,additional) {
-    var r = { }
+    var r = { };
     for (key in base) {
         r[key] = base[key];
     }
@@ -39,52 +115,55 @@ function extend(base,additional) {
 
 var vectorPrototype = {
     toString: function() {
-        return "(" + this.getX() + " " + this.getY() + " " + this.getZ() + ")";
+        return "(" + this.x + " " + this.y + " " + this.z + ")";
     },
     copy: function(other) {
-        return Vector(this.getX(), this.getY(), this.getZ());
+        return Vector(this.x, this.y, this.z);
     },
     add: function(other) {
-        return Vector(this.getX() + other.getX(),
-                      this.getY() + other.getY(),
-                      this.getZ() + other.getZ());
+        return Vector(this.x + other.x,
+                      this.y + other.y,
+                      this.z + other.z);
     },
     subtract: function(other) {
-        return Vector(this.getX() - other.getX(),
-                      this.getY() - other.getY(),
-                      this.getZ() - other.getZ());
+        return Vector(this.x - other.x,
+                      this.y - other.y,
+                      this.z - other.z);
     },
     negate: function() {
-        return Vector(-this.getX(), -this.getY(), -this.getZ());
+        return Vector(-this.x, -this.y, -this.z);
     },
     scale: function(factor) {
-        return Vector(this.getX() * factor,
-                      this.getY() * factor,
-                      this.getZ() * factor);
+        return Vector(this.x * factor,
+                      this.y * factor,
+                      this.z * factor);
+    },
+    normalize: function(factor) {
+        return this.scale(1.0 / this.length());
     },
     dotProduct: function(other) {
-        return this.getX() * other.getX() +
-        this.getY() * other.getY() +
-        this.getZ() * other.getZ();
+        return this.x * other.x +
+        this.y * other.y +
+        this.z * other.z;
     },
     crossProduct: function(other) {
-        return Vector(this.getY() * other.getZ() - other.getY() * this.getZ(),
-                      this.getZ() * other.getX() - other.getZ() * this.getX(),
-                      this.getX() * other.getY() - other.getX() * this.getY());
+        return Vector(this.y * other.z - other.y * this.z,
+                      this.z * other.x - other.z * this.x,
+                      this.x * other.y - other.x * this.y);
     },
     multiplyQuaternion: function(other) {
         return Quaternion(0.0, this).multiply(other);
     },
     distsq: function(other) {
-        var dx = this.getX() - other.getX();
-        var dy = this.getY() - other.getY();
-        var dz = this.getZ() - other.getZ();
+        var dx = this.x - other.x;
+        var dy = this.y - other.y;
+        var dz = this.z - other.z;
         return dx * dx + dy * dy + dz * dz;
     },
     lensq: function() {
-        var x = this.getX();
-        var y = this.getY();
-        var z = this.getZ();
+        var x = this.x;
+        var y = this.y;
+        var z = this.z;
         return x * x + y * y + z * z;
     },
     length: function() {
@@ -92,20 +171,15 @@ var vectorPrototype = {
     }
 };
 
+function vectorConstructor() { }
+vectorConstructor.prototype = vectorPrototype;
+
 function Vector(x,y,z) {
-    function v() {
-        this.getX = function() {
-            return x;
-        };
-        this.getY = function() {
-            return y;
-        };
-        this.getZ = function() {
-            return z;
-        };
-    }
-    v.prototype = vectorPrototype;
-    return new v();
+    inst = new vectorConstructor();
+    inst.x = x;
+    inst.y = y;
+    inst.z = z;
+    return inst;
 }
 
 /*
@@ -144,10 +218,10 @@ var quaternionPrototype = {
     multiply: function(other) {
         var a = this.getReal();
         var im = this.getImaginary();
-        var b = im.getX(), c = im.getY(), d = im.getZ();
+        var b = im.x, c = im.y, d = im.z;
         var e = other.getReal();
         im = other.getImaginary();
-        var f = im.getX(), g = im.getY(), h = im.getZ();
+        var f = im.x, g = im.y, h = im.z;
         return Quaternion(a*e - b*f - c*g - d*h,
                           Vector(a*f + b*e + c*h - d*g,
                                  a*g - b*h + c*e + d*f,
@@ -161,7 +235,7 @@ var quaternionPrototype = {
         return Quaternion(k * this.getReal(), this.getImaginary().scale(-k));
     },
     conjugate: function() {
-        return Quaternion(this.getReal(), this.getImaginary().scale(-1));
+        return Quaternion(this.getReal(), this.getImaginary().negate());
     },
     divide: function(other) {
         return this.multiply(other.inverse());
@@ -437,7 +511,13 @@ var atomPrototype = {
         return this._force;
     },
     addForce: function(v) {
-        this._force = this._force.add(v);
+        if (this._force === undefined)
+            this._force = v;
+        else {
+            this._force.x += v.x;
+            this._force.y += v.y;
+            this._force.z += v.z;
+        }
     },
     zeroForce: function(v) {
         this._force = Vector(0, 0, 0);
@@ -464,6 +544,26 @@ var atomPrototype = {
             case Atom.NONE: return "NONE";
         }
     },
+    verletStep: function(dt) {
+        // http://en.wikipedia.org/wiki/Verlet_integration
+        var pos = this._position, prev = this._previous;
+        var x, y, z;
+        if (damping) {
+            x = pos.x + 0.98 * (pos.x - prev.x);
+            y = pos.y + 0.98 * (pos.y - prev.y);
+            z = pos.z + 0.98 * (pos.z - prev.z);
+        } else {
+            x = 2 * pos.x - prev.x;
+            y = 2 * pos.y - prev.y;
+            z = 2 * pos.z - prev.z;
+        }
+        var a = dt * dt / this.getMass();
+        var f = this._force;
+        this._position = Vector(x + a * f.x,
+                                y + a * f.y,
+                                z + a * f.z);
+        this._previous = pos;
+    },
     reorient: function() {
         var newpos = orientation.transform(this.getPosition().scale(scalar));
         var r = 0.9 * scalar * orientation.P * this.getCovalentRadius();
@@ -482,9 +582,9 @@ var atomPrototype = {
         var neighbors = [ ];
         var bondLengthTolerance = 0.4;
         var covR = this.getCovalentRadius();
-        var xi = Math.floor(this._position.getX() / BUCKET_LINEAR_DIMENSION);
-        var yi = Math.floor(this._position.getY() / BUCKET_LINEAR_DIMENSION);
-        var zi = Math.floor(this._position.getZ() / BUCKET_LINEAR_DIMENSION);
+        var xi = Math.floor(this._position.x / BUCKET_LINEAR_DIMENSION);
+        var yi = Math.floor(this._position.y / BUCKET_LINEAR_DIMENSION);
+        var zi = Math.floor(this._position.z / BUCKET_LINEAR_DIMENSION);
         for (var x = xi - 1; x <= xi + 1; x++)
             for (var y = yi - 1; y <= yi + 1; y++)
                 for (var z = zi - 1; z <= zi + 1; z++) {
@@ -493,7 +593,7 @@ var atomPrototype = {
                         for (var i in bucket) {
                             var a2 = bucket[i];
                             var dx = a2._position.subtract(this._position).length();
-                            if (dx > covR &&
+                            if (a2 !== this &&
                                 dx < covR + a2.getCovalentRadius() + bondLengthTolerance) {
                                 neighbors.push(a2);
                             }
@@ -509,9 +609,9 @@ var atomPrototype = {
         var w = canvas.width;
         var h = canvas.height;
         var K = 0.8 * ((w < h) ? w : h);
-        var x = K * pos.getX() + w/2;
-        var y = K * pos.getY() + h/2;
-        var z = pos.getZ();
+        var x = K * pos.x + w/2;
+        var y = K * pos.y + h/2;
+        var z = pos.z;
         var r = K * this.getCovalentRadius();
         this.containsMouse = function(xmouse, ymouse) {
             var dx = xmouse - x;
@@ -990,19 +1090,15 @@ function Phosphorus() {
  * * * * * * * * * * * * * * STRUCTURE STUFF * * * * * * * * * * * * * *
  */
 
-var atomArray;
-var rotArray;  // used for pretty drawing when mouse is up, reused for tooltip
-var bondsByAtom;   // bidirectional hashmap: atom -> [atom, atom, atom...]
-
 function buildBondInfo() {
     bondsByAtom = { };
     atomBuckets = { };
     for (var i in atomArray) {
         // add the atom to the appropriate bucket
         var pos = atomArray[i].getPosition();
-        var xi = Math.floor(pos.getX() / BUCKET_LINEAR_DIMENSION);
-        var yi = Math.floor(pos.getY() / BUCKET_LINEAR_DIMENSION);
-        var zi = Math.floor(pos.getZ() / BUCKET_LINEAR_DIMENSION);
+        var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
+        var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
+        var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
         var key = xi + ":" + yi + ":" + zi;
         if (!(key in atomBuckets))
             atomBuckets[key] = [ ];
@@ -1024,6 +1120,11 @@ function recenterAtoms() {
     centerOfGravity = centerOfGravity.scale(1.0 / numAtoms);
     for (var i in atomArray) {
         atomArray[i].setPosition(atomArray[i].getPosition().subtract(centerOfGravity));
+        var previous = atomArray[i].getPreviousPosition();
+        if (previous === undefined)
+            atomArray[i].setPreviousPosition(atomArray[i].getPosition());
+        else
+            atomArray[i].setPreviousPosition(previous.subtract(centerOfGravity));
     }
 }
 
@@ -1070,6 +1171,20 @@ function removeAtom(atom) {
             addAtomConnectedToExisting(h, neighbor);
         }
     }
+}
+
+function replaceTwoHydrogensWithABond(h1,h2) {
+    if (h1 === undefined || h1.getSymbol() !== "H" ||
+        h2 === undefined || h2.getSymbol() !== "H") {
+        return;
+    }
+    var other1 = deleteBondsFor(h1)[0];
+    delete atomArray[h1.getUniqueId()];
+    var other2 = deleteBondsFor(h2)[0];
+    delete atomArray[h2.getUniqueId()];
+    bondsByAtom[other1].push(other2);
+    bondsByAtom[other2].push(other1);
+    termListOutdated = true;
 }
 
 function addAtom(oldH,symbol) {
@@ -1138,18 +1253,41 @@ function addAtom(oldH,symbol) {
     var direction = oldH.getPosition().subtract(neighbor.getPosition());
     var distance = neighbor.getCovalentRadius() + newAtom.getCovalentRadius();
     direction = direction.scale(distance / direction.length());
+    // u is a unit vector pointing from the existing neighbor to the new atom
+    var u = direction.scale(1.0 / direction.length());
     newAtom.setPosition(neighbor.getPosition().add(direction));
     addAtomConnectedToExisting(newAtom, neighbor);
+
+    // are there any hydrogens that should be deleted so their neighbors
+    // can be connected to the new atom?
+    var otherHs = filter(function(x) { return x !== neighbor &&
+                                       x.getSymbol() === "H"; },
+                         newAtom.getNeighbors());
+    var z;
+    if (otherHs !== undefined) {
+        for (var i in otherHs) {
+            var h = otherHs[i];
+            var hneighbors = deleteBondsFor(h);
+            if (hneighbors === undefined)
+                continue;
+            var hBuddy = hneighbors[0];
+            z = (hBuddy.getPosition()
+                 .subtract(newAtom.getPosition()).crossProduct(u));
+            delete atomArray[h.getUniqueId()];
+            bondsByAtom[newAtom].push(hBuddy);
+            bondsByAtom[hBuddy].push(newAtom);
+            hydrogensNeeded--;
+        }
+    }
+
     var sqrt2 = Math.sqrt(2);
     var sqrt3 = Math.sqrt(3);
     var sqrt6 = Math.sqrt(6);
     // compute how far the hydrogens are from the new atom
     var hdist = newAtom.getCovalentRadius() + hydrogenCovalentRadius;
-    // u is a unit vector pointing from the existing neighbor to the new atom
-    var u = direction.scale(1.0 / direction.length());
-    // z is a unit vector in a random direction perpendicular to u
-    // TODO: determine this from neighbor geometry, not just random
-    var z = u.crossProduct(Vector(u.getY(), -u.getX(), u.getZ()));
+    // z is a unit vector perpendicular to u
+    if (z === undefined)
+        z = u.crossProduct(Vector(-u.y, u.z, u.x));  // random direction
     z = z.scale(1.0 / z.length());
     // t is a unit vector perpendicular to both u and z
     var t = u.crossProduct(z);
@@ -1206,6 +1344,19 @@ function addAtom(oldH,symbol) {
             addAtomConnectedToExisting(newH, newAtom);
         }
     }
+
+    atomBuckets = { };
+    for (var i in atomArray) {
+        // add the atom to the appropriate bucket
+        var pos = atomArray[i].getPosition();
+        var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
+        var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
+        var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
+        var key = xi + ":" + yi + ":" + zi;
+        if (!(key in atomBuckets))
+            atomBuckets[key] = [ ];
+        atomBuckets[key].push(atomArray[i]);
+    }
 }
 
 /*
@@ -1227,8 +1378,8 @@ var orientationPrototype = {
     transform: function(vec) {
         vec = this.quat.rotate(vec);
         var perspectiveDistance = 2;
-        this.P = perspectiveDistance / (perspectiveDistance - vec.getZ());
-        return Vector(this.P * vec.getX(), this.P * vec.getY(), vec.getZ());
+        this.P = perspectiveDistance / (perspectiveDistance - vec.z);
+        return Vector(this.P * vec.x, this.P * vec.y, vec.z);
     }
 };
 
@@ -1251,9 +1402,9 @@ function selectGoodScalar() {
     var zmax = -1.0e20;
     for (var i in atomArray) {
         var pos = atomArray[i].getPosition();
-        var x = pos.getX();
-        var y = pos.getY();
-        var z = pos.getZ();
+        var x = pos.x;
+        var y = pos.y;
+        var z = pos.z;
         if (x < xmin) xmin = x;
         if (x > xmax) xmax = x;
         if (y < ymin) ymin = y;
@@ -1281,10 +1432,10 @@ function drawAtoms() {
         rotArray.push(atomArray[i].reorient());
     }
     rotArray.sort(function(atom1,atom2) {
-            if (atom1.getPosition().getZ() > atom2.getPosition().getZ()) {
+            if (atom1.getPosition().z > atom2.getPosition().z) {
                 return 1;
             }
-            if (atom1.getPosition().getZ() < atom2.getPosition().getZ()) {
+            if (atom1.getPosition().z < atom2.getPosition().z) {
                 return -1;
             }
             return 0;
@@ -1321,31 +1472,44 @@ function quickdrawAtoms() {
                 var v = atom2.rotated.getPosition();
                 // draw a line, see http://diveintohtml5.org/canvas.html
                 // depth cue during quickdraw: darker lines for bonds closer to the user
-                if (u.getZ() + v.getZ() > 0.0)
+                if (u.z + v.z > 0.0)
                     context.strokeStyle = "#000";
                 else
                     context.strokeStyle = "#799";
                 context.beginPath();
-                context.moveTo(K * u.getX() + w/2, K * u.getY() + h/2);
-                context.lineTo(K * v.getX() + w/2, K * v.getY() + h/2);
+                context.moveTo(K * u.x + w/2, K * u.y + h/2);
+                context.lineTo(K * v.x + w/2, K * v.y + h/2);
                 context.stroke();
             }
         }
     }
 }
 
-function redraw() {
-    document.getElementById("canvas").height = canvasheight;
-    var width = window.innerWidth - canvasgap;
-    if (width > canvasheight * 1.5)
-        width = Math.floor(canvasheight * 1.5);
-    document.getElementById("canvas").width = width;
-    if (atomArray === undefined)
-        return;
-    selectGoodScalar();
-    drawAtoms();
+function atomByScreenCoords(x,y) {
+    var key = 4000 * Math.floor(x / 50) + Math.floor(y / 50);
+    if (pixelAtomHash === undefined)
+        pixelAtomHash = { };
+    // find out if we are inside an atom
+    var bucket = pixelAtomHash[key];
+    if (bucket !== undefined) {
+        var closestZ;  // most positive
+        var found;
+        for (i in bucket) {
+            var a = bucket[i];
+            if (a.containsMouse(x, y)) {
+                var depth = a.getScreenDepth();
+                if (found === undefined || depth > closestZ) {
+                    found = a;
+                    closestZ = depth;
+                }
+            }
+        }
+        if (found !== undefined) {
+            return found.original;
+        }
+    }
+    return undefined;
 }
-
 
 /*
  * * * * * * * * * * Dynamics (MM2) stuff * * * * * * * * * * *
@@ -1389,7 +1553,7 @@ var lengthtermPrototype = {
         var force = this._k * (this._r - x.length());
         var df = x.scale(force / x.length());
         this._atom2.addForce(df);
-        this._atom1.addForce(df.scale(-1));
+        this._atom1.addForce(df.negate());
     },
     init: function(atom1,atom2) {
         this._atom1 = atom1;
@@ -1400,10 +1564,14 @@ var lengthtermPrototype = {
         var hyb2 = atom2.getHybridizationString();
         var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2;
         var coeffs = lengthtermCoefficients[key];
-        if (coeffs === undefined)
-            coeffs = lengthtermCoefficients["C:SP3:H:NONE"];
-        this._k = coeffs.k;
-        this._r = coeffs.r;
+        if (coeffs === undefined) {
+            key = sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
+            coeffs = lengthtermCoefficients[key];
+            if (coeffs === undefined)
+                coeffs = lengthtermCoefficients["C:SP3:H:NONE"];
+        }
+        this._k = 4;   // something kinda typical
+        this._r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
     }
 };
 
@@ -1413,6 +1581,491 @@ function LengthTerm(atom1,atom2) {
     var t = new lt();
     t.init(atom1, atom2);
     return t;
+}
+
+var angletermCoefficients = {
+    "C:SP3:C:SP3:C:SP3": {kth:0.450, th0:109.470},
+    "C:SP3:C:SP3:C:SP2": {kth:0.450, th0:109.470},
+    "C:SP3:C:SP3:C:SP": {kth:0.450, th0:109.470},
+    "C:SP3:C:SP3:H:NONE": {kth:0.360, th0:109.390},
+    "C:SP3:C:SP3:O:SP3": {kth:0.700, th0:107.500},
+    "C:SP3:C:SP3:N:SP3": {kth:0.570, th0:109.470},
+    "C:SP3:C:SP3:N:SP2": {kth:0.500, th0:109.280},
+    "C:SP3:C:SP3:N:SP3": {kth:0.570, th0:103.500},
+    "C:SP3:C:SP3:O:SP2": {kth:0.700, th0:107.500},
+    "C:SP2:C:SP3:C:SP2": {kth:0.450, th0:109.470},
+    "C:SP2:C:SP3:C:SP": {kth:0.470, th0:109.470},
+    "C:SP2:C:SP3:H:NONE": {kth:0.360, th0:109.390},
+    "C:SP2:C:SP3:O:SP3": {kth:0.700, th0:109.500},
+    "C:SP2:C:SP3:N:SP3": {kth:1.045, th0:110.740},
+    "C:SP2:C:SP3:N:SP2": {kth:0.500, th0:109.800},
+    "C:SP2:C:SP3:N:SP3": {kth:1.045, th0:110.740},
+    "C:SP:C:SP3:C:SP": {kth:0.470, th0:109.470},
+    "C:SP:C:SP3:H:NONE": {kth:0.360, th0:109.390},
+    "H:NONE:C:SP3:H:NONE": {kth:0.320, th0:109.400},
+    "H:NONE:C:SP3:O:SP3": {kth:0.540, th0:106.700},
+    "H:NONE:C:SP3:N:SP3": {kth:0.500, th0:108.800},
+    "H:NONE:C:SP3:N:SP2": {kth:0.420, th0:109.000},
+    "H:NONE:C:SP3:N:SP3": {kth:0.500, th0:108.800},
+    "H:NONE:C:SP3:O:SP2": {kth:0.540, th0:106.700},
+    "O:SP3:C:SP3:O:SP3": {kth:0.460, th0:99.900},
+    "N:SP3:C:SP3:N:SP3": {kth:1.045, th0:110.740},
+    "N:SP3:C:SP3:N:SP3": {kth:1.045, th0:110.740},
+    "C:SP3:C:SP2:C:SP3": {kth:0.450, th0:117.200},
+    "C:SP3:C:SP2:C:SP2": {kth:0.550, th0:121.400},
+    "C:SP3:C:SP2:C:SP": {kth:0.470, th0:122.000},
+    "C:SP3:C:SP2:H:NONE": {kth:0.360, th0:118.200},
+    "C:SP3:C:SP2:O:SP3": {kth:0.500, th0:120.000},
+    "C:SP2:C:SP2:C:SP2": {kth:0.430, th0:120.000},
+    "C:SP2:C:SP2:H:NONE": {kth:0.360, th0:120.000},
+    "C:SP2:C:SP2:O:SP3": {kth:0.700, th0:124.300},
+    "C:SP2:C:SP2:N:SP3": {kth:0.616, th0:123.000},
+    "C:SP2:C:SP2:N:SP2": {kth:0.500, th0:118.000},
+    "C:SP2:C:SP2:O:SP2": {kth:0.600, th0:120.000},
+    "C:SP:C:SP2:H:NONE": {kth:0.360, th0:121.100},
+    "H:NONE:C:SP2:H:NONE": {kth:0.320, th0:119.000},
+    "H:NONE:C:SP2:O:SP3": {kth:0.540, th0:116.400},
+    "H:NONE:C:SP2:N:SP3": {kth:0.540, th0:119.000},
+    "H:NONE:C:SP2:N:SP2": {kth:0.300, th0:109.000},
+    "H:NONE:C:SP2:O:SP2": {kth:0.450, th0:108.000},
+    "N:SP2:C:SP2:N:SP2": {kth:0.400, th0:120.000},
+    "C:SP3:C:SP:C:SP": {kth:0.200, th0:180.000},
+    "C:SP3:C:SP:N:SP": {kth:0.325, th0:180.000},
+    "C:SP2:C:SP:C:SP2": {kth:0.400, th0:180.000},
+    "C:SP2:C:SP:C:SP": {kth:0.470, th0:180.000},
+    "C:SP:C:SP:H:NONE": {kth:0.360, th0:180.000},
+    "C:SP:C:SP:O:SP3": {kth:0.360, th0:180.000},
+    "C:SP:C:SP:O:SP2": {kth:0.360, th0:180.000},
+    "C:SP:C:SP:N:SP3": {kth:0.360, th0:180.000},
+    "C:SP:C:SP:N:SP2": {kth:0.360, th0:180.000},
+    "C:SP:C:SP:N:SP": {kth:0.360, th0:180.000},
+    "C:SP3:O:SP3:C:SP3": {kth:0.770, th0:106.800},
+    "C:SP3:O:SP3:C:SP2": {kth:0.770, th0:110.800},
+    "C:SP3:O:SP3:O:SP3": {kth:0.635, th0:98.700},
+    "C:SP3:N:SP3:C:SP3": {kth:0.630, th0:107.700},
+    "C:SP3:N:SP3:C:SP2": {kth:0.698, th0:107.000},
+    "C:SP3:N:SP3:N:SP3": {kth:0.740, th0:105.500},
+    "C:SP3:N:SP2:C:SP3": {kth:0.760, th0:126.000},
+    "C:SP3:N:SP2:C:SP2": {kth:0.630, th0:119.900},
+    "C:SP2:N:SP2:C:SP2": {kth:0.400, th0:107.000},
+    "C:SP3:N:SP3:C:SP3": {kth:0.630, th0:108.600},
+    "C:SP3:N:SP3:H:NONE": {kth:0.500, th0:109.470},
+    "H:NONE:N:SP3:H:NONE": {kth:0.500, th0:104.500},
+    "C:SP3:O:SP2:C:SP2": {kth:0.770, th0:113.600},
+    "C:SP2:O:SP2:C:SP2": {kth:0.870, th0:113.95},
+};
+
+var angletermPrototype = {
+    toString: function() {
+        return ("(angleterm " + this._atom1.toString() + " " +
+                this._atom2.toString() + " " +
+                this._atom3.toString() + " " + this._kth + " " + this._th0 + ")");
+    },
+    v: function(theta) {   // theta is in radians
+        // Nanosystems, Drexler, 1992, Wiley-Interscience, John Wiley & Sons
+        // equation 3.5 on page 46
+        var ksextic = 0.754;
+        var thdiff = theta - this._th0;
+        var d2 = thdiff * thdiff;
+        var d4 = d2 * d2;
+        return 0.5 * this._kth * d2 * (1 + ksextic * d4);
+    },
+    vderiv: function(theta) {   // first derivative of v w.r.t. theta
+        var ksextic = 0.754;
+        var thdiff = theta - this._th0;
+        var d2 = thdiff * thdiff;
+        var d4 = d2 * d2;
+        return this._kth * thdiff + 3 * ksextic * thdiff * d4;
+    },
+    computeForces: function() {
+        // TODO
+        var pos2 = this._atom2.getPosition();
+        var x = this._atom1.getPosition().subtract(pos2);
+        var y = this._atom3.getPosition().subtract(pos2);
+        var yx = y.crossProduct(x);        
+        var xlen = x.length();
+        var ylen = y.length();
+        var yxlen = yx.length();
+        var theta = Math.acos(x.dotProduct(y) / (xlen * ylen));
+        var vdot = this.vderiv(theta);
+        var f1 = x.crossProduct(yx).scale(vdot / (yxlen * xlen * xlen));
+        var f3 = yx.crossProduct(y).scale(vdot / (yxlen * ylen * ylen));
+        this._atom1.addForce(f1);
+        this._atom3.addForce(f3);
+        this._atom2.addForce(f1.add(f3).negate());
+    },
+    init: function(atom1,atom2,atom3) {
+        this._atom1 = atom1;
+        this._atom2 = atom2;
+        this._atom3 = atom3;
+        var sym1 = atom1.getSymbol();
+        var hyb1 = atom1.getHybridizationString();
+        var sym2 = atom2.getSymbol();
+        var hyb2 = atom2.getHybridizationString();
+        var sym3 = atom3.getSymbol();
+        var hyb3 = atom3.getHybridizationString();
+        var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" + sym3 + ":" + hyb3;
+        var coeffs = angletermCoefficients[key];
+        if (coeffs === undefined) {
+            key = sym3 + ":" + hyb3 + ":" + sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
+            coeffs = angletermCoefficients[key];
+        }
+        if (coeffs === undefined) {
+            this._kth = 0.4;  // hope this is reasonable
+            this._th0 = 109.47 * Math.PI / 180.0;
+        } else {
+            this._kth = coeffs.kth;
+            this._th0 = coeffs.th0 * Math.PI / 180.0;
+        }
+    }
+};
+
+function AngleTerm(atom1,atom2,atom3) {
+    function at() { }
+    at.prototype = angletermPrototype;
+    var t = new at();
+    t.init(atom1, atom2, atom3);
+    return t;
+}
+
+var torsiontermCoefficients = {
+
+    //"C:SP3:C:SP3:C:SP3:C:SP3": {v1:0.200, v2:0.270, v3:0.093},
+    "C:SP3:C:SP3:C:SP3:C:SP3": {v1:0.0, v2:0.0, v3:0.3},
+
+    "C:SP3:C:SP3:C:SP3:C:SP2": {v1:0.170, v2:0.270, v3:0.093},
+    "C:SP3:C:SP3:C:SP3:C:SP": {v1:0.200, v2:-0.260, v3:0.093},
+    "C:SP3:C:SP3:C:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.267},
+    "C:SP3:C:SP3:C:SP3:O:SP3": {v1:0.100, v2:0.100, v3:0.180},
+    "C:SP3:C:SP3:C:SP3:N:SP3": {v1:0.100, v2:0.400, v3:0.500},
+    "C:SP3:C:SP3:C:SP3:N:SP2": {v1:0.000, v2:0.000, v3:0.400},
+    "C:SP3:C:SP3:C:SP3:N:SP3": {v1:0.100, v2:0.400, v3:0.500},
+    "C:SP2:C:SP3:C:SP3:C:SP2": {v1:2.100, v2:0.270, v3:0.093},
+    "C:SP2:C:SP3:C:SP3:C:SP": {v1:0.000, v2:0.000, v3:0.093},
+    "C:SP2:C:SP3:C:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.500},
+    "C:SP2:C:SP3:C:SP3:O:SP3": {v1:0.000, v2:0.000, v3:0.180},
+    "C:SP2:C:SP3:C:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.180},
+    "C:SP2:C:SP3:C:SP3:N:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP3:C:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.180},
+    "C:SP:C:SP3:C:SP3:C:SP": {v1:1.000, v2:0.000, v3:0.093},
+    "C:SP:C:SP3:C:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.400},
+    "C:SP:C:SP3:C:SP3:O:SP3": {v1:0.000, v2:-0.400, v3:0.180},
+    "H:NONE:C:SP3:C:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.237},
+    "H:NONE:C:SP3:C:SP3:O:SP3": {v1:0.000, v2:0.000, v3:0.180},
+    "H:NONE:C:SP3:C:SP3:N:SP3": {v1:-0.150, v2:0.000, v3:0.150},
+    "H:NONE:C:SP3:C:SP3:N:SP2": {v1:0.000, v2:0.000, v3:0.400},
+    "H:NONE:C:SP3:C:SP3:N:SP3": {v1:-0.150, v2:0.000, v3:0.150},
+    "H:NONE:C:SP3:C:SP3:O:SP2": {v1:0.000, v2:0.000, v3:0.180},
+    "O:SP3:C:SP3:C:SP3:O:SP3": {v1:0.000, v2:-0.600, v3:0.300},
+    "O:SP3:C:SP3:C:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "O:SP3:C:SP3:C:SP3:N:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "O:SP3:C:SP3:C:SP3:N:SP3": {v1:0.000, v2:-0.600, v3:0.300},
+    "N:SP3:C:SP3:C:SP3:N:SP3": {v1:-0.400, v2:-1.100, v3:1.200},
+    "N:SP3:C:SP3:C:SP3:N:SP2": {v1:1.170, v2:-1.263, v3:2.064},
+    "N:SP2:C:SP3:C:SP3:N:SP2": {v1:0.000, v2:0.000, v3:-0.500},
+    "O:SP2:C:SP3:C:SP3:O:SP2": {v1:0.000, v2:-0.600, v3:0.300},
+    "C:SP3:C:SP3:C:SP2:C:SP3": {v1:0.400, v2:0.030, v3:0.500},
+    "C:SP3:C:SP3:C:SP2:C:SP2": {v1:-0.440, v2:0.240, v3:0.060},
+    "C:SP3:C:SP3:C:SP2:C:SP": {v1:-0.440, v2:0.240, v3:0.060},
+    "C:SP3:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.010},
+    "C:SP3:C:SP3:C:SP2:O:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP3:C:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.300},
+    "C:SP2:C:SP3:C:SP2:C:SP2": {v1:0.100, v2:0.000, v3:0.500},
+    "C:SP2:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.600},
+    "C:SP2:C:SP3:C:SP2:O:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP:C:SP3:C:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.780},
+    "C:SP:C:SP3:C:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.100},
+    "C:SP:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.780},
+    "H:NONE:C:SP3:C:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.540},
+    "H:NONE:C:SP3:C:SP2:C:SP2": {v1:0.000, v2:0.000, v3:-0.240},
+    "H:NONE:C:SP3:C:SP2:C:SP": {v1:0.000, v2:0.000, v3:-0.240},
+    "H:NONE:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.520},
+    "H:NONE:C:SP3:C:SP2:O:SP3": {v1:0.000, v2:0.000, v3:0.540},
+    "O:SP3:C:SP3:C:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "O:SP3:C:SP3:C:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "O:SP3:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.000},
+    "N:SP3:C:SP3:C:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "N:SP3:C:SP3:C:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "N:SP3:C:SP3:C:SP2:H:NONE": {v1:0.000, v2:0.000, v3:0.000},
+    "N:SP3:C:SP3:C:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP3:C:SP3:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "H:NONE:C:SP3:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP3:C:SP3:O:SP3:C:SP3": {v1:0.400, v2:0.520, v3:0.467},
+    "C:SP3:C:SP3:O:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.400},
+    "C:SP3:C:SP3:O:SP3:O:SP3": {v1:0.000, v2:0.000, v3:0.400},
+    "C:SP2:C:SP3:O:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.403},
+    "H:NONE:C:SP3:O:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.530},
+    "H:NONE:C:SP3:O:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.530},
+    "H:NONE:C:SP3:O:SP3:O:SP3": {v1:0.000, v2:0.000, v3:0.465},
+    "O:SP3:C:SP3:O:SP3:C:SP3": {v1:-0.170, v2:-1.200, v3:0.000},
+    "O:SP3:C:SP3:O:SP3:O:SP3": {v1:0.000, v2:0.000, v3:0.403},
+    "C:SP3:C:SP3:N:SP3:C:SP3": {v1:-0.200, v2:0.730, v3:0.800},
+    "C:SP3:C:SP3:N:SP3:N:SP3": {v1:-0.200, v2:0.730, v3:0.800},
+    "C:SP2:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP3:N:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "H:NONE:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.520},
+    "H:NONE:C:SP3:N:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.450},
+    "H:NONE:C:SP3:N:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.520},
+    "N:SP3:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.350},
+    "N:SP3:C:SP3:N:SP3:N:SP3": {v1:0.000, v2:0.000, v3:0.350},
+    "N:SP3:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.350},
+    "C:SP3:C:SP3:N:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.910},
+    "C:SP3:C:SP3:N:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "H:NONE:C:SP3:N:SP2:C:SP3": {v1:0.000, v2:0.000, v3:-0.200},
+    "H:NONE:C:SP3:N:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "H:NONE:C:SP3:N:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.650},
+    "C:SP3:C:SP3:N:SP3:C:SP3": {v1:-0.200, v2:0.730, v3:0.800},
+    "C:SP3:C:SP3:N:SP3:H:NONE": {v1:0.000, v2:0.120, v3:0.100},
+    "C:SP2:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP3:N:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.000},
+    "H:NONE:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.520},
+    "H:NONE:C:SP3:N:SP3:H:NONE": {v1:0.000, v2:0.000, v3:0.250},
+    "N:SP3:C:SP3:N:SP3:C:SP3": {v1:0.000, v2:0.000, v3:0.350},
+    "C:SP3:C:SP3:O:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.400},
+    "H:NONE:C:SP3:O:SP2:C:SP2": {v1:0.000, v2:0.000, v3:0.350},
+    "C:SP3:C:SP2:C:SP2:C:SP3": {v1:-0.100, v2:10.000, v3:0.000},
+    "C:SP3:C:SP2:C:SP2:C:SP2": {v1:-0.270, v2:10.000, v3:0.000},
+    "C:SP3:C:SP2:C:SP2:H:NONE": {v1:0.000, v2:12.500, v3:0.000},
+    "C:SP3:C:SP2:C:SP2:O:SP3": {v1:-1.200, v2:16.250, v3:0.000},
+
+    //"C:SP2:C:SP2:C:SP2:C:SP2": {v1:-0.930, v2:8.000, v3:0.000},
+    "C:SP2:C:SP2:C:SP2:C:SP2": {v1:-0.930, v2:0.000, v3:0.000},
+
+    "C:SP2:C:SP2:C:SP2:C:SP": {v1:0.000, v2:15.000, v3:0.000},
+    "C:SP2:C:SP2:C:SP2:H:NONE": {v1:0.000, v2:9.000, v3:-1.060},
+    "C:SP2:C:SP2:C:SP2:O:SP3": {v1:0.000, v2:16.250, v3:0.000},
+    "C:SP2:C:SP2:C:SP2:N:SP3": {v1:0.000, v2:15.000, v3:0.000},
+    "C:SP2:C:SP2:C:SP2:N:SP2": {v1:0.000, v2:12.000, v3:0.000},
+    "C:SP2:C:SP2:C:SP2:O:SP2": {v1:0.000, v2:15.000, v3:0.000},
+    "C:SP:C:SP2:C:SP2:H:NONE": {v1:0.000, v2:15.000, v3:0.000},
+
+    //"H:NONE:C:SP2:C:SP2:H:NONE": {v1:0.000, v2:15.000, v3:0.000},
+    "H:NONE:C:SP2:C:SP2:H:NONE": {v1:-2.000, v2:0.000, v3:0.000},
+
+    "H:NONE:C:SP2:C:SP2:O:SP3": {v1:0.000, v2:16.250, v3:0.000},
+    "H:NONE:C:SP2:C:SP2:N:SP3": {v1:0.000, v2:15.000, v3:0.000},
+    "H:NONE:C:SP2:C:SP2:N:SP2": {v1:0.000, v2:12.000, v3:0.000},
+    "H:NONE:C:SP2:C:SP2:O:SP2": {v1:0.000, v2:15.000, v3:0.000},
+    "O:SP3:C:SP2:C:SP2:O:SP3": {v1:-2.000, v2:16.250, v3:0.000},
+    "O:SP2:C:SP2:C:SP2:O:SP2": {v1:-2.000, v2:15.000, v3:0.000},
+    "C:SP2:C:SP2:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP3:C:SP2:O:SP3:C:SP3": {v1:2.300, v2:4.000, v3:0.000},
+    "C:SP3:C:SP2:O:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP2:O:SP3:C:SP3": {v1:3.530, v2:2.300, v3:-3.530},
+    "C:SP2:C:SP2:O:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "H:NONE:C:SP2:O:SP3:C:SP3": {v1:3.000, v2:3.100, v3:0.000},
+    "H:NONE:C:SP2:O:SP3:C:SP2": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP2:N:SP3:C:SP3": {v1:-1.570, v2:3.200, v3:0.000},
+    "H:NONE:C:SP2:N:SP3:C:SP3": {v1:1.570, v2:1.690, v3:0.000},
+    "C:SP2:C:SP2:N:SP2:C:SP3": {v1:0.000, v2:2.000, v3:0.000},
+    "C:SP2:C:SP2:N:SP2:C:SP2": {v1:0.000, v2:0.000, v3:1.490},
+    "N:SP2:C:SP2:N:SP2:C:SP3": {v1:0.000, v2:0.000, v3:0.000},
+    "C:SP2:C:SP2:O:SP2:C:SP3": {v1:0.000, v2:9.200, v3:0.000},
+    "C:SP2:C:SP2:O:SP2:C:SP2": {v1:0.000, v2:8.300, v3:-0.800},
+    "H:NONE:C:SP2:O:SP2:C:SP3": {v1:-0.820, v2:9.200, v3:3.700},
+    "H:NONE:C:SP2:O:SP2:C:SP2": {v1:-0.460, v2:2.700, v3:0.700},
+    "C:SP3:C:SP:C:SP:C:SP2": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP3:C:SP:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP2:C:SP:C:SP:C:SP2": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP2:C:SP:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP2:C:SP:C:SP:H:NONE": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP:C:SP:C:SP:C:SP": {v1:0.000, v2:0.001, v3:0.000},
+    "C:SP3:O:SP3:O:SP3:C:SP3": {v1:2.095, v2:-2.155, v3:-0.113},
+    "C:SP3:N:SP3:N:SP3:C:SP3": {v1:0.900, v2:-6.800, v3:0.210},
+};
+
+var torsiontermPrototype = {
+    toString: function() {
+        return ("(torsionterm " + this._atom1.toString() + " " +
+                this._atom2.toString() + " " +
+                this._atom3.toString() + " " +
+                this._atom4.toString() + " " +
+                this._v1 + " " + this._v2 + " " + this._v3 + ")");
+    },
+    v: function(phi) {   // phi is in radians
+        // Nanosystems, Drexler, 1992, Wiley-Interscience, John Wiley & Sons
+        // equation 3.7 on page 47
+        // I think Drexler may have been mistaken, and the cos(2*phi) term should
+        // be added, not subtracted
+        return 0.5 * (this._v1 * (1 + Math.cos(phi)) +
+                      this._v2 * (1 + Math.cos(2 * phi)) +
+                      this._v3 * (1 + Math.cos(3 * phi)));
+    },
+    vderiv: function(phi) {   // first derivative of v w.r.t. phi
+        return 0.5 * (-this._v1 * Math.sin(phi)
+                      - 2 * this._v2 * Math.sin(2 * phi) +
+                      - 3 * this._v3 * Math.sin(3 * phi));
+    },
+
+    computeForces: function() {
+        var pos1 = this._atom1.getPosition();
+        var pos2 = this._atom2.getPosition();
+        var pos3 = this._atom3.getPosition();
+        var pos4 = this._atom4.getPosition();
+        var u = pos1.subtract(pos2);
+        var v = pos3.subtract(pos2);
+        var w = pos4.subtract(pos3);
+        var uv = u.crossProduct(v);
+        var uvlen = uv.length();
+        var wv = w.crossProduct(v);
+        var wvlen = wv.length();
+        var phi = Math.asin(wv.crossProduct(uv).dotProduct(v) / (uvlen * wvlen * v.length()));
+        var vdot = 0.001 * this.vderiv(phi);
+        var h = u.dotProduct(v);
+        h = u.lensq() - (h * h) / v.lensq();
+        var f1 = uv.scale(vdot / (Math.sqrt(h) * uvlen));
+        h = w.dotProduct(v);
+        h = w.lensq() - (h * h) / v.lensq();
+        var f4 = wv.scale(-vdot / (Math.sqrt(h) * wvlen));
+        this._atom1.addForce(f1);
+        this._atom4.addForce(f4);
+        // TODO - correct forces on atoms 2 and 3
+        // The actual forces on atoms 2 and 3 are a little more complicated.
+        // These are approximate. Torsion forces are weak compared to the
+        // other forces so these approximations aren't horrible.
+        var fopp = f1.add(f4).scale(-0.5);
+        this._atom2.addForce(fopp);
+        this._atom3.addForce(fopp);
+    },
+
+    init: function(atom1,atom2,atom3,atom4) {
+        this._atom1 = atom1;
+        this._atom2 = atom2;
+        this._atom3 = atom3;
+        this._atom4 = atom4;
+        var sym1 = atom1.getSymbol();
+        var hyb1 = atom1.getHybridizationString();
+        var sym2 = atom2.getSymbol();
+        var hyb2 = atom2.getHybridizationString();
+        var sym3 = atom3.getSymbol();
+        var hyb3 = atom3.getHybridizationString();
+        var sym4 = atom4.getSymbol();
+        var hyb4 = atom4.getHybridizationString();
+        var key = (sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" +
+                   sym3 + ":" + hyb3 + ":" + sym4 + ":" + hyb4);
+        var coeffs = torsiontermCoefficients[key];
+        if (coeffs === undefined) {
+            key = (sym4 + ":" + hyb4 + ":" + sym3 + ":" + hyb3 + ":" +
+                   sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1);
+            coeffs = torsiontermCoefficients[key];
+        }
+        if (coeffs === undefined) {
+            this._v1 = 0.0;
+            this._v2 = 0.0;
+            this._v3 = 0.0;
+        } else {
+            this._v1 = coeffs.v1;
+            this._v2 = coeffs.v2;
+            this._v3 = coeffs.v3;
+        }
+    }
+};
+
+function TorsionTerm(atom1,atom2,atom3,atom4) {
+    function tt() { }
+    tt.prototype = torsiontermPrototype;
+    var t = new tt();
+    t.init(atom1, atom2, atom3, atom4);
+    return t;
+}
+
+var termList;
+
+function enumerateTerms() {
+    termList = [ ];
+    function dig(mostRecentAtom,excluded,func2,func3,func4,atomsRemaining) {
+        if (atomsRemaining === 0)
+            return;
+        for (var i in bondsByAtom[mostRecentAtom]) {
+            var atom = bondsByAtom[mostRecentAtom][i];
+            if (excluded.indexOf(atom) != -1)
+                continue;
+            func2(mostRecentAtom, atom);
+            excluded.push(atom);
+            dig(atom,
+                excluded,
+                function(atom1,atom2) {
+                    func3(mostRecentAtom, atom1, atom2);
+                },
+                function(atom1,atom2,atom3) {
+                    func4(mostRecentAtom, atom1, atom2, atom3);
+                },
+                function(atom1,atom2,atom3,atom4) {
+                },
+                atomsRemaining - 1);
+            excluded.pop();
+        }
+    }
+    function func2(atom1,atom2) {
+        if (atom1.getUniqueId() < atom2.getUniqueId()) {
+            termList.push(LengthTerm(atom1, atom2));
+        }
+    }
+    function func3(atom1,atom2,atom3) {
+        if (atom1.getUniqueId() < atom3.getUniqueId()) {
+            termList.push(AngleTerm(atom1, atom2, atom3));
+        }
+    }
+    function func4(atom1,atom2,atom3,atom4) {
+        if (atom1.getUniqueId() < atom4.getUniqueId()) {
+            termList.push(TorsionTerm(atom1, atom2, atom3, atom4));
+        }
+    }
+    for (var i in atomArray) {
+        var atom = atomArray[i];
+        dig(atom,[atom],func2,func3,func4,3);
+    }
+}
+
+var redrawPreamble;
+
+function redraw() {
+    if (redrawPreamble !== undefined)
+        redrawPreamble();
+    if (atomArray === undefined)
+        return;
+    selectGoodScalar();
+    drawAtoms();
+    var numAtoms = 0;
+    if (termListOutdated) {
+        termListOutdated = false;
+        enumerateTerms();
+        for (var i in atomArray) {
+            var dx = 0.001;
+            var atom = atomArray[i];
+            var pos = atom.getPosition();
+            var prev = Vector(pos.x + dx * (Math.random() - 0.5),
+                              pos.y + dx * (Math.random() - 0.5),
+                              pos.z + dx * (Math.random() - 0.5));
+            atom.setPreviousPosition(prev);
+            numAtoms++;
+        }
+    } else {
+        for (var i in atomArray)
+            numAtoms++;
+    }
+    // don't do dynamics for huge structures
+    if (!dynamicsPaused && numAtoms < 200)
+        setTimeout("verletStep();", 1);
+}
+
+function verletStep() {
+    var numAtoms = 0;
+    for (var j = 0; j < stepsBetweenRedraws; j++) {
+        for (var i in atomArray) {
+            atomArray[i].zeroForce();
+            numAtoms++;
+        }
+        for (var i in termList) {
+            termList[i].computeForces();
+        }
+        var first = true;
+        for (var i in atomArray) {
+            atomArray[i].verletStep(timeStep);
+        }
+        recenterAtoms();
+    }
+    redraw();
 }
 
 /*
