@@ -10,6 +10,7 @@ var hydrogenCovalentRadius = 0.3;  // angstroms
 
 var stepsBetweenRedraws = 10;
 var timeStep = 0.02;
+var verletDelay = 1;
 
 // The following variables should probably be instance variables of a Structure class.
 var atomArray;
@@ -2046,7 +2047,7 @@ function redraw() {
     }
     // don't do dynamics for huge structures
     if (!dynamicsPaused && numAtoms < 200)
-        setTimeout("verletStep();", 1);
+        setTimeout("verletStep();", verletDelay);
 }
 
 function verletStep() {
