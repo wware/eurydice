@@ -1920,9 +1920,7 @@ function makeLongRangeTerm(atom1,atom2) {
         var r1 = rvdw / r;
         var r2 = r1 * r1;
         var r6 = r2 * r2 * r2;
-        // I don't recall where this formula came from
-        // 1.0e-6 maybe too small, 1.0 too big
-        var m = 1.0e-3 * -0.012 * evdw * r1 * r6 * (r6 - 1.0);
+        var m = -1.0e-4 * (evdw / r) * r6 * (r6 - 1.0);
         // m > 0 attract, m < 0 repel
         var f = u.scale(m);
         atom1.addForce(f.negate());
@@ -1981,7 +1979,7 @@ function enumerateTerms() {
     var exclusions = { };
     function _func2(atom1,atom2) {
         var id1 = atom1.getUniqueId();
-        var id2 = atom1.getUniqueId();
+        var id2 = atom2.getUniqueId();
         if (id1 < id2) {
             if (!(id1 in exclusions))
                 exclusions[id1] = [ ];
