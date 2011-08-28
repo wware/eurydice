@@ -9,8 +9,8 @@ var orientation;
 var hydrogenCovalentRadius = 0.3;  // angstroms
 
 var stepsBetweenRedraws = 10;
-var timeStep = 0.02;
-var verletDelay = 1;
+var timeStep = 0.2;
+var verletDelay = 5;
 
 // The following variables should probably be instance variables of a Structure class.
 var atomArray;
@@ -28,6 +28,22 @@ var redrawPreamble;
 
 var dynamicsPaused = false;
 var damping = false;
+
+/*
+ * A word about physical units. I have initially been in a rush to get things into
+ * some kind of shape where I could post them on the web but I want to start being
+ * a bit more rigorous about dimensional analysis.
+ *
+ * Fundamental units:
+ * Times have units of femtoseconds (1.0e-15 seconds).
+ * Distances have units of angstoms (1.0e-10 meters).
+ * Masses have units of one proton mass (1.67262158e-27 kilograms).
+ *
+ * Derived units:
+ * Energy is in units of 16.7262 attojoules (1 aJ = 1.0e-18 joules).
+ * Force is in units of 167.262 nanonewtons.
+ * Spring constants have units of 1.67262 kilonewtons per meter.
+ */
 
 function map(f,lst) {
     var newlst = [ ];
@@ -58,9 +74,12 @@ if (typeof(String.prototype.trim) === "undefined")
 function toString(obj) {
     var str;
     try {
-        return obj.toString();
+        return obj._toString();
     }
     catch (e) { }
+    if ((typeof obj) === 'string')
+        // TODO: escape all internal double-quotes with backslashes
+        return '"' + obj + '"';
     if (obj instanceof Array) {
         str = "[";
         var first = true;
@@ -90,6 +109,10 @@ function toString(obj) {
         }
         return str + "}";
     }
+    try {
+        return '' + obj;
+    }
+    catch (e) { }
     return "" + obj;
 }
 
@@ -119,7 +142,7 @@ function extend(base,additional) {
  */
 
 var vectorPrototype = {
-    toString: function() {
+    _toString: function() {
         return "(" + this.x + " " + this.y + " " + this.z + ")";
     },
     copy: function(other) {
@@ -209,7 +232,7 @@ function Vector(x,y,z) {
  */
 
 var quaternionPrototype = {
-    toString: function() {
+    _toString: function() {
         return "(Quat " + this.getReal() + " " + this.getImaginary() + ")";
     },
     add: function(other) {
@@ -419,7 +442,7 @@ function makeRotator(theta, axis) {
 function Color(r,g,b) {
     function c() { };
     c.prototype = {
-        toString: function() {
+        _toString: function() {
             return "(Color " + r + " " + g + " " + b + ")";
         },
         getRed: function() {
@@ -491,7 +514,7 @@ var atomPrototype = {
     init: function() {
         // default behavior is to do nothing
     },
-    toString: function() {
+    _toString: function() {
         return "(" + this.getSymbol() + " " + this.getUniqueId() + ")";
     },
     setUniqueId: function(v) {
@@ -1105,13 +1128,13 @@ function buildBondInfo() {
         var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
         var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
         var key = xi + ":" + yi + ":" + zi;
-        if (!(key in atomBuckets))
+        if (atomBuckets[key] === undefined)
             atomBuckets[key] = [ ];
         atomBuckets[key].push(atomArray[i]);
     }
     for (var i in atomArray) {
         var atom = atomArray[i];
-        bondsByAtom[atom] = atom.getNeighbors();
+        bondsByAtom[atom.getUniqueId()] = atom.getNeighbors();
     }
 }
 
@@ -1134,14 +1157,14 @@ function recenterAtoms() {
 }
 
 function deleteBondsFor(atom) {
-    var buddies = bondsByAtom[atom];
-    delete bondsByAtom[atom];
+    var buddies = bondsByAtom[atom.getUniqueId()];
+    delete bondsByAtom[atom.getUniqueId()];
     for (var i in buddies) {
         var buddy = buddies[i];
-        var hisBuddies = bondsByAtom[buddy];
+        var hisBuddies = bondsByAtom[buddy.getUniqueId()];
         var n = hisBuddies.indexOf(atom);
         hisBuddies.splice(n, 1);
-        bondsByAtom[buddy] = hisBuddies;
+        bondsByAtom[buddy.getUniqueId()] = hisBuddies;
     }
     return buddies;
 }
@@ -1149,8 +1172,8 @@ function deleteBondsFor(atom) {
 function addAtomConnectedToExisting(atom,existing) {
     atom.setUniqueId(++largestIdThusfar);
     atomArray[atom.getUniqueId()] = atom;
-    bondsByAtom[atom] = [ existing ];
-    bondsByAtom[existing].push(atom);
+    bondsByAtom[atom.getUniqueId()] = [ existing ];
+    bondsByAtom[existing.getUniqueId()].push(atom);
 }
 
 function removeAtom(atom) {
@@ -1187,8 +1210,8 @@ function replaceTwoHydrogensWithABond(h1,h2) {
     delete atomArray[h1.getUniqueId()];
     var other2 = deleteBondsFor(h2)[0];
     delete atomArray[h2.getUniqueId()];
-    bondsByAtom[other1].push(other2);
-    bondsByAtom[other2].push(other1);
+    bondsByAtom[other1.getUniqueId()].push(other2);
+    bondsByAtom[other2.getUniqueId()].push(other1);
     termListOutdated = true;
 }
 
@@ -1279,8 +1302,8 @@ function addAtom(oldH,symbol) {
             z = (hBuddy.getPosition()
                  .subtract(newAtom.getPosition()).crossProduct(u));
             delete atomArray[h.getUniqueId()];
-            bondsByAtom[newAtom].push(hBuddy);
-            bondsByAtom[hBuddy].push(newAtom);
+            bondsByAtom[newAtom.getUniqueId()].push(hBuddy);
+            bondsByAtom[hBuddy.getUniqueId()].push(newAtom);
             hydrogensNeeded--;
         }
     }
@@ -1369,8 +1392,8 @@ function addAtom(oldH,symbol) {
  */
 
 var orientationPrototype = {
-    toString: function() {
-        return "(orientation " + this.quat.toString() + ")";
+    _toString: function() {
+        return "(orientation " + this.quat._toString() + ")";
     },
     rotX: function(angle) {
         this.quat = makeRotator(angle, Vector(-1,0,0)).multiply(this.quat);
@@ -1469,7 +1492,7 @@ function quickdrawAtoms() {
         var atom = ratom.original;
         var aid = atom.getUniqueId();
         var u = ratom.getPosition();
-        var neighborList = bondsByAtom[atom];
+        var neighborList = bondsByAtom[atom.getUniqueId()];
         for (var j in neighborList) {
             var atom2 = neighborList[j];
             var a2id = atom2.getUniqueId();
@@ -1521,6 +1544,8 @@ function atomByScreenCoords(x,y) {
  */
 // http://en.wikipedia.org/wiki/Force_field_(chemistry)
 // http://en.wikipedia.org/wiki/Verlet_integration
+// k here in units of 100 newtons per meter
+// r is in units of angstroms
 
 var lengthtermCoefficients = {
     "C:SP3:C:SP3": {k:4.400, r:1.523},
@@ -1557,22 +1582,26 @@ function makeLengthTerm(atom1,atom2) {
     if (coeffs === undefined) {
         key = sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
         coeffs = lengthtermCoefficients[key];
-        if (coeffs === undefined)
-            coeffs = lengthtermCoefficients["C:SP3:H:NONE"];
     }
     var k = 4;   // something kinda typical
     var r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
-    //k *= 3; // stiffer springs? maybe not
+    if (coeffs !== undefined) {
+        k = coeffs['k'];
+        r = coeffs['r'];
+    }
+    k /= 16.7262;  // get spring constant into system units.
     return function() {
         // for the moment let's just use a linear spring force
         var x = atom2.getPosition().subtract(atom1.getPosition());
         var force = k * (r - x.length());
-        var df = x.scale(10.0 * force / x.length());
+        var df = x.scale(force / x.length());
         atom2.addForce(df);
         atom1.addForce(df.negate());
     };
 }
 
+// kth is in units of attojoules per square radian
+// th0 is in units of degrees
 var angletermCoefficients = {
     "C:SP3:C:SP3:C:SP3": {kth:0.450, th0:109.470},
     "C:SP3:C:SP3:C:SP2": {kth:0.450, th0:109.470},
@@ -1666,6 +1695,7 @@ function makeAngleTerm(atom1,atom2,atom3) {
         kth = coeffs.kth;
         th0 = coeffs.th0 * Math.PI / 180.0;
     }
+    kth /= 16.7262;  // get into system units
     function vderiv(theta) {   // first derivative of v w.r.t. theta
         var ksextic = 0.754;
         var thdiff = theta - th0;
@@ -1691,6 +1721,7 @@ function makeAngleTerm(atom1,atom2,atom3) {
     };
 }
 
+// I think these coefficients are all in milliattojoules, not certain.
 var torsiontermCoefficients = {
 
     //"C:SP3:C:SP3:C:SP3:C:SP3": {v1:0.200, v2:0.270, v3:0.093},
@@ -1864,6 +1895,9 @@ function makeTorsionTerm(atom1,atom2,atom3,atom4) {
         v2 = coeffs.v2;
         v3 = coeffs.v3;
     }
+    v1 /= 16726.2;  // convert milliattojoules to system units
+    v2 /= 16726.2;
+    v3 /= 16726.2;
     function vderiv(phi) {   // first derivative of v w.r.t. phi
         return 0.5 * (-v1 * Math.sin(phi)
                       -2 * v2 * Math.sin(2 * phi) +
@@ -1883,7 +1917,7 @@ function makeTorsionTerm(atom1,atom2,atom3,atom4) {
         var wvlen = wv.length();
         var phi = Math.asin(wv.crossProduct(uv).dotProduct(v) /
                             (uvlen * wvlen * v.length()));
-        var vdot = 0.001 * vderiv(phi);
+        var vdot = vderiv(phi);
         var h = u.dotProduct(v);
         h = u.lensq() - (h * h) / v.lensq();
         var f1 = uv.scale(vdot / (Math.sqrt(h) * uvlen));
@@ -1910,6 +1944,7 @@ function makeTorsionTerm(atom1,atom2,atom3,atom4) {
 function makeLongRangeTerm(atom1,atom2) {
     var rvdw = atom1.getVdwRadius() + atom2.getVdwRadius();
     var evdw = 0.5 * (atom1.getVdwEnergy() + atom2.getVdwEnergy());
+    evdw /= 16726.2;   // convert maJ to system units
     // if I were going to do electrostatics, they'd look something like this
     // var q1q2 = atom1.getCharge() * atom2.getCharge();
     return function() {
@@ -1920,7 +1955,7 @@ function makeLongRangeTerm(atom1,atom2) {
         var r1 = rvdw / r;
         var r2 = r1 * r1;
         var r6 = r2 * r2 * r2;
-        var m = -1.0e-4 * (evdw / r) * r6 * (r6 - 1.0);
+        var m = -(evdw / r) * r6 * (r6 - 1.0);
         // m > 0 attract, m < 0 repel
         var f = u.scale(m);
         atom1.addForce(f.negate());
@@ -1933,78 +1968,72 @@ function enumerateTerms() {
     termList = [ ];
     // short range terms are relatively few in number because they
     // affect only atoms that are close in the graph of chemical bonds
-    function dig(mostRecentAtom,excluded,func2,func3,func4,atomsRemaining) {
-        if (atomsRemaining === 0)
-            return;
-        for (var i in bondsByAtom[mostRecentAtom]) {
-            var atom = bondsByAtom[mostRecentAtom][i];
-            if (excluded.indexOf(atom) != -1)
-                continue;
-            func2(mostRecentAtom, atom);
-            excluded.push(atom);
-            dig(atom,
-                excluded,
-                function(atom1,atom2) {
-                    func3(mostRecentAtom, atom1, atom2);
-                },
-                function(atom1,atom2,atom3) {
-                    func4(mostRecentAtom, atom1, atom2, atom3);
-                },
-                function(atom1,atom2,atom3,atom4) {
-                },
-                atomsRemaining - 1);
-            excluded.pop();
-        }
-    }
-    function func2(atom1,atom2) {
-        if (atom1.getUniqueId() < atom2.getUniqueId()) {
-            termList.push(makeLengthTerm(atom1, atom2));
-        }
-    }
-    function func3(atom1,atom2,atom3) {
-        if (atom1.getUniqueId() < atom3.getUniqueId()) {
-            termList.push(makeAngleTerm(atom1, atom2, atom3));
-        }
-    }
-    function func4(atom1,atom2,atom3,atom4) {
-        if (atom1.getUniqueId() < atom4.getUniqueId()) {
-            termList.push(makeTorsionTerm(atom1, atom2, atom3, atom4));
-        }
-    }
     for (var i in atomArray) {
-        var atom = atomArray[i];
-        dig(atom,[atom],func2,func3,func4,3);
+        var atom1 = atomArray[i];
+        var id1 = atom1.getUniqueId();
+        for (var i in bondsByAtom[id1]) {
+            atom2 = bondsByAtom[id1][i];
+            if (atom2 === atom1)
+                continue;
+            var id2 = atom2.getUniqueId();
+            if (id2 > id1)
+                termList.push(makeLengthTerm(atom1, atom2));
+            for (var j in bondsByAtom[id2]) {
+                var atom3 = bondsByAtom[id2][j];
+                if (atom3 === atom1 || atom3 === atom2)
+                    continue;
+                var id3 = atom3.getUniqueId();
+                if (id3 > id1)
+                    termList.push(makeAngleTerm(atom1, atom2, atom3));
+                for (var k in bondsByAtom[id3]) {
+                    var atom4 = bondsByAtom[id3][k];
+                    if (atom4 === atom1 || atom4 === atom2 || atom4 === atom3)
+                        continue;
+                    var id4 = atom4.getUniqueId();
+                    if (id4 > id1)
+                        termList.push(makeTorsionTerm(atom1, atom2, atom3, atom4));
+                }
+            }
+        }
     }
+
     // long range terms are more numerous
     var exclusions = { };
-    function _func2(atom1,atom2) {
-        var id1 = atom1.getUniqueId();
-        var id2 = atom2.getUniqueId();
-        if (id1 < id2) {
-            if (!(id1 in exclusions))
-                exclusions[id1] = [ ];
-            exclusions[id1].push(id2);
-        }
-    }
-    function _func3(atom1,atom2,atom3) {
-        _func2(atom1, atom3);
-    }
-    function _func4(atom1,atom2,atom3,atom4) {
-        _func2(atom1, atom4);
-    }
     for (var i in atomArray) {
-        var atom = atomArray[i];
-        dig(atom,[atom],_func2,_func3,_func4,3);
+        var atom1 = atomArray[i];
+        var id1 = atom1.getUniqueId();
+        for (var i in bondsByAtom[id1]) {
+            atom2 = bondsByAtom[id1][i];
+            if (atom2 === atom1)
+                continue;
+            var id2 = atom2.getUniqueId();
+            exclusions['' + id1 + ':' + id2] = 1;
+            exclusions['' + id2 + ':' + id1] = 1;
+            for (var j in bondsByAtom[id2]) {
+                var atom3 = bondsByAtom[id2][j];
+                if (atom3 === atom1 || atom3 === atom2)
+                    continue;
+                var id3 = atom3.getUniqueId();
+                exclusions['' + id1 + ':' + id3] = 1;
+                exclusions['' + id3 + ':' + id1] = 1;
+                for (var k in bondsByAtom[id3]) {
+                    var atom4 = bondsByAtom[id3][k];
+                    if (atom4 === atom1 || atom4 === atom2 || atom4 === atom3)
+                        continue;
+                    var id4 = atom4.getUniqueId();
+                    exclusions['' + id1 + ':' + id4] = 1;
+                    exclusions['' + id4 + ':' + id1] = 1;
+                }
+            }
+        }
     }
     for (var i in atomArray) {
         var atom1 = atomArray[i];
-        var exi = exclusions[i];
         for (var j in atomArray) {
-            if (j > i) {
-                var atom2 = atomArray[j];
-                if (exi === undefined || !(j in exi)) {
-                    termList.push(makeLongRangeTerm(atom1, atom2));
-                }
+            var atom2 = atomArray[j];
+            if (atom2.getUniqueId() > atom1.getUniqueId() &&
+                exclusions[i + ':' + j] === undefined) {
+                termList.push(makeLongRangeTerm(atom1, atom2));
             }
         }
     }
@@ -2018,7 +2047,7 @@ function redraw() {
     selectGoodScalar();
     drawAtoms();
     var numAtoms = 0;
-    if (termListOutdated) {
+    if (termListOutdated && numAtoms < 200) {
         termListOutdated = false;
         enumerateTerms();
         for (var i in atomArray) {
