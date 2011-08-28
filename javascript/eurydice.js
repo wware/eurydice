@@ -16,11 +16,15 @@ var verletDelay = 1;
 var atomArray;
 var rotArray;  // used for pretty drawing when mouse is up, reused for tooltip
 var bondsByAtom;   // bidirectional hashmap: atom -> [atom, atom, atom...]
+var termList;
 // end of putative Structure instance variables
 
 // The atomBuckets data structure helps to speed up bond inference. For very large
 // structures, an octree might do better, but this will do for now.
 var BUCKET_LINEAR_DIMENSION = 3;   // angstroms
+
+// a hook to permit modifying redrawing behavior
+var redrawPreamble;
 
 var dynamicsPaused = false;
 var damping = false;
@@ -1543,45 +1547,30 @@ var lengthtermCoefficients = {
     "N:SP3:H:NONE": {k:6.100, r:1.045}
 };
 
-var lengthtermPrototype = {
-    toString: function() {
-        return ("(lengthterm " + this._atom1.toString() + " " +
-                this._atom2.toString() + " " + this._k + " " + this._r + ")");
-    },
-    computeForces: function() {
-        // for the moment let's just use a linear spring force
-        var x = this._atom2.getPosition().subtract(this._atom1.getPosition());
-        var force = this._k * (this._r - x.length());
-        var df = x.scale(force / x.length());
-        this._atom2.addForce(df);
-        this._atom1.addForce(df.negate());
-    },
-    init: function(atom1,atom2) {
-        this._atom1 = atom1;
-        this._atom2 = atom2;
-        var sym1 = atom1.getSymbol();
-        var hyb1 = atom1.getHybridizationString();
-        var sym2 = atom2.getSymbol();
-        var hyb2 = atom2.getHybridizationString();
-        var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2;
-        var coeffs = lengthtermCoefficients[key];
-        if (coeffs === undefined) {
-            key = sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
-            coeffs = lengthtermCoefficients[key];
-            if (coeffs === undefined)
-                coeffs = lengthtermCoefficients["C:SP3:H:NONE"];
-        }
-        this._k = 4;   // something kinda typical
-        this._r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
+function makeLengthTerm(atom1,atom2) {
+    var sym1 = atom1.getSymbol();
+    var hyb1 = atom1.getHybridizationString();
+    var sym2 = atom2.getSymbol();
+    var hyb2 = atom2.getHybridizationString();
+    var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2;
+    var coeffs = lengthtermCoefficients[key];
+    if (coeffs === undefined) {
+        key = sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
+        coeffs = lengthtermCoefficients[key];
+        if (coeffs === undefined)
+            coeffs = lengthtermCoefficients["C:SP3:H:NONE"];
     }
-};
-
-function LengthTerm(atom1,atom2) {
-    function lt() { }
-    lt.prototype = lengthtermPrototype;
-    var t = new lt();
-    t.init(atom1, atom2);
-    return t;
+    var k = 4;   // something kinda typical
+    var r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
+    //k *= 3; // stiffer springs? maybe not
+    return function() {
+        // for the moment let's just use a linear spring force
+        var x = atom2.getPosition().subtract(atom1.getPosition());
+        var force = k * (r - x.length());
+        var df = x.scale(10.0 * force / x.length());
+        atom2.addForce(df);
+        atom1.addForce(df.negate());
+    };
 }
 
 var angletermCoefficients = {
@@ -1656,77 +1645,50 @@ var angletermCoefficients = {
     "C:SP2:O:SP2:C:SP2": {kth:0.870, th0:113.95},
 };
 
-var angletermPrototype = {
-    toString: function() {
-        return ("(angleterm " + this._atom1.toString() + " " +
-                this._atom2.toString() + " " +
-                this._atom3.toString() + " " + this._kth + " " + this._th0 + ")");
-    },
-    v: function(theta) {   // theta is in radians
-        // Nanosystems, Drexler, 1992, Wiley-Interscience, John Wiley & Sons
-        // equation 3.5 on page 46
+function makeAngleTerm(atom1,atom2,atom3) {
+    var sym1 = atom1.getSymbol();
+    var hyb1 = atom1.getHybridizationString();
+    var sym2 = atom2.getSymbol();
+    var hyb2 = atom2.getHybridizationString();
+    var sym3 = atom3.getSymbol();
+    var hyb3 = atom3.getHybridizationString();
+    var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" + sym3 + ":" + hyb3;
+    var coeffs = angletermCoefficients[key];
+    var kth, th0;
+    if (coeffs === undefined) {
+        key = sym3 + ":" + hyb3 + ":" + sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
+        coeffs = angletermCoefficients[key];
+    }
+    if (coeffs === undefined) {
+        kth = 0.4;  // hope this is reasonable
+        th0 = 109.47 * Math.PI / 180.0;
+    } else {
+        kth = coeffs.kth;
+        th0 = coeffs.th0 * Math.PI / 180.0;
+    }
+    function vderiv(theta) {   // first derivative of v w.r.t. theta
         var ksextic = 0.754;
-        var thdiff = theta - this._th0;
+        var thdiff = theta - th0;
         var d2 = thdiff * thdiff;
         var d4 = d2 * d2;
-        return 0.5 * this._kth * d2 * (1 + ksextic * d4);
-    },
-    vderiv: function(theta) {   // first derivative of v w.r.t. theta
-        var ksextic = 0.754;
-        var thdiff = theta - this._th0;
-        var d2 = thdiff * thdiff;
-        var d4 = d2 * d2;
-        return this._kth * thdiff + 3 * ksextic * thdiff * d4;
-    },
-    computeForces: function() {
-        // TODO
-        var pos2 = this._atom2.getPosition();
-        var x = this._atom1.getPosition().subtract(pos2);
-        var y = this._atom3.getPosition().subtract(pos2);
+        return kth * thdiff + 3 * ksextic * thdiff * d4;
+    };
+    return function() {
+        var pos2 = atom2.getPosition();
+        var x = atom1.getPosition().subtract(pos2);
+        var y = atom3.getPosition().subtract(pos2);
         var yx = y.crossProduct(x);        
         var xlen = x.length();
         var ylen = y.length();
         var yxlen = yx.length();
         var theta = Math.acos(x.dotProduct(y) / (xlen * ylen));
-        var vdot = this.vderiv(theta);
+        var vdot = vderiv(theta);
         var f1 = x.crossProduct(yx).scale(vdot / (yxlen * xlen * xlen));
         var f3 = yx.crossProduct(y).scale(vdot / (yxlen * ylen * ylen));
-        this._atom1.addForce(f1);
-        this._atom3.addForce(f3);
-        this._atom2.addForce(f1.add(f3).negate());
-    },
-    init: function(atom1,atom2,atom3) {
-        this._atom1 = atom1;
-        this._atom2 = atom2;
-        this._atom3 = atom3;
-        var sym1 = atom1.getSymbol();
-        var hyb1 = atom1.getHybridizationString();
-        var sym2 = atom2.getSymbol();
-        var hyb2 = atom2.getHybridizationString();
-        var sym3 = atom3.getSymbol();
-        var hyb3 = atom3.getHybridizationString();
-        var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" + sym3 + ":" + hyb3;
-        var coeffs = angletermCoefficients[key];
-        if (coeffs === undefined) {
-            key = sym3 + ":" + hyb3 + ":" + sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
-            coeffs = angletermCoefficients[key];
-        }
-        if (coeffs === undefined) {
-            this._kth = 0.4;  // hope this is reasonable
-            this._th0 = 109.47 * Math.PI / 180.0;
-        } else {
-            this._kth = coeffs.kth;
-            this._th0 = coeffs.th0 * Math.PI / 180.0;
-        }
-    }
-};
-
-function AngleTerm(atom1,atom2,atom3) {
-    function at() { }
-    at.prototype = angletermPrototype;
-    var t = new at();
-    t.init(atom1, atom2, atom3);
-    return t;
+        atom1.addForce(f1);
+        atom3.addForce(f3);
+        atom2.addForce(f1.add(f3).negate());
+    };
 }
 
 var torsiontermCoefficients = {
@@ -1875,34 +1837,43 @@ var torsiontermCoefficients = {
     "C:SP3:N:SP3:N:SP3:C:SP3": {v1:0.900, v2:-6.800, v3:0.210},
 };
 
-var torsiontermPrototype = {
-    toString: function() {
-        return ("(torsionterm " + this._atom1.toString() + " " +
-                this._atom2.toString() + " " +
-                this._atom3.toString() + " " +
-                this._atom4.toString() + " " +
-                this._v1 + " " + this._v2 + " " + this._v3 + ")");
-    },
-    v: function(phi) {   // phi is in radians
-        // Nanosystems, Drexler, 1992, Wiley-Interscience, John Wiley & Sons
-        // equation 3.7 on page 47
-        // I think Drexler may have been mistaken, and the cos(2*phi) term should
-        // be added, not subtracted
-        return 0.5 * (this._v1 * (1 + Math.cos(phi)) +
-                      this._v2 * (1 + Math.cos(2 * phi)) +
-                      this._v3 * (1 + Math.cos(3 * phi)));
-    },
-    vderiv: function(phi) {   // first derivative of v w.r.t. phi
-        return 0.5 * (-this._v1 * Math.sin(phi)
-                      - 2 * this._v2 * Math.sin(2 * phi) +
-                      - 3 * this._v3 * Math.sin(3 * phi));
-    },
-
-    computeForces: function() {
-        var pos1 = this._atom1.getPosition();
-        var pos2 = this._atom2.getPosition();
-        var pos3 = this._atom3.getPosition();
-        var pos4 = this._atom4.getPosition();
+function makeTorsionTerm(atom1,atom2,atom3,atom4) {
+    var sym1 = atom1.getSymbol();
+    var hyb1 = atom1.getHybridizationString();
+    var sym2 = atom2.getSymbol();
+    var hyb2 = atom2.getHybridizationString();
+    var sym3 = atom3.getSymbol();
+    var hyb3 = atom3.getHybridizationString();
+    var sym4 = atom4.getSymbol();
+    var hyb4 = atom4.getHybridizationString();
+    var key = (sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" +
+               sym3 + ":" + hyb3 + ":" + sym4 + ":" + hyb4);
+    var coeffs = torsiontermCoefficients[key];
+    if (coeffs === undefined) {
+        key = (sym4 + ":" + hyb4 + ":" + sym3 + ":" + hyb3 + ":" +
+               sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1);
+        coeffs = torsiontermCoefficients[key];
+    }
+    var v1, v2, v3;
+    if (coeffs === undefined) {
+        v1 = 0.0;
+        v2 = 0.0;
+        v3 = 0.0;
+    } else {
+        v1 = coeffs.v1;
+        v2 = coeffs.v2;
+        v3 = coeffs.v3;
+    }
+    function vderiv(phi) {   // first derivative of v w.r.t. phi
+        return 0.5 * (-v1 * Math.sin(phi)
+                      -2 * v2 * Math.sin(2 * phi) +
+                      -3 * v3 * Math.sin(3 * phi));
+    };
+    return function() {
+        var pos1 = atom1.getPosition();
+        var pos2 = atom2.getPosition();
+        var pos3 = atom3.getPosition();
+        var pos4 = atom4.getPosition();
         var u = pos1.subtract(pos2);
         var v = pos3.subtract(pos2);
         var w = pos4.subtract(pos3);
@@ -1910,70 +1881,60 @@ var torsiontermPrototype = {
         var uvlen = uv.length();
         var wv = w.crossProduct(v);
         var wvlen = wv.length();
-        var phi = Math.asin(wv.crossProduct(uv).dotProduct(v) / (uvlen * wvlen * v.length()));
-        var vdot = 0.001 * this.vderiv(phi);
+        var phi = Math.asin(wv.crossProduct(uv).dotProduct(v) /
+                            (uvlen * wvlen * v.length()));
+        var vdot = 0.001 * vderiv(phi);
         var h = u.dotProduct(v);
         h = u.lensq() - (h * h) / v.lensq();
         var f1 = uv.scale(vdot / (Math.sqrt(h) * uvlen));
         h = w.dotProduct(v);
         h = w.lensq() - (h * h) / v.lensq();
         var f4 = wv.scale(-vdot / (Math.sqrt(h) * wvlen));
-        this._atom1.addForce(f1);
-        this._atom4.addForce(f4);
+        atom1.addForce(f1);
+        atom4.addForce(f4);
         // TODO - correct forces on atoms 2 and 3
         // The actual forces on atoms 2 and 3 are a little more complicated.
         // These are approximate. Torsion forces are weak compared to the
         // other forces so these approximations aren't horrible.
         var fopp = f1.add(f4).scale(-0.5);
-        this._atom2.addForce(fopp);
-        this._atom3.addForce(fopp);
-    },
-
-    init: function(atom1,atom2,atom3,atom4) {
-        this._atom1 = atom1;
-        this._atom2 = atom2;
-        this._atom3 = atom3;
-        this._atom4 = atom4;
-        var sym1 = atom1.getSymbol();
-        var hyb1 = atom1.getHybridizationString();
-        var sym2 = atom2.getSymbol();
-        var hyb2 = atom2.getHybridizationString();
-        var sym3 = atom3.getSymbol();
-        var hyb3 = atom3.getHybridizationString();
-        var sym4 = atom4.getSymbol();
-        var hyb4 = atom4.getHybridizationString();
-        var key = (sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" +
-                   sym3 + ":" + hyb3 + ":" + sym4 + ":" + hyb4);
-        var coeffs = torsiontermCoefficients[key];
-        if (coeffs === undefined) {
-            key = (sym4 + ":" + hyb4 + ":" + sym3 + ":" + hyb3 + ":" +
-                   sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1);
-            coeffs = torsiontermCoefficients[key];
-        }
-        if (coeffs === undefined) {
-            this._v1 = 0.0;
-            this._v2 = 0.0;
-            this._v3 = 0.0;
-        } else {
-            this._v1 = coeffs.v1;
-            this._v2 = coeffs.v2;
-            this._v3 = coeffs.v3;
-        }
-    }
-};
-
-function TorsionTerm(atom1,atom2,atom3,atom4) {
-    function tt() { }
-    tt.prototype = torsiontermPrototype;
-    var t = new tt();
-    t.init(atom1, atom2, atom3, atom4);
-    return t;
+        atom2.addForce(fopp);
+        atom3.addForce(fopp);
+    };
 }
 
-var termList;
+/*
+ * Long range terms should ideally include both Van der Waals forces
+ * and electrostatic forces. For now, I'm not dealing with electric
+ * charges so this is just VDW forces.
+ */
+function makeLongRangeTerm(atom1,atom2) {
+    var rvdw = atom1.getVdwRadius() + atom2.getVdwRadius();
+    var evdw = 0.5 * (atom1.getVdwEnergy() + atom2.getVdwEnergy());
+    // if I were going to do electrostatics, they'd look something like this
+    // var q1q2 = atom1.getCharge() * atom2.getCharge();
+    return function() {
+        var pos1 = atom1.getPosition();
+        var pos2 = atom2.getPosition();
+        var u = pos1.subtract(pos2);
+        var r = u.length();
+        var r1 = rvdw / r;
+        var r2 = r1 * r1;
+        var r6 = r2 * r2 * r2;
+        // I don't recall where this formula came from
+        // 1.0e-6 maybe too small, 1.0 too big
+        var m = 1.0e-3 * -0.012 * evdw * r1 * r6 * (r6 - 1.0);
+        // m > 0 attract, m < 0 repel
+        var f = u.scale(m);
+        atom1.addForce(f.negate());
+        atom2.addForce(f);
+    };
+}
+
 
 function enumerateTerms() {
     termList = [ ];
+    // short range terms are relatively few in number because they
+    // affect only atoms that are close in the graph of chemical bonds
     function dig(mostRecentAtom,excluded,func2,func3,func4,atomsRemaining) {
         if (atomsRemaining === 0)
             return;
@@ -1999,26 +1960,57 @@ function enumerateTerms() {
     }
     function func2(atom1,atom2) {
         if (atom1.getUniqueId() < atom2.getUniqueId()) {
-            termList.push(LengthTerm(atom1, atom2));
+            termList.push(makeLengthTerm(atom1, atom2));
         }
     }
     function func3(atom1,atom2,atom3) {
         if (atom1.getUniqueId() < atom3.getUniqueId()) {
-            termList.push(AngleTerm(atom1, atom2, atom3));
+            termList.push(makeAngleTerm(atom1, atom2, atom3));
         }
     }
     function func4(atom1,atom2,atom3,atom4) {
         if (atom1.getUniqueId() < atom4.getUniqueId()) {
-            termList.push(TorsionTerm(atom1, atom2, atom3, atom4));
+            termList.push(makeTorsionTerm(atom1, atom2, atom3, atom4));
         }
     }
     for (var i in atomArray) {
         var atom = atomArray[i];
         dig(atom,[atom],func2,func3,func4,3);
     }
+    // long range terms are more numerous
+    var exclusions = { };
+    function _func2(atom1,atom2) {
+        var id1 = atom1.getUniqueId();
+        var id2 = atom1.getUniqueId();
+        if (id1 < id2) {
+            if (!(id1 in exclusions))
+                exclusions[id1] = [ ];
+            exclusions[id1].push(id2);
+        }
+    }
+    function _func3(atom1,atom2,atom3) {
+        _func2(atom1, atom3);
+    }
+    function _func4(atom1,atom2,atom3,atom4) {
+        _func2(atom1, atom4);
+    }
+    for (var i in atomArray) {
+        var atom = atomArray[i];
+        dig(atom,[atom],_func2,_func3,_func4,3);
+    }
+    for (var i in atomArray) {
+        var atom1 = atomArray[i];
+        var exi = exclusions[i];
+        for (var j in atomArray) {
+            if (j > i) {
+                var atom2 = atomArray[j];
+                if (exi === undefined || !(j in exi)) {
+                    termList.push(makeLongRangeTerm(atom1, atom2));
+                }
+            }
+        }
+    }
 }
-
-var redrawPreamble;
 
 function redraw() {
     if (redrawPreamble !== undefined)
@@ -2058,7 +2050,7 @@ function verletStep() {
             numAtoms++;
         }
         for (var i in termList) {
-            termList[i].computeForces();
+            termList[i]();
         }
         var first = true;
         for (var i in atomArray) {
