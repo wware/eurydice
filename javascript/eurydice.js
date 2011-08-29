@@ -43,7 +43,12 @@ var damping = false;
  * Energy is in units of 16.7262 attojoules (1 aJ = 1.0e-18 joules).
  * Force is in units of 167.262 nanonewtons.
  * Spring constants have units of 1.67262 kilonewtons per meter.
+ *
+ * Thermometer: Boltzmann's constant is 1.3806488e-23 J/Kelvin but in terms of
+ * these energy units per Kelvin, it has the value below.
  */
+var BoltzmannsConstant = 8.254400257e-7;
+var Temperature;   // in degrees Kelvin
 
 function map(f,lst) {
     var newlst = [ ];
@@ -575,22 +580,28 @@ var atomPrototype = {
     verletStep: function(dt) {
         // http://en.wikipedia.org/wiki/Verlet_integration
         var pos = this._position, prev = this._previous;
-        var x, y, z;
+        var thermostat;  // negative: colder, positive: hotter
         if (damping) {
-            x = pos.x + 0.98 * (pos.x - prev.x);
-            y = pos.y + 0.98 * (pos.y - prev.y);
-            z = pos.z + 0.98 * (pos.z - prev.z);
+            thermostat = -0.005;
         } else {
-            x = 2 * pos.x - prev.x;
-            y = 2 * pos.y - prev.y;
-            z = 2 * pos.z - prev.z;
+            thermostat = 0.0;
         }
+        var x = pos.x + (1.0 + thermostat) * (pos.x - prev.x);
+        var y = pos.y + (1.0 + thermostat) * (pos.y - prev.y);
+        var z = pos.z + (1.0 + thermostat) * (pos.z - prev.z);
         var a = dt * dt / this.getMass();
         var f = this._force;
         this._position = Vector(x + a * f.x,
                                 y + a * f.y,
                                 z + a * f.z);
         this._previous = pos;
+    },
+    kineticEnergy: function(dt) {
+        var pos = this._position, prev = this._previous;
+        var dx = pos.x - prev.x;
+        var dy = pos.y - prev.y;
+        var dz = pos.z - prev.z;
+        return 0.5 * this.getMass() * (dx*dx + dy*dy + dz*dz) / (dt*dt);
     },
     reorient: function() {
         var newpos = orientation.transform(this.getPosition().scale(scalar));
@@ -2085,6 +2096,11 @@ function verletStep() {
         }
         recenterAtoms();
     }
+    var etotal = 0.0;
+    for (var i in atomArray) {
+        etotal += atomArray[i].kineticEnergy(timeStep);
+    }
+    Temperature = (2.0/3.0) * (etotal / BoltzmannsConstant);
     redraw();
 }
 
