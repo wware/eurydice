@@ -49,6 +49,8 @@ var damping = false;
  */
 var BoltzmannsConstant = 8.254400257e-7;
 var Temperature;   // in degrees Kelvin
+var TargetTemperature;   // in degrees Kelvin
+var temperatureUpdate;
 
 function map(f,lst) {
     var newlst = [ ];
@@ -583,6 +585,11 @@ var atomPrototype = {
         var thermostat;  // negative: colder, positive: hotter
         if (damping) {
             thermostat = -0.005;
+        } else if (TargetTemperature !== null) {
+            if (TargetTemperature > Temperature)
+                thermostat = 0.01;
+            else
+                thermostat = -0.01;
         } else {
             thermostat = 0.0;
         }
@@ -2100,7 +2107,10 @@ function verletStep() {
     for (var i in atomArray) {
         etotal += atomArray[i].kineticEnergy(timeStep);
     }
+    etotal /= numAtoms;
     Temperature = (2.0/3.0) * (etotal / BoltzmannsConstant);
+    if (temperatureUpdate !== undefined)
+        temperatureUpdate(Temperature);
     redraw();
 }
 
