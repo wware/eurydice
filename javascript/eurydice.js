@@ -3,28 +3,20 @@
  */
 
 var pixelAtomHash;  // keyed by coarse (x,y) screen location
-var atomBuckets;
-var scalar;
-var orientation;
-var hydrogenCovalentRadius = 0.3;  // angstroms
+var atomBuckets;   // may NOT be an ivar of structure
+var orientation;   // must become an ivar of structure
+var hydrogenCovalentRadius = 0.3e-10;  // angstroms
 
 var stepsBetweenRedraws = 10;
-var timeStep = 0.2;
-var verletDelay = 5;
-
-// The following variables should probably be instance variables of a Structure class.
-var atomArray;
-var rotArray;  // used for pretty drawing when mouse is up, reused for tooltip
-var bondsByAtom;   // bidirectional hashmap: atom -> [atom, atom, atom...]
-var termList;
-// end of putative Structure instance variables
+var timeStep = 0.2e-15;
+var verletDelay = 1000;
 
 // The atomBuckets data structure helps to speed up bond inference. For very large
 // structures, an octree might do better, but this will do for now.
-var BUCKET_LINEAR_DIMENSION = 3;   // angstroms
+var BUCKET_LINEAR_DIMENSION = 3e-10;
 
 // a hook to permit modifying redrawing behavior
-var redrawPreamble;
+// var redrawPreamble;
 
 var dynamicsPaused = false;
 var damping = false;
@@ -35,22 +27,16 @@ var damping = false;
  * a bit more rigorous about dimensional analysis.
  *
  * Fundamental units:
- * Times have units of femtoseconds (1.0e-15 seconds).
- * Distances have units of angstoms (1.0e-10 meters).
- * Masses have units of one proton mass (1.67262158e-27 kilograms).
+ * Times are in seconds
+ * Distances are in meters
+ * Masses are in kilograms
  *
  * Derived units:
- * Energy is in units of 16.7262 attojoules (1 aJ = 1.0e-18 joules).
- * Force is in units of 167.262 nanonewtons.
- * Spring constants have units of 1.67262 kilonewtons per meter.
- *
- * Thermometer: Boltzmann's constant is 1.3806488e-23 J/Kelvin but in terms of
- * these energy units per Kelvin, it has the value below.
+ * Energy is in joules (1 aJ = 1.0e-18 joules).
+ * Force is in units of newtons.
+ * Spring constants have units of newtons per meter.
  */
-var BoltzmannsConstant = 8.254400257e-7;
-var Temperature;   // in degrees Kelvin
-var TargetTemperature;   // in degrees Kelvin
-var temperatureUpdate;
+var BoltzmannsConstant = 1.3806488e-23;
 
 function map(f,lst) {
     var newlst = [ ];
@@ -248,7 +234,8 @@ var quaternionPrototype = {
     },
     subtract: function(other) {
         return Quaternion(this.getReal() - other.getReal(),
-                          this.getImaginary().subtract(other.getImaginary()));
+                          this.getImaginary()
+                          .subtract(other.getImaginary()));
     },
     multiply: function(other) {
         var a = this.getReal();
@@ -521,30 +508,39 @@ var atomPrototype = {
     init: function() {
         // default behavior is to do nothing
     },
+
     _toString: function() {
         return "(" + this.getSymbol() + " " + this.getUniqueId() + ")";
     },
+
     setUniqueId: function(v) {
         this._uniqueid = v;
     },
+
     getUniqueId: function() {
         return this._uniqueid;
     },
+
     setPosition: function(v) {
         this._position = v;
     },
+
     getPosition: function() {
         return this._position;
     },
+
     move: function(v) {
         this._position = this._position.add(v);
     },
+
     setForce: function(v) {
         this._force = v;
     },
+
     getForce: function() {
         return this._force;
     },
+
     addForce: function(v) {
         if (this._force === undefined)
             this._force = v;
@@ -554,22 +550,28 @@ var atomPrototype = {
             this._force.z += v.z;
         }
     },
+
     zeroForce: function(v) {
         this._force = Vector(0, 0, 0);
     },
+
     setPreviousPosition: function(v) {
         this._previous = v;
     },
+
     getPreviousPosition: function(v) {
         return this._previous;
     },
+
     setHybridization: function(h) {
         // check valid hybridization for this element??
         this._h = h;
     },
+
     getHybridization: function() {
         return this._h;
     },
+
     getHybridizationString: function() {
         switch (this.getHybridization()) {
             default:
@@ -579,23 +581,14 @@ var atomPrototype = {
             case Atom.NONE: return "NONE";
         }
     },
-    verletStep: function(dt) {
+
+    verletStep: function(dt, dampingCoeff) {
         // http://en.wikipedia.org/wiki/Verlet_integration
         var pos = this._position, prev = this._previous;
-        var thermostat;  // negative: colder, positive: hotter
-        if (damping) {
-            thermostat = -0.005;
-        } else if (TargetTemperature !== null) {
-            if (TargetTemperature > Temperature)
-                thermostat = 0.01;
-            else
-                thermostat = -0.01;
-        } else {
-            thermostat = 0.0;
-        }
-        var x = pos.x + (1.0 + thermostat) * (pos.x - prev.x);
-        var y = pos.y + (1.0 + thermostat) * (pos.y - prev.y);
-        var z = pos.z + (1.0 + thermostat) * (pos.z - prev.z);
+        // dampingCoeff negative: colder, positive: hotter
+        var x = pos.x + (1.0 + dampingCoeff) * (pos.x - prev.x);
+        var y = pos.y + (1.0 + dampingCoeff) * (pos.y - prev.y);
+        var z = pos.z + (1.0 + dampingCoeff) * (pos.z - prev.z);
         var a = dt * dt / this.getMass();
         var f = this._force;
         this._position = Vector(x + a * f.x,
@@ -603,6 +596,7 @@ var atomPrototype = {
                                 z + a * f.z);
         this._previous = pos;
     },
+
     kineticEnergy: function(dt) {
         var pos = this._position, prev = this._previous;
         var dx = pos.x - prev.x;
@@ -610,23 +604,11 @@ var atomPrototype = {
         var dz = pos.z - prev.z;
         return 0.5 * this.getMass() * (dx*dx + dy*dy + dz*dz) / (dt*dt);
     },
-    reorient: function() {
-        var newpos = orientation.transform(this.getPosition().scale(scalar));
-        var r = 0.9 * scalar * orientation.P * this.getCovalentRadius();
-        function atomConstructor() { };
-        atomConstructor.prototype = this.getPrototype();
-        var a = new atomConstructor();
-        a.setPosition(newpos);
-        a.getCovalentRadius = function() {
-            return r;
-        };
-        a.original = this;
-        return a;
-    },
+
     getNeighbors: function() {
         // return an array of atoms bonded directly to this guy
         var neighbors = [ ];
-        var bondLengthTolerance = 0.4;
+        var bondLengthTolerance = 0.4e-10;
         var covR = this.getCovalentRadius();
         var xi = Math.floor(this._position.x / BUCKET_LINEAR_DIMENSION);
         var yi = Math.floor(this._position.y / BUCKET_LINEAR_DIMENSION);
@@ -638,9 +620,11 @@ var atomPrototype = {
                     if (bucket !== null && bucket !== undefined) {
                         for (var i in bucket) {
                             var a2 = bucket[i];
-                            var dx = a2._position.subtract(this._position).length();
+                            var dx = a2._position
+                                .subtract(this._position).length();
                             if (a2 !== this &&
-                                dx < covR + a2.getCovalentRadius() + bondLengthTolerance) {
+                                dx < covR + a2.getCovalentRadius()
+                                + bondLengthTolerance) {
                                 neighbors.push(a2);
                             }
                         }
@@ -648,6 +632,7 @@ var atomPrototype = {
                 }
         return neighbors;
     },
+
     draw: function() {
         var canvas = document.getElementById("canvas");
         var context = canvas.getContext("2d");
@@ -682,49 +667,60 @@ var atomPrototype = {
     },
 };
 
-var carbonPrototype =
-    extend(atomPrototype, {
-            init: function() {
-                this.setHybridization(Atom.SP3);
-            },
-            getName: function() {
-                return "Carbon";
-            },
-            getImage: function() {
-                return document.getElementById("carbon");
-            },
-            getSymbol: function() {
-                return "C";
-            },
-            getAtomicNumber: function() {
-                return 6;
-            },
-            getMass: function() {
-                return 12;
-            },
-            getColor: function() {
-                return Color.getColor("gray30");
-            },
-            getCovalentRadius: function() {
-                if (this._h === Atom.SP2)
-                    return 0.67;
-                if (this._h === Atom.SP)
-                    return 0.6;
-                return 0.77;
-            },
-            getVdwEnergy: function() {
-                return 0.357;
-            },
-            getVdwRadius: function() {
-                return 1.85;
-            },
-            getCorrectNumBonds: function() {
-                return 4;
-            },
-            getPrototype: function() {
-                return carbonPrototype;
-            },
-        });
+var carbonPrototype = extend(atomPrototype, {
+        init: function() {
+            this.setHybridization(Atom.SP3);
+        },
+
+        getName: function() {
+            return "Carbon";
+        },
+
+        getImage: function() {
+            return document.getElementById("carbon");
+        },
+
+        getSymbol: function() {
+            return "C";
+        },
+
+        getAtomicNumber: function() {
+            return 6;
+        },
+
+        getMass: function() {
+            // 12 * proton mass, in kilograms
+            return 2.0071458959999998e-26;
+        },
+
+        getColor: function() {
+            return Color.getColor("gray30");
+        },
+
+        getCovalentRadius: function() {
+            if (this._h === Atom.SP2)
+                return 0.67e-10;
+            if (this._h === Atom.SP)
+                return 0.6e-10;
+            return 0.77e-10;
+        },
+
+        getVdwEnergy: function() {
+            return 0.357e-21;
+        },
+
+        getVdwRadius: function() {
+            return 1.85e-10;
+        },
+
+        getCorrectNumBonds: function() {
+            return 4;
+        },
+
+        getPrototype: function() {
+            return carbonPrototype;
+        },
+    });
 
 function Carbon() {
     function c() { }
@@ -749,7 +745,8 @@ var hydrogenPrototype =
                 return 1;
             },
             getMass: function() {
-                return 1;
+                // 1 * proton mass
+                return 1.67262158e-27;
             },
             getColor: function() {
                 return Color.getColor("white");
@@ -758,10 +755,10 @@ var hydrogenPrototype =
                 return hydrogenCovalentRadius;
             },
             getVdwEnergy: function() {
-                return 0.382;
+                return 0.382e-21;
             },
             getVdwRadius: function() {
-                return 1.2;
+                return 1.2e-10;
             },
             getCorrectNumBonds: function() {
                 return 1;
@@ -803,25 +800,26 @@ var oxygenPrototype =
                 return 8;
             },
             getMass: function() {
-                return 16;
+                // 16 * proton mass
+                return 2.676194528e-26;
             },
             getColor: function() {
                 return Color.getColor("red");
             },
             getCovalentRadius: function() {
                 if (this._h === Atom.SP2)
-                    return 0.62;
+                    return 0.62e-10;
                 if (this._h === Atom.SP)
-                    return 0.55;
-                return 0.74;
+                    return 0.55e-10;
+                return 0.74e-10;
             },
             getVdwEnergy: function() {
                 if (this._h === Atom.SP2 || this._h === Atom.SP)
-                    return 0.536;
-                return 0.406;
+                    return 0.536e-21;
+                return 0.406e-21;
             },
             getVdwRadius: function() {
-                return 1.4;
+                return 1.4e-10;
             },
             getCorrectNumBonds: function() {
                 return 2;
@@ -857,7 +855,8 @@ var nitrogenPrototype =
                 return 7;
             },
             getMass: function() {
-                return 14;
+                // 14 * proton mass
+                return 2.341670212e-26;
             },
             getColor: function() {
                 return Color.getColor("blue");
@@ -865,16 +864,16 @@ var nitrogenPrototype =
             getCovalentRadius: function() {
                 // IDENTICAL to oxygen? is that right???
                 if (this._h === Atom.SP2)
-                    return 0.62;
+                    return 0.62e-10;
                 if (this._h === Atom.SP)
-                    return 0.55;
-                return 0.74;
+                    return 0.55e-10;
+                return 0.74e-10;
             },
             getVdwEnergy: function() {
-                return 0.447;
+                return 0.447e-21;
             },
             getVdwRadius: function() {
-                return 1.5;
+                return 1.5e-10;
             },
             getCorrectNumBonds: function() {
                 return 3;
@@ -910,19 +909,20 @@ var fluorinePrototype =
                 return 9;
             },
             getMass: function() {
-                return 19;
+                // 19 * proton mass
+                return 3.177981002e-26;
             },
             getColor: function() {
                 return Color.getColor("green");
             },
             getCovalentRadius: function() {
-                return 0.6;
+                return 0.6e-10;
             },
             getVdwEnergy: function() {
-                return 0.447;  // TODO - correct value
+                return 0.447e-21;  // TODO - correct value
             },
             getVdwRadius: function() {
-                return 1.47;
+                return 1.47e-10;
             },
             getCorrectNumBonds: function() {
                 return 1;
@@ -958,19 +958,20 @@ var sulfurPrototype =
                 return 16;
             },
             getMass: function() {
-                return 32.065;
+                // 32.065 * proton mass
+                return 5.36326109627e-26;
             },
             getColor: function() {
                 return Color.getColor("yellow");
             },
             getCovalentRadius: function() {
-                return 1.05;
+                return 1.05e-10;
             },
             getVdwEnergy: function() {
-                return 0.447;  // TODO - correct value?
+                return 0.447e-21;  // TODO - correct value?
             },
             getVdwRadius: function() {
-                return 1.8;
+                return 1.8e-10;
             },
             getCorrectNumBonds: function() {
                 return 2;
@@ -1006,19 +1007,20 @@ var siliconPrototype =
                 return 14;
             },
             getMass: function() {
-                return 28.0855;
+                // 28.0855 * proton mass
+                return 4.697641338509e-26;
             },
             getColor: function() {
                 return Color.getColor("Gray70");
             },
             getCovalentRadius: function() {
-                return 1.11;
+                return 1.11e-10;
             },
             getVdwEnergy: function() {
-                return 0.447; // TODO - correct value?
+                return 0.447e-21; // TODO - correct value?
             },
             getVdwRadius: function() {
-                return 2.1;
+                return 2.1e-10;
             },
             getCorrectNumBonds: function() {
                 return 4;
@@ -1054,19 +1056,20 @@ var chlorinePrototype =
                 return 17;
             },
             getMass: function() {
-                return 35.453;
+                // 35.543 * proton mass
+                return 5.944998881794e-26;
             },
             getColor: function() {
                 return Color.getColor("orange");
             },
             getCovalentRadius: function() {
-                return 1.02;
+                return 1.02e-10;
             },
             getVdwEnergy: function() {
-                return 0.447;  // TODO - correct value
+                return 0.447e-21;  // TODO - correct value
             },
             getVdwRadius: function() {
-                return 1.75;
+                return 1.75e-10;
             },
             getCorrectNumBonds: function() {
                 return 1;
@@ -1102,19 +1105,20 @@ var phosphorusPrototype =
                 return 15;
             },
             getMass: function() {
-                return 30.97;
+                // 30.97 * proton mass
+                return 5.18010903326e-26;
             },
             getColor: function() {
                 return Color.getColor("purple");
             },
             getCovalentRadius: function() {
-                return 1.07;
+                return 1.07e-10;
             },
             getVdwEnergy: function() {
-                return 0.447;  // TODO - correct value
+                return 0.447e-21;  // TODO - correct value
             },
             getVdwRadius: function() {
-                return 1.8;
+                return 1.8e-10;
             },
             getCorrectNumBonds: function() {
                 return 3;  // works like nitrogen
@@ -1133,280 +1137,7 @@ function Phosphorus() {
 }
 
 /*
- * * * * * * * * * * * * * * STRUCTURE STUFF * * * * * * * * * * * * * *
- */
-
-function buildBondInfo() {
-    bondsByAtom = { };
-    atomBuckets = { };
-    for (var i in atomArray) {
-        // add the atom to the appropriate bucket
-        var pos = atomArray[i].getPosition();
-        var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
-        var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
-        var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
-        var key = xi + ":" + yi + ":" + zi;
-        if (atomBuckets[key] === undefined)
-            atomBuckets[key] = [ ];
-        atomBuckets[key].push(atomArray[i]);
-    }
-    for (var i in atomArray) {
-        var atom = atomArray[i];
-        bondsByAtom[atom.getUniqueId()] = atom.getNeighbors();
-    }
-}
-
-function recenterAtoms() {
-    var centerOfGravity = Vector(0.0, 0.0, 0.0);
-    var numAtoms = 0;
-    for (var i in atomArray) {
-        numAtoms++;
-        centerOfGravity = centerOfGravity.add(atomArray[i].getPosition());
-    }
-    centerOfGravity = centerOfGravity.scale(1.0 / numAtoms);
-    for (var i in atomArray) {
-        atomArray[i].setPosition(atomArray[i].getPosition().subtract(centerOfGravity));
-        var previous = atomArray[i].getPreviousPosition();
-        if (previous === undefined)
-            atomArray[i].setPreviousPosition(atomArray[i].getPosition());
-        else
-            atomArray[i].setPreviousPosition(previous.subtract(centerOfGravity));
-    }
-}
-
-function deleteBondsFor(atom) {
-    var buddies = bondsByAtom[atom.getUniqueId()];
-    delete bondsByAtom[atom.getUniqueId()];
-    for (var i in buddies) {
-        var buddy = buddies[i];
-        var hisBuddies = bondsByAtom[buddy.getUniqueId()];
-        var n = hisBuddies.indexOf(atom);
-        hisBuddies.splice(n, 1);
-        bondsByAtom[buddy.getUniqueId()] = hisBuddies;
-    }
-    return buddies;
-}
-
-function addAtomConnectedToExisting(atom,existing) {
-    atom.setUniqueId(++largestIdThusfar);
-    atomArray[atom.getUniqueId()] = atom;
-    bondsByAtom[atom.getUniqueId()] = [ existing ];
-    bondsByAtom[existing.getUniqueId()].push(atom);
-}
-
-function removeAtom(atom) {
-    if (atom.getSymbol() === "H") {
-        return;
-    }
-    // update atomArray with deletion of chosen atom
-    var neighborhood = deleteBondsFor(atom);
-    delete atomArray[atom.getUniqueId()];
-    // each surviving neighbor gets a hydrogen to terminate
-    for (var i in neighborhood) {
-        var neighbor = neighborhood[i];
-        if (neighbor.getSymbol() === "H") {
-            // unless it's hydrogen, then kill it
-            deleteBondsFor(neighbor);
-            delete atomArray[neighbor.getUniqueId()];
-        } else {
-            var direction = atom.getPosition().subtract(neighbor.getPosition());
-            var distance = neighbor.getCovalentRadius() + hydrogenCovalentRadius;
-            direction = direction.scale(distance / direction.length());
-            var h = Hydrogen();
-            h.setPosition(neighbor.getPosition().add(direction));
-            addAtomConnectedToExisting(h, neighbor);
-        }
-    }
-}
-
-function replaceTwoHydrogensWithABond(h1,h2) {
-    if (h1 === undefined || h1.getSymbol() !== "H" ||
-        h2 === undefined || h2.getSymbol() !== "H") {
-        return;
-    }
-    var other1 = deleteBondsFor(h1)[0];
-    delete atomArray[h1.getUniqueId()];
-    var other2 = deleteBondsFor(h2)[0];
-    delete atomArray[h2.getUniqueId()];
-    bondsByAtom[other1.getUniqueId()].push(other2);
-    bondsByAtom[other2.getUniqueId()].push(other1);
-    termListOutdated = true;
-}
-
-function addAtom(oldH,symbol) {
-    // this makes sense only if the atom is hydrogen
-    if (oldH.getSymbol() !== "H") {
-        return;
-    }
-    var newAtom = undefined;
-    switch (symbol) {
-        case "C":
-            newAtom = Carbon();
-            break;
-        case "N":
-            newAtom = Nitrogen();
-            break;
-        case "O":
-            newAtom = Oxygen();
-            break;
-        case "F":
-            newAtom = Fluorine();
-            break;
-        case "Si":
-            newAtom = Silicon();
-            break;
-        case "P":
-            newAtom = Phosphorus();
-            break;
-        case "S":
-            newAtom = Sulfur();
-            break;
-        case "Cl":
-            newAtom = Chlorine();
-            break;
-        default:
-            return;
-    }
-    var TETRAHEDRAL_GEOMETRY = 0;
-    var TRIGONAL_GEOMETRY = 1;
-    var LINEAR_GEOMETRY = 2;
-    var geometry;
-    var hydrogensNeeded;
-    switch (findChosenRadioButton("hybrid")) {
-        case "sp3":
-            newAtom.setHybridization(Atom.SP3);
-            geometry = TETRAHEDRAL_GEOMETRY;
-            hydrogensNeeded = newAtom.getCorrectNumBonds() - 1;
-            break;
-        case "sp2":
-            newAtom.setHybridization(Atom.SP2);
-            geometry = TRIGONAL_GEOMETRY;
-            hydrogensNeeded = newAtom.getCorrectNumBonds() - 2;
-            break;
-        case "sp":
-            newAtom.setHybridization(Atom.SP);
-            geometry = LINEAR_GEOMETRY;
-            hydrogensNeeded = newAtom.getCorrectNumBonds() - 3;
-            break;
-        default:
-            return;
-    }
-    // update atomArray: remove old hydrogen
-    var neighborhood = deleteBondsFor(oldH);
-    delete atomArray[oldH.getUniqueId()];
-    // find correct position for new atom, add it
-    var neighbor = neighborhood[0];
-    var direction = oldH.getPosition().subtract(neighbor.getPosition());
-    var distance = neighbor.getCovalentRadius() + newAtom.getCovalentRadius();
-    direction = direction.scale(distance / direction.length());
-    // u is a unit vector pointing from the existing neighbor to the new atom
-    var u = direction.scale(1.0 / direction.length());
-    newAtom.setPosition(neighbor.getPosition().add(direction));
-    addAtomConnectedToExisting(newAtom, neighbor);
-
-    // are there any hydrogens that should be deleted so their neighbors
-    // can be connected to the new atom?
-    var otherHs = filter(function(x) { return x !== neighbor &&
-                                       x.getSymbol() === "H"; },
-                         newAtom.getNeighbors());
-    var z;
-    if (otherHs !== undefined) {
-        for (var i in otherHs) {
-            var h = otherHs[i];
-            var hneighbors = deleteBondsFor(h);
-            if (hneighbors === undefined)
-                continue;
-            var hBuddy = hneighbors[0];
-            z = (hBuddy.getPosition()
-                 .subtract(newAtom.getPosition()).crossProduct(u));
-            delete atomArray[h.getUniqueId()];
-            bondsByAtom[newAtom.getUniqueId()].push(hBuddy);
-            bondsByAtom[hBuddy.getUniqueId()].push(newAtom);
-            hydrogensNeeded--;
-        }
-    }
-
-    var sqrt2 = Math.sqrt(2);
-    var sqrt3 = Math.sqrt(3);
-    var sqrt6 = Math.sqrt(6);
-    // compute how far the hydrogens are from the new atom
-    var hdist = newAtom.getCovalentRadius() + hydrogenCovalentRadius;
-    // z is a unit vector perpendicular to u
-    if (z === undefined)
-        z = u.crossProduct(Vector(-u.y, u.z, u.x));  // random direction
-    z = z.scale(1.0 / z.length());
-    // t is a unit vector perpendicular to both u and z
-    var t = u.crossProduct(z);
-    // It would be great to be able to display lone pairs. These would be
-    // located where there would be unused sigma bonds, e.g. SP3 nitrogen
-    // has tetrahedral geometry but only three bonds.
-    if (geometry === LINEAR_GEOMETRY) {
-        // It would be great to be able to display pi orbitals. They
-        // would go at t.scale(K).add(newAtom.getPosition()) and
-        // z.scale(K).add(newAtom.getPosition()) and
-        // t.scale(K).add(newAtom.getPosition()) and
-        // z.scale(-K).add(newAtom.getPosition()), for some distance K.
-        if (hydrogensNeeded == 1) {
-            var newH = Hydrogen();
-            newH.setPosition(u.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-    } else if (geometry === TRIGONAL_GEOMETRY) {
-        // It would be great to be able to display pi orbitals. They
-        // would go at t.scale(K).add(newAtom.getPosition()) and
-        // t.scale(-K).add(newAtom.getPosition()), for some distance K.
-        if (hydrogensNeeded >= 1) {
-            var x = u.scale(0.5).add(z.scale(sqrt3/2));
-            var newH = Hydrogen();
-            newH.setPosition(x.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-        if (hydrogensNeeded == 2) {
-            var y = u.scale(0.5).add(z.scale(-sqrt3/2));
-            var newH = Hydrogen();
-            newH.setPosition(y.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-    } else if (geometry === TETRAHEDRAL_GEOMETRY) {
-        var w = u.scale(1.0/3).add(z.scale(2*sqrt2/3));
-        // tperp is the contributions of u and z to the positions of the
-        // second and third hydrogens
-        var tperp = u.scale(1.0/3).add(z.scale(-sqrt2/3));
-        if (hydrogensNeeded >= 1) {
-            var newH = Hydrogen();
-            newH.setPosition(w.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-        if (hydrogensNeeded >= 2) {
-            var t1 = tperp.add(t.scale(sqrt6/3));
-            var newH = Hydrogen();
-            newH.setPosition(t1.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-        if (hydrogensNeeded == 3) {
-            var t2 = tperp.add(t.scale(-sqrt6/3));
-            var newH = Hydrogen();
-            newH.setPosition(t2.scale(hdist).add(newAtom.getPosition()));
-            addAtomConnectedToExisting(newH, newAtom);
-        }
-    }
-
-    atomBuckets = { };
-    for (var i in atomArray) {
-        // add the atom to the appropriate bucket
-        var pos = atomArray[i].getPosition();
-        var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
-        var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
-        var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
-        var key = xi + ":" + yi + ":" + zi;
-        if (!(key in atomBuckets))
-            atomBuckets[key] = [ ];
-        atomBuckets[key].push(atomArray[i]);
-    }
-}
-
-/*
- * * * * * * * * * * ORIENTATION and DRAWING * * * * * * * * * * *
+ * * * * * * * * * * ORIENTATION * * * * * * * * * * *
  */
 
 var orientationPrototype = {
@@ -1439,122 +1170,668 @@ function Orientation() {
     return ort;
 }
 
-function selectGoodScalar() {
-    var xmin = 1.0e20;
-    var ymin = 1.0e20;
-    var zmin = 1.0e20;
-    var xmax = -1.0e20;
-    var ymax = -1.0e20;
-    var zmax = -1.0e20;
-    for (var i in atomArray) {
-        var pos = atomArray[i].getPosition();
-        var x = pos.x;
-        var y = pos.y;
-        var z = pos.z;
-        if (x < xmin) xmin = x;
-        if (x > xmax) xmax = x;
-        if (y < ymin) ymin = y;
-        if (y > ymax) ymax = y;
-        if (z < zmin) zmin = z;
-        if (z > zmax) zmax = z;
-    }
-    var dx = xmax - xmin;
-    var dy = ymax - ymin;
-    var dz = zmax - zmin;
-    var maxDimension = (dx > dy) ? dx : dy;
-    maxDimension = (dz > maxDimension) ? dz : maxDimension;
-    if (maxDimension < 5) maxDimension = 5;
-    scalar = 1.0 / maxDimension;   // tinker with constant as needed
-}
+/*
+ * * * * * * * * * * * * * * STRUCTURE * * * * * * * * * * * * * *
+ */
 
-function drawAtoms() {
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-    context.fillStyle = canvasBackgroundColor;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    rotArray = [ ];
-    pixelAtomHash = { };
-    for (var i in atomArray) {
-        rotArray.push(atomArray[i].reorient());
-    }
-    rotArray.sort(function(atom1,atom2) {
-            if (atom1.getPosition().z > atom2.getPosition().z) {
-                return 1;
-            }
-            if (atom1.getPosition().z < atom2.getPosition().z) {
-                return -1;
-            }
-            return 0;
-        });
-    for (var i in rotArray) {
-        rotArray[i].draw();
-    }
-}
+function Structure() {
+    function structureConstructor() { }
+    structureConstructor.prototype = {
+        init: function() {
+            this.atomArray;
+            this.rotArray;  // used for pretty drawing when mouse is up,
+                            // reused for tooltip
+            this.bondsByAtom = { };  // bidirectional hashmap:
+                                     // atom -> [atom, atom, atom...]
+            this.termList = [ ];
+            this.temperature = 0.0;   // in degrees Kelvin
+            this.targetTemperature = 0.0;   // in degrees Kelvin
+            this.termListOutdated = true;
+            this.largestIdThusfar = 0;
+            this.scalar = 1.0;
+        },
 
-function quickdrawAtoms() {
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-    context.fillStyle = canvasBackgroundColor;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    rotArray = [ ];
-    for (var i in atomArray) {
-        var ratom = atomArray[i].reorient();
-        atomArray[i].rotated = ratom;
-        rotArray.push(ratom);
-    }
-    var w = canvas.width;
-    var h = canvas.height;
-    var K = 0.8 * ((w < h) ? w : h);
-    for (var i in rotArray) {
-        var ratom = rotArray[i];
-        var atom = ratom.original;
-        var aid = atom.getUniqueId();
-        var u = ratom.getPosition();
-        var neighborList = bondsByAtom[atom.getUniqueId()];
-        for (var j in neighborList) {
-            var atom2 = neighborList[j];
-            var a2id = atom2.getUniqueId();
-            if (aid < a2id) {
-                var v = atom2.rotated.getPosition();
-                // draw a line, see http://diveintohtml5.org/canvas.html
-                // depth cue during quickdraw: darker lines for bonds closer to the user
-                if (u.z + v.z > 0.0)
-                    context.strokeStyle = "#000";
+        _toString: function() {
+            return "(structure)";
+        },
+
+        // the array is a list of lists, each inner list is four things
+        // [["C", 2.430, 2.038, -1.932],
+        //  ["C", 0.947, 2.377, -1.909],
+        //  ["C", 2.602, 0.523, -1.966]...]
+        // Given such a list, we 
+        buildFromArray: function(struc) {
+            this.largestIdThusfar = 0;
+            this.atomArray = { };
+            var atom, id;
+            var b = 1.0e-10;  // convert angstroms to meters
+            for (var i in struc) {
+                var a = struc[i];
+                switch (a[0]) {
+                    case "C":
+                        atom = Carbon();
+                        break;
+                    case "H":
+                        atom = Hydrogen();
+                        break;
+                    case "O":
+                        atom = Oxygen();
+                        break;
+                    case "N":
+                        atom = Nitrogen();
+                        break;
+                    case "S":
+                        atom = Sulfur();
+                        break;
+                    case "F":
+                        atom = Fluorine();
+                        break;
+                    case "Si":
+                        atom = Silicon();
+                        break;
+                    case "Cl":
+                        atom = Chlorine();
+                        break;
+                    case "P":
+                        atom = Phosphorus();
+                        break;
+                }
+                atom.setPosition(Vector(a[1]*b, a[2]*b, a[3]*b));
+                id = ++this.largestIdThusfar;
+                atom.setUniqueId(id);
+                this.atomArray[id] = atom;
+            }
+            this.recenterAtoms();
+            this.buildBondInfo();
+            // fix hybridization
+            for (var i in this.atomArray) {
+                var atom = this.atomArray[i];
+                if (atom.getSymbol() !== "H") {
+                    var bondDeficit = atom.getCorrectNumBonds()
+                        - atom.getNeighbors().length;
+                    switch (bondDeficit) {
+                        default:
+                        case 0:
+                            atom.setHybridization(Atom.SP3);
+                            break;
+                        case 1:
+                            atom.setHybridization(Atom.SP2);
+                            break;
+                        case 2:
+                            atom.setHybridization(Atom.SP);
+                            break;
+                    }
+                }
+            }
+            this.orientation = Orientation();
+            this.termListOutdated = true;;
+            this.drawAtoms();
+        },
+
+        buildBondInfo: function() {
+            this.bondsByAtom = { };
+            atomBuckets = { };
+            for (var i in this.atomArray) {
+                // add the atom to the appropriate bucket
+                var pos = this.atomArray[i].getPosition();
+                var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
+                var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
+                var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
+                var key = xi + ":" + yi + ":" + zi;
+                if (atomBuckets[key] === undefined)
+                    atomBuckets[key] = [ ];
+                atomBuckets[key].push(this.atomArray[i]);
+            }
+            for (var i in this.atomArray) {
+                var atom = this.atomArray[i];
+                this.bondsByAtom[atom.getUniqueId()] = atom.getNeighbors();
+            }
+        },
+
+        recenterAtoms: function() {
+            var centerOfGravity = Vector(0.0, 0.0, 0.0);
+            var numAtoms = 0;
+            for (var i in this.atomArray) {
+                numAtoms++;
+                centerOfGravity =
+                    centerOfGravity.add(this.atomArray[i].getPosition());
+            }
+            centerOfGravity = centerOfGravity.scale(1.0 / numAtoms);
+            for (var i in this.atomArray) {
+                this.atomArray[i]
+                    .setPosition(this.atomArray[i]
+                                 .getPosition().subtract(centerOfGravity));
+                var previous = this.atomArray[i].getPreviousPosition();
+                if (previous === undefined)
+                    this.atomArray[i]
+                        .setPreviousPosition(this.atomArray[i]
+                                             .getPosition());
                 else
-                    context.strokeStyle = "#799";
-                context.beginPath();
-                context.moveTo(K * u.x + w/2, K * u.y + h/2);
-                context.lineTo(K * v.x + w/2, K * v.y + h/2);
-                context.stroke();
+                    this.atomArray[i]
+                        .setPreviousPosition(previous
+                                             .subtract(centerOfGravity));
             }
-        }
-    }
-}
+        },
 
-function atomByScreenCoords(x,y) {
-    var key = 4000 * Math.floor(x / 50) + Math.floor(y / 50);
-    if (pixelAtomHash === undefined)
-        pixelAtomHash = { };
-    // find out if we are inside an atom
-    var bucket = pixelAtomHash[key];
-    if (bucket !== undefined) {
-        var closestZ;  // most positive
-        var found;
-        for (i in bucket) {
-            var a = bucket[i];
-            if (a.containsMouse(x, y)) {
-                var depth = a.getScreenDepth();
-                if (found === undefined || depth > closestZ) {
-                    found = a;
-                    closestZ = depth;
+        deleteBondsFor: function(atom) {
+            var buddies = this.bondsByAtom[atom.getUniqueId()];
+            delete this.bondsByAtom[atom.getUniqueId()];
+            for (var i in buddies) {
+                var buddy = buddies[i];
+                var hisBuddies = this.bondsByAtom[buddy.getUniqueId()];
+                var n = hisBuddies.indexOf(atom);
+                hisBuddies.splice(n, 1);
+                this.bondsByAtom[buddy.getUniqueId()] = hisBuddies;
+            }
+            return buddies;
+        },
+
+        addAtomConnectedToExisting: function(atom,existing) {
+            atom.setUniqueId(++this.largestIdThusfar);
+            this.atomArray[atom.getUniqueId()] = atom;
+            this.bondsByAtom[atom.getUniqueId()] = [ existing ];
+            this.bondsByAtom[existing.getUniqueId()].push(atom);
+        },
+
+        removeAtom: function(atom) {
+            if (atom.getSymbol() === "H") {
+                return;
+            }
+            // update this.atomArray with deletion of chosen atom
+            var neighborhood = deleteBondsFor(atom);
+            delete this.atomArray[atom.getUniqueId()];
+            // each surviving neighbor gets a hydrogen to terminate
+            for (var i in neighborhood) {
+                var neighbor = neighborhood[i];
+                if (neighbor.getSymbol() === "H") {
+                    // unless it's hydrogen, then kill it
+                    deleteBondsFor(neighbor);
+                    delete this.atomArray[neighbor.getUniqueId()];
+                } else {
+                    var direction =
+                        atom.getPosition().subtract(neighbor.getPosition());
+                    var distance =
+                        neighbor.getCovalentRadius() +
+                        hydrogenCovalentRadius;
+                    direction =
+                        direction.scale(distance / direction.length());
+                    var h = Hydrogen();
+                    h.setPosition(neighbor.getPosition().add(direction));
+                    addAtomConnectedToExisting(h, neighbor);
+                }
+            }
+        },
+
+        replaceTwoHydrogensWithABond: function(h1,h2) {
+            if (h1 === undefined || h1.getSymbol() !== "H" ||
+                h2 === undefined || h2.getSymbol() !== "H") {
+                return;
+            }
+            var other1 = deleteBondsFor(h1)[0];
+            delete this.atomArray[h1.getUniqueId()];
+            var other2 = deleteBondsFor(h2)[0];
+            delete this.atomArray[h2.getUniqueId()];
+            this.bondsByAtom[other1.getUniqueId()].push(other2);
+            this.bondsByAtom[other2.getUniqueId()].push(other1);
+            this.termListOutdated = true;
+        },
+
+        addAtom: function(oldH,symbol) {
+            // this makes sense only if the atom is hydrogen
+            if (oldH.getSymbol() !== "H") {
+                return;
+            }
+            var newAtom = undefined;
+            switch (symbol) {
+                case "C":
+                    newAtom = Carbon();
+                    break;
+                case "N":
+                    newAtom = Nitrogen();
+                    break;
+                case "O":
+                    newAtom = Oxygen();
+                    break;
+                case "F":
+                    newAtom = Fluorine();
+                    break;
+                case "Si":
+                    newAtom = Silicon();
+                    break;
+                case "P":
+                    newAtom = Phosphorus();
+                    break;
+                case "S":
+                    newAtom = Sulfur();
+                    break;
+                case "Cl":
+                    newAtom = Chlorine();
+                    break;
+                default:
+                    return;
+            }
+            var TETRAHEDRAL_GEOMETRY = 0;
+            var TRIGONAL_GEOMETRY = 1;
+            var LINEAR_GEOMETRY = 2;
+            var geometry;
+            var hydrogensNeeded;
+            switch (findChosenRadioButton("hybrid")) {
+                case "sp3":
+                    newAtom.setHybridization(Atom.SP3);
+                    geometry = TETRAHEDRAL_GEOMETRY;
+                    hydrogensNeeded = newAtom.getCorrectNumBonds() - 1;
+                    break;
+                case "sp2":
+                    newAtom.setHybridization(Atom.SP2);
+                    geometry = TRIGONAL_GEOMETRY;
+                    hydrogensNeeded = newAtom.getCorrectNumBonds() - 2;
+                    break;
+                case "sp":
+                    newAtom.setHybridization(Atom.SP);
+                    geometry = LINEAR_GEOMETRY;
+                    hydrogensNeeded = newAtom.getCorrectNumBonds() - 3;
+                    break;
+                default:
+                    return;
+            }
+            // update atomArray: remove old hydrogen
+            var neighborhood = deleteBondsFor(oldH);
+            delete this.atomArray[oldH.getUniqueId()];
+            // find correct position for new atom, add it
+            var neighbor = neighborhood[0];
+            var direction = (oldH.getPosition()
+                             .subtract(neighbor.getPosition()));
+            var distance = (neighbor.getCovalentRadius() +
+                            newAtom.getCovalentRadius());
+            direction = direction.scale(distance / direction.length());
+            // u is a unit vector pointing from the existing neighbor
+            // to the new atom
+            var u = direction.scale(1.0 / direction.length());
+            newAtom.setPosition(neighbor.getPosition().add(direction));
+            addAtomConnectedToExisting(newAtom, neighbor);
+
+            // are there any hydrogens that should be deleted so
+            // their neighbors can be connected to the new atom?
+            var otherHs = filter(function(x) { return x !== neighbor &&
+                                               x.getSymbol() === "H"; },
+                newAtom.getNeighbors());
+            var z;
+            if (otherHs !== undefined) {
+                for (var i in otherHs) {
+                    var h = otherHs[i];
+                    var hneighbors = deleteBondsFor(h);
+                    if (hneighbors === undefined)
+                        continue;
+                    var hBuddy = hneighbors[0];
+                    z = (hBuddy.getPosition()
+                         .subtract(newAtom.getPosition()).crossProduct(u));
+                    delete this.atomArray[h.getUniqueId()];
+                    this.bondsByAtom[newAtom.getUniqueId()].push(hBuddy);
+                    this.bondsByAtom[hBuddy.getUniqueId()].push(newAtom);
+                    hydrogensNeeded--;
+                }
+            }
+
+            var sqrt2 = Math.sqrt(2);
+            var sqrt3 = Math.sqrt(3);
+            var sqrt6 = Math.sqrt(6);
+            // compute how far the hydrogens are from the new atom
+            var hdist = (newAtom.getCovalentRadius() +
+                         hydrogenCovalentRadius);
+            // z is a unit vector perpendicular to u
+            if (z === undefined)
+                z = u.crossProduct(Vector(-u.y, u.z, u.x));
+            // z -> random direction
+            z = z.scale(1.0 / z.length());
+            // t is a unit vector perpendicular to both u and z
+            var t = u.crossProduct(z);
+            // It would be great to be able to display lone pairs.
+            // These would be located where there would be unused
+            // sigma bonds, e.g. SP3 nitrogen has tetrahedral
+            // geometry but only three bonds.
+            if (geometry === LINEAR_GEOMETRY) {
+                // It would be great to be able to display pi orbitals. They
+                // would go at t.scale(K).add(newAtom.getPosition()) and
+                // z.scale(K).add(newAtom.getPosition()) and
+                // t.scale(K).add(newAtom.getPosition()) and
+                // z.scale(-K).add(newAtom.getPosition()),
+                // for some distance K.
+                if (hydrogensNeeded == 1) {
+                    var newH = Hydrogen();
+                    newH.setPosition(u.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+            } else if (geometry === TRIGONAL_GEOMETRY) {
+                // It would be great to be able to display pi orbitals. They
+                // would go at t.scale(K).add(newAtom.getPosition()) and
+                // t.scale(-K).add(newAtom.getPosition()),
+                // for some distance K.
+                if (hydrogensNeeded >= 1) {
+                    var x = u.scale(0.5).add(z.scale(sqrt3/2));
+                    var newH = Hydrogen();
+                    newH.setPosition(x.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+                if (hydrogensNeeded == 2) {
+                    var y = u.scale(0.5).add(z.scale(-sqrt3/2));
+                    var newH = Hydrogen();
+                    newH.setPosition(y.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+            } else if (geometry === TETRAHEDRAL_GEOMETRY) {
+                var w = u.scale(1.0/3).add(z.scale(2*sqrt2/3));
+                // tperp is the contributions of u and z to the positions of the
+                // second and third hydrogens
+                var tperp = u.scale(1.0/3).add(z.scale(-sqrt2/3));
+                if (hydrogensNeeded >= 1) {
+                    var newH = Hydrogen();
+                    newH.setPosition(w.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+                if (hydrogensNeeded >= 2) {
+                    var t1 = tperp.add(t.scale(sqrt6/3));
+                    var newH = Hydrogen();
+                    newH.setPosition(t1.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+                if (hydrogensNeeded == 3) {
+                    var t2 = tperp.add(t.scale(-sqrt6/3));
+                    var newH = Hydrogen();
+                    newH.setPosition(t2.scale(hdist)
+                                     .add(newAtom.getPosition()));
+                    addAtomConnectedToExisting(newH, newAtom);
+                }
+            }
+
+            atomBuckets = { };
+            for (var i in this.atomArray) {
+                // add the atom to the appropriate bucket
+                var pos = this.atomArray[i].getPosition();
+                var xi = Math.floor(pos.x / BUCKET_LINEAR_DIMENSION);
+                var yi = Math.floor(pos.y / BUCKET_LINEAR_DIMENSION);
+                var zi = Math.floor(pos.z / BUCKET_LINEAR_DIMENSION);
+                var key = xi + ":" + yi + ":" + zi;
+                if (!(key in atomBuckets))
+                    atomBuckets[key] = [ ];
+                atomBuckets[key].push(this.atomArray[i]);
+            }
+        },
+
+        selectGoodScalar: function() {
+            var xmin = 1.0e20;
+            var ymin = 1.0e20;
+            var zmin = 1.0e20;
+            var xmax = -1.0e20;
+            var ymax = -1.0e20;
+            var zmax = -1.0e20;
+            for (var i in this.atomArray) {
+                var pos = this.atomArray[i].getPosition();
+                var x = pos.x;
+                var y = pos.y;
+                var z = pos.z;
+                if (x < xmin) xmin = x;
+                if (x > xmax) xmax = x;
+                if (y < ymin) ymin = y;
+                if (y > ymax) ymax = y;
+                if (z < zmin) zmin = z;
+                if (z > zmax) zmax = z;
+            }
+            var dx = xmax - xmin;
+            var dy = ymax - ymin;
+            var dz = zmax - zmin;
+            var maxDimension = (dx > dy) ? dx : dy;
+            maxDimension = (dz > maxDimension) ? dz : maxDimension;
+            if (maxDimension < 5e-10) maxDimension = 5e-10;
+            this.scalar = 1.0 / maxDimension;
+        },
+
+        reorientAtom: function(atom) {
+            var newpos = (this.orientation
+                          .transform(atom.getPosition().scale(this.scalar)));
+            var r = (0.9 * this.scalar
+                     * this.orientation.P * atom.getCovalentRadius());
+            function atomConstructor() { };
+            atomConstructor.prototype = atom.getPrototype();
+            var a = new atomConstructor();
+            a.setPosition(newpos);
+            a.getCovalentRadius = function() {
+                return r;
+            };
+            a.original = atom;
+            return a;
+        },
+
+        drawAtoms: function() {
+            this.selectGoodScalar();
+            var canvas = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+            context.fillStyle = canvasBackgroundColor;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            this.rotArray = [ ];
+            pixelAtomHash = { };
+            for (var i in this.atomArray) {
+                this.rotArray.push(this.reorientAtom(this.atomArray[i]));
+            }
+            this.rotArray.sort(function(atom1,atom2) {
+                    if (atom1.getPosition().z > atom2.getPosition().z) {
+                        return 1;
+                    }
+                    if (atom1.getPosition().z < atom2.getPosition().z) {
+                        return -1;
+                    }
+                    return 0;
+                });
+            for (var i in this.rotArray) {
+                this.rotArray[i].draw();
+            }
+        },
+
+        quickdrawAtoms: function() {
+            this.selectGoodScalar();
+            var canvas = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+            context.fillStyle = canvasBackgroundColor;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            this.rotArray = [ ];
+            for (var i in this.atomArray) {
+                var ratom = this.reorientAtom(this.atomArray[i]);
+                this.atomArray[i].rotated = ratom;
+                this.rotArray.push(ratom);
+            }
+            var w = canvas.width;
+            var h = canvas.height;
+            var K = 0.8 * ((w < h) ? w : h);
+            for (var i in this.rotArray) {
+                var ratom = this.rotArray[i];
+                var atom = ratom.original;
+                var aid = atom.getUniqueId();
+                var u = ratom.getPosition();
+                var neighborList = this.bondsByAtom[atom.getUniqueId()];
+                for (var j in neighborList) {
+                    var atom2 = neighborList[j];
+                    var a2id = atom2.getUniqueId();
+                    if (aid < a2id) {
+                        var v = atom2.rotated.getPosition();
+                        // draw a line
+                        // see http://diveintohtml5.org/canvas.html
+                        // depth cue during quickdraw: darker lines for
+                        // bonds closer to the user
+                        if (u.z + v.z > 0.0)
+                            context.strokeStyle = "#000";
+                        else
+                            context.strokeStyle = "#799";
+                        context.beginPath();
+                        context.moveTo(K * u.x + w/2, K * u.y + h/2);
+                        context.lineTo(K * v.x + w/2, K * v.y + h/2);
+                        context.stroke();
+                    }
+                }
+            }
+        },
+
+        atomByScreenCoords: function(x,y) {
+            var key = 4000 * Math.floor(x / 50) + Math.floor(y / 50);
+            if (pixelAtomHash === undefined)
+                pixelAtomHash = { };
+            // find out if we are inside an atom
+            var bucket = pixelAtomHash[key];
+            if (bucket !== undefined) {
+                var closestZ;  // most positive
+                var found;
+                for (i in bucket) {
+                    var a = bucket[i];
+                    if (a.containsMouse(x, y)) {
+                        var depth = a.getScreenDepth();
+                        if (found === undefined || depth > closestZ) {
+                            found = a;
+                            closestZ = depth;
+                        }
+                    }
+                }
+                if (found !== undefined) {
+                    return found.original;
+                }
+            }
+            return undefined;
+        },
+
+        enumerateTerms: function() {
+            this.termList = [ ];
+            // short range terms are relatively few in number
+            // because they affect only atoms that are close in
+            // the graph of chemical bonds
+            for (var h in this.atomArray) {
+                var atom1 = this.atomArray[h];
+                var id1 = atom1.getUniqueId();
+                for (var i in this.bondsByAtom[id1]) {
+                    atom2 = this.bondsByAtom[id1][i];
+                    if (atom2 === atom1)
+                        continue;
+                    var id2 = atom2.getUniqueId();
+                    if (id2 > id1)
+                        this.termList.push(makeLengthTerm(atom1, atom2));
+                    for (var j in this.bondsByAtom[id2]) {
+                        var atom3 = this.bondsByAtom[id2][j];
+                        if (atom3 === atom1 || atom3 === atom2)
+                            continue;
+                        var id3 = atom3.getUniqueId();
+                        if (id3 > id1)
+                            this.termList
+                                .push(makeAngleTerm(atom1, atom2, atom3));
+                        for (var k in this.bondsByAtom[id3]) {
+                            var atom4 = this.bondsByAtom[id3][k];
+                            if (atom4 === atom1 || atom4 === atom2
+                                || atom4 === atom3)
+                                continue;
+                            var id4 = atom4.getUniqueId();
+                            if (id4 > id1)
+                                this.termList
+                                    .push(makeTorsionTerm(atom1, atom2,
+                                                          atom3, atom4));
+                        }
+                    }
+                }
+            }
+
+            // long range terms are more numerous
+            var exclusions = { };
+            for (var h in this.atomArray) {
+                var atom1 = this.atomArray[h];
+                var id1 = atom1.getUniqueId();
+                for (var i in this.bondsByAtom[id1]) {
+                    atom2 = this.bondsByAtom[id1][i];
+                    if (atom2 === atom1)
+                        continue;
+                    var id2 = atom2.getUniqueId();
+                    exclusions['' + id1 + ':' + id2] = 1;
+                    exclusions['' + id2 + ':' + id1] = 1;
+                    for (var j in this.bondsByAtom[id2]) {
+                        var atom3 = this.bondsByAtom[id2][j];
+                        if (atom3 === atom1 || atom3 === atom2)
+                            continue;
+                        var id3 = atom3.getUniqueId();
+                        exclusions['' + id1 + ':' + id3] = 1;
+                        exclusions['' + id3 + ':' + id1] = 1;
+                        for (var k in this.bondsByAtom[id3]) {
+                            var atom4 = this.bondsByAtom[id3][k];
+                            if (atom4 === atom1 || atom4 === atom2
+                                || atom4 === atom3)
+                                continue;
+                            var id4 = atom4.getUniqueId();
+                            exclusions['' + id1 + ':' + id4] = 1;
+                            exclusions['' + id4 + ':' + id1] = 1;
+                        }
+                    }
+                }
+            }
+            for (var i in this.atomArray) {
+                var atom1 = this.atomArray[i];
+                for (var j in this.atomArray) {
+                    var atom2 = this.atomArray[j];
+                    if (atom2.getUniqueId() > atom1.getUniqueId() &&
+                        exclusions[i + ':' + j] === undefined) {
+                        this.termList.push(makeLongRangeTerm(atom1, atom2));
+                    }
+                }
+            }
+        },
+
+        countAtoms: function() {
+            var numAtoms = 0;
+            for (var i in this.atomArray)
+                numAtoms++;
+            return numAtoms;
+        },
+
+        outdateTermList: function() {
+            this.termListOutdated = true;
+        },
+
+        verletStep: function(dt) {
+            if (this.termListOutdated && this.countAtoms() < 200) {
+                this.termListOutdated = false;
+                this.enumerateTerms();
+            }
+            var numAtoms = 0;
+            var etotal = 0.0;
+            for (var i in this.atomArray) {
+                etotal += this.atomArray[i].kineticEnergy(dt);
+                numAtoms++;
+            }
+            if (numAtoms === 0)
+                return;
+            etotal /= numAtoms;
+            this.temperature = (2.0/3.0) * (etotal / BoltzmannsConstant);
+            if (this.temperatureUpdate !== undefined)
+                this.temperatureUpdate(this.temperature);
+            var dampingCoeff;
+            if (this.targetTemperature > this.temperature)
+                dampingCoeff = 0.001;
+            else
+                dampingCoeff = -0.001;
+            for (var j = 0; j < stepsBetweenRedraws; j++) {
+                for (var i in this.atomArray) {
+                    this.atomArray[i].zeroForce();
+                }
+                for (var i in this.termList) {
+                    this.termList[i]();
+                }
+                var first = true;
+                for (var i in this.atomArray) {
+                    this.atomArray[i].verletStep(dt, dampingCoeff);
                 }
             }
         }
-        if (found !== undefined) {
-            return found.original;
-        }
-    }
-    return undefined;
+    };
+
+    var s = new structureConstructor();
+    s.init();
+    return s;
 }
 
 /*
@@ -1562,32 +1839,32 @@ function atomByScreenCoords(x,y) {
  */
 // http://en.wikipedia.org/wiki/Force_field_(chemistry)
 // http://en.wikipedia.org/wiki/Verlet_integration
-// k here in units of 100 newtons per meter
+// k here in units of newtons per meter
 // r is in units of angstroms
 
 var lengthtermCoefficients = {
-    "C:SP3:C:SP3": {k:4.400, r:1.523},
-    "C:SP3:C:SP2": {k:4.400, r:1.497},
-    "C:SP3:C:SP": {k:5.200, r:1.470},
-    "C:SP3:H:NONE": {k:4.600, r:1.113},
-    "C:SP3:O:SP3": {k:5.360, r:1.402},
-    "C:SP3:N:SP3": {k:5.100, r:1.438},
-    "C:SP3:N:SP2": {k:3.520, r:1.437},
-    "C:SP3:N:SP3": {k:5.100, r:1.499},
-    "C:SP3:O:SP2": {k:5.360, r:1.414},
-    "C:SP2:C:SP2": {k:9.600, r:1.337},
-    "C:SP2:C:SP": {k:9.900, r:1.313},
-    "C:SP2:H:NONE": {k:4.600, r:1.101},
-    "C:SP2:O:SP3": {k:6.000, r:1.355},
-    "C:SP2:N:SP3": {k:6.320, r:1.377},
-    "C:SP2:N:SP2": {k:5.000, r:1.410},
-    "C:SP2:O:SP2": {k:10.000, r:1.225},
-    "C:SP:C:SP": {k:15.600, r:1.212},
-    "C:SP:H:NONE": {k:5.900, r:1.090},
-    "C:SP:N:SP": {k:17.730, r:1.158},
-    "O:SP3:O:SP3": {k:3.950, r:1.428},
-    "N:SP3:N:SP3": {k:5.600, r:1.381},
-    "N:SP3:H:NONE": {k:6.100, r:1.045}
+    "C:SP3:C:SP3": {k:440.0, r:1.523e-10},
+    "C:SP3:C:SP2": {k:440.0, r:1.497e-10},
+    "C:SP3:C:SP": {k:520.0, r:1.470e-10},
+    "C:SP3:H:NONE": {k:460.0, r:1.113e-10},
+    "C:SP3:O:SP3": {k:536.0, r:1.402e-10},
+    "C:SP3:N:SP3": {k:510.0, r:1.438e-10},
+    "C:SP3:N:SP2": {k:352.0, r:1.437e-10},
+    "C:SP3:N:SP3": {k:510.0, r:1.499e-10},
+    "C:SP3:O:SP2": {k:536.0, r:1.414e-10},
+    "C:SP2:C:SP2": {k:960.0, r:1.337e-10},
+    "C:SP2:C:SP": {k:990.0, r:1.313e-10},
+    "C:SP2:H:NONE": {k:460.0, r:1.101e-10},
+    "C:SP2:O:SP3": {k:600.0, r:1.355e-10},
+    "C:SP2:N:SP3": {k:632.0, r:1.377e-10},
+    "C:SP2:N:SP2": {k:500.0, r:1.410e-10},
+    "C:SP2:O:SP2": {k:1000.0, r:1.225e-10},
+    "C:SP:C:SP": {k:1560.0, r:1.212e-10},
+    "C:SP:H:NONE": {k:590.0, r:1.090e-10},
+    "C:SP:N:SP": {k:1773.0, r:1.158e-10},
+    "O:SP3:O:SP3": {k:395.0, r:1.428e-10},
+    "N:SP3:N:SP3": {k:560.0, r:1.381e-10},
+    "N:SP3:H:NONE": {k:610.0, r:1.04e-105}
 };
 
 function makeLengthTerm(atom1,atom2) {
@@ -1601,13 +1878,14 @@ function makeLengthTerm(atom1,atom2) {
         key = sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
         coeffs = lengthtermCoefficients[key];
     }
-    var k = 4;   // something kinda typical
-    var r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
+    var k, r;
     if (coeffs !== undefined) {
         k = coeffs['k'];
         r = coeffs['r'];
+    } else {
+        k = 400;   // something kinda typical
+        r = atom1.getCovalentRadius() + atom2.getCovalentRadius();
     }
-    k /= 16.7262;  // get spring constant into system units.
     return function() {
         // for the moment let's just use a linear spring force
         var x = atom2.getPosition().subtract(atom1.getPosition());
@@ -1699,11 +1977,13 @@ function makeAngleTerm(atom1,atom2,atom3) {
     var hyb2 = atom2.getHybridizationString();
     var sym3 = atom3.getSymbol();
     var hyb3 = atom3.getHybridizationString();
-    var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":" + sym3 + ":" + hyb3;
+    var key = sym1 + ":" + hyb1 + ":" + sym2 + ":" + hyb2 + ":"
+        + sym3 + ":" + hyb3;
     var coeffs = angletermCoefficients[key];
     var kth, th0;
     if (coeffs === undefined) {
-        key = sym3 + ":" + hyb3 + ":" + sym2 + ":" + hyb2 + ":" + sym1 + ":" + hyb1;
+        key = sym3 + ":" + hyb3 + ":" + sym2 + ":" + hyb2 + ":"
+            + sym1 + ":" + hyb1;
         coeffs = angletermCoefficients[key];
     }
     if (coeffs === undefined) {
@@ -1713,9 +1993,9 @@ function makeAngleTerm(atom1,atom2,atom3) {
         kth = coeffs.kth;
         th0 = coeffs.th0 * Math.PI / 180.0;
     }
-    kth /= 16.7262;  // get into system units
+    kth *= 1.0e-18;  // get into system units
     function vderiv(theta) {   // first derivative of v w.r.t. theta
-        var ksextic = 0.754;
+        var ksextic = 0.754e-18;
         var thdiff = theta - th0;
         var d2 = thdiff * thdiff;
         var d4 = d2 * d2;
@@ -1913,9 +2193,10 @@ function makeTorsionTerm(atom1,atom2,atom3,atom4) {
         v2 = coeffs.v2;
         v3 = coeffs.v3;
     }
-    v1 /= 16726.2;  // convert milliattojoules to system units
-    v2 /= 16726.2;
-    v3 /= 16726.2;
+    var mv = 1.0e-21;  // convert milliattojoules to joules
+    v1 *= mv;
+    v2 *= mv;
+    v3 *= mv;
     function vderiv(phi) {   // first derivative of v w.r.t. phi
         return 0.5 * (-v1 * Math.sin(phi)
                       -2 * v2 * Math.sin(2 * phi) +
@@ -1962,7 +2243,7 @@ function makeTorsionTerm(atom1,atom2,atom3,atom4) {
 function makeLongRangeTerm(atom1,atom2) {
     var rvdw = atom1.getVdwRadius() + atom2.getVdwRadius();
     var evdw = 0.5 * (atom1.getVdwEnergy() + atom2.getVdwEnergy());
-    evdw /= 16726.2;   // convert maJ to system units
+    evdw *= 1.0-21;   // convert maJ to system units
     // if I were going to do electrostatics, they'd look something like this
     // var q1q2 = atom1.getCharge() * atom2.getCharge();
     return function() {
@@ -1981,138 +2262,6 @@ function makeLongRangeTerm(atom1,atom2) {
     };
 }
 
-
-function enumerateTerms() {
-    termList = [ ];
-    // short range terms are relatively few in number because they
-    // affect only atoms that are close in the graph of chemical bonds
-    for (var i in atomArray) {
-        var atom1 = atomArray[i];
-        var id1 = atom1.getUniqueId();
-        for (var i in bondsByAtom[id1]) {
-            atom2 = bondsByAtom[id1][i];
-            if (atom2 === atom1)
-                continue;
-            var id2 = atom2.getUniqueId();
-            if (id2 > id1)
-                termList.push(makeLengthTerm(atom1, atom2));
-            for (var j in bondsByAtom[id2]) {
-                var atom3 = bondsByAtom[id2][j];
-                if (atom3 === atom1 || atom3 === atom2)
-                    continue;
-                var id3 = atom3.getUniqueId();
-                if (id3 > id1)
-                    termList.push(makeAngleTerm(atom1, atom2, atom3));
-                for (var k in bondsByAtom[id3]) {
-                    var atom4 = bondsByAtom[id3][k];
-                    if (atom4 === atom1 || atom4 === atom2 || atom4 === atom3)
-                        continue;
-                    var id4 = atom4.getUniqueId();
-                    if (id4 > id1)
-                        termList.push(makeTorsionTerm(atom1, atom2, atom3, atom4));
-                }
-            }
-        }
-    }
-
-    // long range terms are more numerous
-    var exclusions = { };
-    for (var i in atomArray) {
-        var atom1 = atomArray[i];
-        var id1 = atom1.getUniqueId();
-        for (var i in bondsByAtom[id1]) {
-            atom2 = bondsByAtom[id1][i];
-            if (atom2 === atom1)
-                continue;
-            var id2 = atom2.getUniqueId();
-            exclusions['' + id1 + ':' + id2] = 1;
-            exclusions['' + id2 + ':' + id1] = 1;
-            for (var j in bondsByAtom[id2]) {
-                var atom3 = bondsByAtom[id2][j];
-                if (atom3 === atom1 || atom3 === atom2)
-                    continue;
-                var id3 = atom3.getUniqueId();
-                exclusions['' + id1 + ':' + id3] = 1;
-                exclusions['' + id3 + ':' + id1] = 1;
-                for (var k in bondsByAtom[id3]) {
-                    var atom4 = bondsByAtom[id3][k];
-                    if (atom4 === atom1 || atom4 === atom2 || atom4 === atom3)
-                        continue;
-                    var id4 = atom4.getUniqueId();
-                    exclusions['' + id1 + ':' + id4] = 1;
-                    exclusions['' + id4 + ':' + id1] = 1;
-                }
-            }
-        }
-    }
-    for (var i in atomArray) {
-        var atom1 = atomArray[i];
-        for (var j in atomArray) {
-            var atom2 = atomArray[j];
-            if (atom2.getUniqueId() > atom1.getUniqueId() &&
-                exclusions[i + ':' + j] === undefined) {
-                termList.push(makeLongRangeTerm(atom1, atom2));
-            }
-        }
-    }
-}
-
-function redraw() {
-    if (redrawPreamble !== undefined)
-        redrawPreamble();
-    if (atomArray === undefined)
-        return;
-    selectGoodScalar();
-    drawAtoms();
-    var numAtoms = 0;
-    if (termListOutdated && numAtoms < 200) {
-        termListOutdated = false;
-        enumerateTerms();
-        for (var i in atomArray) {
-            var dx = 0.001;
-            var atom = atomArray[i];
-            var pos = atom.getPosition();
-            var prev = Vector(pos.x + dx * (Math.random() - 0.5),
-                              pos.y + dx * (Math.random() - 0.5),
-                              pos.z + dx * (Math.random() - 0.5));
-            atom.setPreviousPosition(prev);
-            numAtoms++;
-        }
-    } else {
-        for (var i in atomArray)
-            numAtoms++;
-    }
-    // don't do dynamics for huge structures
-    if (!dynamicsPaused && numAtoms < 200)
-        setTimeout("verletStep();", verletDelay);
-}
-
-function verletStep() {
-    var numAtoms = 0;
-    for (var j = 0; j < stepsBetweenRedraws; j++) {
-        for (var i in atomArray) {
-            atomArray[i].zeroForce();
-            numAtoms++;
-        }
-        for (var i in termList) {
-            termList[i]();
-        }
-        var first = true;
-        for (var i in atomArray) {
-            atomArray[i].verletStep(timeStep);
-        }
-        recenterAtoms();
-    }
-    var etotal = 0.0;
-    for (var i in atomArray) {
-        etotal += atomArray[i].kineticEnergy(timeStep);
-    }
-    etotal /= numAtoms;
-    Temperature = (2.0/3.0) * (etotal / BoltzmannsConstant);
-    if (temperatureUpdate !== undefined)
-        temperatureUpdate(Temperature);
-    redraw();
-}
 
 /*
  * * * * * * * * * * * * * * STRUCTURE * * * * * * * * * * * * * *
