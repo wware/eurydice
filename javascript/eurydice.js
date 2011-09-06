@@ -122,16 +122,6 @@ function extend(base,additional) {
 
 /*
  * * * * * * * * * * * * * * VECTORS IN 3-SPACE * * * * * * * * * * * * * *
- * TESTS
- * var v = Vector(1.2, -0.3, 0.78);
- * prettyClose(v.length(), 1.4623269);
- * prettyClose(v.lensq(), 2.1384);
- * prettyClose(v.dotProduct(v), 2.1384);
- * vmatch(v.negate(), Vector(-1.2, 0.3, -0.78));
- * vmatch(v.scale(5), Vector(6, -1.5, 3.9));
- * vmatch(v.crossProduct(Vector(2, 3, 5)), Vector(-3.84, -4.44, 4.2));
- * prettyClose(v.dotProduct(Vector(2, 3, 5)), 5.4);
- * prettyClose(v.distsq(Vector(2, 3, 5)), 29.3384);
  */
 
 var vectorPrototype = {
@@ -205,23 +195,6 @@ function Vector(x,y,z) {
 
 /*
  * * * * * * * * * * * * * * QUATERNIONS * * * * * * * * * * * * * *
- * TESTS
- * var v = Vector(1.2, -0.3, 0.78);
- * var q1 = Quaternion(1, Vector(2, 3, 4));
- * var q2 = Quaternion(3, Vector(-4, 0, 5));
- * qmatch(q1.add(q2), Quaternion(4, Vector(-2, 3, 9)));
- * qmatch(q1.subtract(q2), Quaternion(-2, Vector(6, 3, -1)));
- * qmatch(q1.multiply(q2), Quaternion(-9, Vector(17, -17, 29)));
- * qmatch(q1.divide(q2), Quaternion(0.3, Vector(-0.1, 0.7, -0.1)));
- * qmatch(q1.inverse(), Quaternion(0.033333, Vector(-0.0666667, -0.1, -0.1333333)));
- * qmatch(q1.multiply(q1.inverse()), Quaternion(1, Vector(0, 0, 0)));
- * qmatch(q1.add(q1.negate()), Quaternion(0, Vector(0, 0, 0)));
- * qmatch(q1.scale(5), Quaternion(5, Vector(10, 15, 20)));
- * prettyClose(q1.absoluteValue(), 5.4772255);
- * qmatch(q1.multiplyVector(v), Quaternion(-4.62, Vector(4.74, 2.94, -3.42)));
- * vmatch(q1.rotate(v), Vector(-0.268, 1.42, 0.224));
- * qmatch(q1.normalize(), Quaternion(0.182574, Vector(0.365148, 0.547722, 0.7302967)));
- * qmatch(v.multiplyQuaternion(q1), Quaternion(-4.62, Vector(-2.34, -3.54, 4.98)));
  */
 
 var quaternionPrototype = {
@@ -310,127 +283,6 @@ function makeRotator(theta, axis) {
 
 /*
  * * * * * * * * * * * * * * ATOMS AND ELEMENTS * * * * * * * * * * * * * *
- * Stuff I'm not going to implement immediately:
- *   Unique IDs for atoms (probably never in the JS code)
- *   Integer charge
- *   Fractional charge
- *   rehybridize method
- *
- * TESTS
- * equal(Atom.NONE, 0);
- * equal(Atom.SP, 1);
- * equal(Atom.SP2, 2);
- * equal(Atom.SP3, 3);
- *
- * var atom = Carbon();
- * equal(atom.getName(), "Carbon");
- * equal(atom.getSymbol(), "C");
- * equal(atom.getHybridization(), Atom.SP3);
- * equal(atom.getAtomicNumber(), 6);
- * prettyClose(atom.getMass(), 12);
- * colorMatch(atom.getColor(), Color.getColor("gray30"));
- * prettyClose(atom.getCovalentRadius(), 0.77);
- * prettyClose(atom.getVdwEnergy(), 0.357);
- * prettyClose(atom.getVdwRadius(), 1.85);
- * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.67);
- * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.6);
- * equal(atom.getCorrectNumBonds(), 4);
- * atom.setPosition(Vector(31, 14, 16));
- * atom.move(Vector(27, 18, 28));
- * vmatch(atom.getPosition(), Vector(58, 32, 44));
- * atom.setPreviousPosition(Vector(1, 2, 3));
- * vmatch(atom.getPreviousPosition(), Vector(1, 2, 3));
- * atom.setPreviousPosition(Vector(4, 5, 6));
- * vmatch(atom.getPreviousPosition(), Vector(4, 5, 6));
- * atom.zeroForce();
- * vmatch(atom.getForce(), Vector(0, 0, 0));
- * atom.setForce(Vector(1, 3, 5));
- * atom.addForce(Vector(7, 6, 5));
- * vmatch(atom.getForce(), Vector(8, 9, 10));
- *
- * atom = Hydrogen();
- * equal(atom.getName(), "Hydrogen");
- * equal(atom.getSymbol(), "H");
- * equal(atom.getHybridization(), Atom.NONE);
- * equal(atom.getAtomicNumber(), 1);
- * prettyClose(atom.getMass(), 1);
- * colorMatch(atom.getColor(), Color.getColor("white"));
- * prettyClose(atom.getCovalentRadius(), 0.3);
- * prettyClose(atom.getVdwEnergy(), 0.382);
- * prettyClose(atom.getVdwRadius(), 1.2);
- * equal(atom.getCorrectNumBonds(), 1);
- * atom.setPosition(Vector(31, 14, 16));
- * atom.move(Vector(27, 18, 28));
- * vmatch(atom.getPosition(), Vector(58, 32, 44));
- * atom.setPreviousPosition(Vector(1, 2, 3));
- * vmatch(atom.getPreviousPosition(), Vector(1, 2, 3));
- * atom.setPreviousPosition(Vector(4, 5, 6));
- * vmatch(atom.getPreviousPosition(), Vector(4, 5, 6));
- * atom.zeroForce();
- * vmatch(atom.getForce(), Vector(0, 0, 0));
- * atom.setForce(Vector(1, 3, 5));
- * atom.addForce(Vector(7, 6, 5));
- * vmatch(atom.getForce(), Vector(8, 9, 10));
- * 
- * atom = Oxygen();
- * equal(atom.getName(), "Oxygen");
- * equal(atom.getSymbol(), "O");
- * equal(atom.getHybridization(), Atom.SP3);
- * equal(atom.getAtomicNumber(), 8);
- * prettyClose(atom.getMass(), 16);
- * colorMatch(atom.getColor(), Color.getColor("red"));
- * prettyClose(atom.getCovalentRadius(), 0.74);
- * prettyClose(atom.getVdwEnergy(), 0.406);
- * prettyClose(atom.getVdwRadius(), 1.4);
- * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.62);
- * prettyClose(atom.getVdwEnergy(), 0.536);
- * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.55);
- * prettyClose(atom.getVdwEnergy(), 0.536);
- * equal(atom.getCorrectNumBonds(), 2);
- * atom.setPosition(Vector(31, 14, 16));
- * atom.move(Vector(27, 18, 28));
- * vmatch(atom.getPosition(), Vector(58, 32, 44));
- * atom.setPreviousPosition(Vector(1, 2, 3));
- * vmatch(atom.getPreviousPosition(), Vector(1, 2, 3));
- * atom.setPreviousPosition(Vector(4, 5, 6));
- * vmatch(atom.getPreviousPosition(), Vector(4, 5, 6));
- * atom.zeroForce();
- * vmatch(atom.getForce(), Vector(0, 0, 0));
- * atom.setForce(Vector(1, 3, 5));
- * atom.addForce(Vector(7, 6, 5));
- * vmatch(atom.getForce(), Vector(8, 9, 10));
- * 
- * atom = Nitrogen();
- * equal(atom.getName(), "Nitrogen");
- * equal(atom.getSymbol(), "N");
- * equal(atom.getHybridization(), Atom.SP3);
- * equal(atom.getAtomicNumber(), 7);
- * prettyClose(atom.getMass(), 14);
- * colorMatch(atom.getColor(), Color.getColor("blue"));
- * prettyClose(atom.getCovalentRadius(), 0.74);  // IDENTICAL to oxygen???
- * prettyClose(atom.getVdwEnergy(), 0.447);
- * prettyClose(atom.getVdwRadius(), 1.5);
- * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.62); // ? ?
- * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.55); // ? ?
- * equal(atom.getCorrectNumBonds(), 3);
- * atom.setPosition(Vector(31, 14, 16));
- * atom.move(Vector(27, 18, 28));
- * vmatch(atom.getPosition(), Vector(58, 32, 44));
- * atom.setPreviousPosition(Vector(1, 2, 3));
- * vmatch(atom.getPreviousPosition(), Vector(1, 2, 3));
- * atom.setPreviousPosition(Vector(4, 5, 6));
- * vmatch(atom.getPreviousPosition(), Vector(4, 5, 6));
- * atom.zeroForce();
- * vmatch(atom.getForce(), Vector(0, 0, 0));
- * atom.setForce(Vector(1, 3, 5));
- * atom.addForce(Vector(7, 6, 5));
- * vmatch(atom.getForce(), Vector(8, 9, 10));
  */
 
 function Color(r,g,b) {
@@ -631,40 +483,7 @@ var atomPrototype = {
                     }
                 }
         return neighbors;
-    },
-
-    draw: function() {
-        var canvas = document.getElementById("canvas");
-        var context = canvas.getContext("2d");
-        var pos = this.getPosition();
-        var w = canvas.width;
-        var h = canvas.height;
-        var K = 0.8 * ((w < h) ? w : h);
-        var x = K * pos.x + w/2;
-        var y = K * pos.y + h/2;
-        var z = pos.z;
-        var r = K * this.getCovalentRadius();
-        this.containsMouse = function(xmouse, ymouse) {
-            var dx = xmouse - x;
-            var dy = ymouse - y;
-            return (dx * dx + dy * dy) < (r * r);
-        }
-        this.getScreenDepth = function() {
-            return z;
-        }
-        var xmin = Math.floor((x - r) / 50);
-        var xmax = Math.floor((x + r) / 50) + 1;
-        var ymin = Math.floor((y - r) / 50);
-        var ymax = Math.floor((y + r) / 50) + 1;
-        for (var xi = xmin; xi <= xmax; xi++)
-            for (var yi = ymin; yi <= ymax; yi++) {
-                var key = 4000 * xi + yi;
-                if (!(key in pixelAtomHash) )
-                    pixelAtomHash[key] = [ ];
-                pixelAtomHash[key].push(this);
-            }
-        context.drawImage(this.getImage(), x-r, y-r, 2*r, 2*r);
-    },
+    }
 };
 
 var carbonPrototype = extend(atomPrototype, {
@@ -674,10 +493,6 @@ var carbonPrototype = extend(atomPrototype, {
 
         getName: function() {
             return "Carbon";
-        },
-
-        getImage: function() {
-            return document.getElementById("carbon");
         },
 
         getSymbol: function() {
@@ -732,9 +547,6 @@ function Carbon() {
 
 var hydrogenPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("hydrogen");
-            },
             getName: function() {
                 return "Hydrogen";
             },
@@ -784,9 +596,6 @@ function Hydrogen() {
 
 var oxygenPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("oxygen");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -839,9 +648,6 @@ function Oxygen() {
 
 var nitrogenPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("nitrogen");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -893,9 +699,6 @@ function Nitrogen() {
 
 var fluorinePrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("fluorine");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -942,9 +745,6 @@ function Fluorine() {
 
 var sulfurPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("sulfur");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -991,9 +791,6 @@ function Sulfur() {
 
 var siliconPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("silicon");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -1040,9 +837,6 @@ function Silicon() {
 
 var chlorinePrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("chlorine");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -1089,9 +883,6 @@ function Chlorine() {
 
 var phosphorusPrototype =
     extend(atomPrototype, {
-            getImage: function() {
-                return document.getElementById("phosphorus");
-            },
             init: function() {
                 this.setHybridization(Atom.SP3);
             },
@@ -1178,9 +969,9 @@ function Structure() {
     function structureConstructor() { }
     structureConstructor.prototype = {
         init: function() {
-            this.atomArray;
-            this.rotArray;  // used for pretty drawing when mouse is up,
-                            // reused for tooltip
+            this.orientation = Orientation();
+            this.orientation = Orientation();
+            this.atomArray = { };
             this.bondsByAtom = { };  // bidirectional hashmap:
                                      // atom -> [atom, atom, atom...]
             this.termList = [ ];
@@ -1265,7 +1056,6 @@ function Structure() {
             }
             this.orientation = Orientation();
             this.termListOutdated = true;;
-            this.drawAtoms();
         },
 
         buildBondInfo: function() {
@@ -1604,100 +1394,6 @@ function Structure() {
             };
             a.original = atom;
             return a;
-        },
-
-        drawAtoms: function() {
-            this.selectGoodScalar();
-            var canvas = document.getElementById("canvas");
-            var context = canvas.getContext("2d");
-            context.fillStyle = canvasBackgroundColor;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            this.rotArray = [ ];
-            pixelAtomHash = { };
-            for (var i in this.atomArray) {
-                this.rotArray.push(this.reorientAtom(this.atomArray[i]));
-            }
-            this.rotArray.sort(function(atom1,atom2) {
-                    if (atom1.getPosition().z > atom2.getPosition().z) {
-                        return 1;
-                    }
-                    if (atom1.getPosition().z < atom2.getPosition().z) {
-                        return -1;
-                    }
-                    return 0;
-                });
-            for (var i in this.rotArray) {
-                this.rotArray[i].draw();
-            }
-        },
-
-        quickdrawAtoms: function() {
-            this.selectGoodScalar();
-            var canvas = document.getElementById("canvas");
-            var context = canvas.getContext("2d");
-            context.fillStyle = canvasBackgroundColor;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            this.rotArray = [ ];
-            for (var i in this.atomArray) {
-                var ratom = this.reorientAtom(this.atomArray[i]);
-                this.atomArray[i].rotated = ratom;
-                this.rotArray.push(ratom);
-            }
-            var w = canvas.width;
-            var h = canvas.height;
-            var K = 0.8 * ((w < h) ? w : h);
-            for (var i in this.rotArray) {
-                var ratom = this.rotArray[i];
-                var atom = ratom.original;
-                var aid = atom.getUniqueId();
-                var u = ratom.getPosition();
-                var neighborList = this.bondsByAtom[atom.getUniqueId()];
-                for (var j in neighborList) {
-                    var atom2 = neighborList[j];
-                    var a2id = atom2.getUniqueId();
-                    if (aid < a2id) {
-                        var v = atom2.rotated.getPosition();
-                        // draw a line
-                        // see http://diveintohtml5.org/canvas.html
-                        // depth cue during quickdraw: darker lines for
-                        // bonds closer to the user
-                        if (u.z + v.z > 0.0)
-                            context.strokeStyle = "#000";
-                        else
-                            context.strokeStyle = "#799";
-                        context.beginPath();
-                        context.moveTo(K * u.x + w/2, K * u.y + h/2);
-                        context.lineTo(K * v.x + w/2, K * v.y + h/2);
-                        context.stroke();
-                    }
-                }
-            }
-        },
-
-        atomByScreenCoords: function(x,y) {
-            var key = 4000 * Math.floor(x / 50) + Math.floor(y / 50);
-            if (pixelAtomHash === undefined)
-                pixelAtomHash = { };
-            // find out if we are inside an atom
-            var bucket = pixelAtomHash[key];
-            if (bucket !== undefined) {
-                var closestZ;  // most positive
-                var found;
-                for (i in bucket) {
-                    var a = bucket[i];
-                    if (a.containsMouse(x, y)) {
-                        var depth = a.getScreenDepth();
-                        if (found === undefined || depth > closestZ) {
-                            found = a;
-                            closestZ = depth;
-                        }
-                    }
-                }
-                if (found !== undefined) {
-                    return found.original;
-                }
-            }
-            return undefined;
         },
 
         enumerateTerms: function() {
@@ -2261,15 +1957,3 @@ function makeLongRangeTerm(atom1,atom2) {
         atom2.addForce(f);
     };
 }
-
-
-/*
- * * * * * * * * * * * * * * STRUCTURE * * * * * * * * * * * * * *
- * TESTS
- * // var p = Propane();
- * // var mm2 = JigImpl.getJig(p, "net.willware.eurydice.forcefields.mm2.MM2");
- * // mm2.computeForces();
- * // var lst = p.getAtomList();
- + // for (var i = 0; i < lst.size(); i++) print(lst.get(i).getForce());
- - // for (var i in lst) print(lst[i].getForce());
- */
