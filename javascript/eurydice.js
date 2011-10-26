@@ -2251,6 +2251,8 @@ function makeLongRangeTerm(atom1,atom2) {
         var pos2 = atom2.getPosition();
         var u = pos1.subtract(pos2);
         var r = u.length();
+        // avoid divide-by-nearly-zero situations, they hurt numeric stability
+        if (r < 0.7 * rvdw) r = 0.7 * rvdw;
         var r1 = rvdw / r;
         var r2 = r1 * r1;
         var r6 = r2 * r2 * r2;
