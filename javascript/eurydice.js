@@ -2246,3 +2246,26 @@ function makeLongRangeTerm(atom1,atom2) {
  + // for (var i = 0; i < lst.size(); i++) print(lst.get(i).getForce());
  - // for (var i in lst) print(lst[i].getForce());
  */
+
+
+
+module.exports = {
+    Vector: Vector,
+    Quaternion: Quaternion,
+    Color: Color,
+    Carbon: Carbon,
+    Hydrogen: Hydrogen,
+    Oxygen: Oxygen,
+    Nitrogen: Nitrogen,
+    Fluorine: Fluorine,
+    Sulfur: Sulfur,
+    Silicon: Silicon,
+    Chlorine: Chlorine,
+    Phosphorus: Phosphorus,
+    Orientation: Orientation,
+    Structure: Structure,
+    makeLengthTerm: makeLengthTerm,
+    makeAngleTerm: makeAngleTerm,
+    makeTorsionTerm: makeTorsionTerm,
+    makeLongRangeTerm: makeLongRangeTerm,
+};

@@ -19,3 +19,5 @@ functional divergence with comprehensive regression tests. Rhino is an Apache
 project that lets you call Java code from JavaScript. So yes, I *will* write
 redundant code, but *theoretically* comprehensive regression testing will keep
 me out of trouble. We'll see.
+
+https://quickleft.com/blog/creating-and-publishing-a-node-js-module/
