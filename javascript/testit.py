@@ -10,6 +10,10 @@ testinit = """
 var _N;
 var testsOK = true;
 
+var protonMass = 1.67262158e-27;
+var angstrom = 1.0e-10;
+var attojoule = 1.0e-21;
+
 function testfail() {
     testsOK = false;
     throw _N;
@@ -32,9 +36,9 @@ function equal(x, y) {
 
 // compare two vectors, works for both Java and JavaScript
 function vmatch(u, v) {
-    prettyClose(u.getX(), v.getX());
-    prettyClose(u.getY(), v.getY());
-    prettyClose(u.getZ(), v.getZ());
+    prettyClose(u.x, v.x);
+    prettyClose(u.y, v.y);
+    prettyClose(u.z, v.z);
 }
 
 // compare two quaternions, works for both Java and JavaScript

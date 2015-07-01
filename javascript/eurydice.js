@@ -22,10 +22,6 @@ var dynamicsPaused = false;
 var damping = false;
 
 /*
- * A word about physical units. I have initially been in a rush to get things into
- * some kind of shape where I could post them on the web but I want to start being
- * a bit more rigorous about dimensional analysis.
- *
  * Fundamental units:
  * Times are in seconds
  * Distances are in meters
@@ -37,32 +33,6 @@ var damping = false;
  * Spring constants have units of newtons per meter.
  */
 var BoltzmannsConstant = 1.3806488e-23;
-
-function map(f,lst) {
-    var newlst = [ ];
-    for (var i in lst) {
-        newlst[i] = f(lst[i]);
-    }
-    return newlst;
-}
-
-function filter(f,lst) {
-    var newlst = [ ];
-    for (var i in lst) {
-        var x = lst[i];
-        if (f(x))
-            newlst.push(x);
-    }
-    return newlst;
-}
-
-if (typeof(String.prototype.trim) === "undefined")
-{
-    String.prototype.trim = function() 
-    {
-        return String(this).replace(/^\s+|\s+$/g, '');
-    };
-}
 
 function toString(obj) {
     var str;
@@ -327,15 +297,15 @@ function makeRotator(theta, axis) {
  * equal(atom.getSymbol(), "C");
  * equal(atom.getHybridization(), Atom.SP3);
  * equal(atom.getAtomicNumber(), 6);
- * prettyClose(atom.getMass(), 12);
+ * prettyClose(atom.getMass(), 12 * protonMass);
  * colorMatch(atom.getColor(), Color.getColor("gray30"));
- * prettyClose(atom.getCovalentRadius(), 0.77);
- * prettyClose(atom.getVdwEnergy(), 0.357);
- * prettyClose(atom.getVdwRadius(), 1.85);
+ * prettyClose(atom.getCovalentRadius(), 0.77 * angstrom);
+ * prettyClose(atom.getVdwEnergy(), 0.357 * attojoule);
+ * prettyClose(atom.getVdwRadius(), 1.85 * angstrom);
  * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.67);
+ * prettyClose(atom.getCovalentRadius(), 0.67 * angstrom);
  * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.6);
+ * prettyClose(atom.getCovalentRadius(), 0.6 * angstrom);
  * equal(atom.getCorrectNumBonds(), 4);
  * atom.setPosition(Vector(31, 14, 16));
  * atom.move(Vector(27, 18, 28));
@@ -355,11 +325,11 @@ function makeRotator(theta, axis) {
  * equal(atom.getSymbol(), "H");
  * equal(atom.getHybridization(), Atom.NONE);
  * equal(atom.getAtomicNumber(), 1);
- * prettyClose(atom.getMass(), 1);
+ * prettyClose(atom.getMass(), protonMass);
  * colorMatch(atom.getColor(), Color.getColor("white"));
- * prettyClose(atom.getCovalentRadius(), 0.3);
- * prettyClose(atom.getVdwEnergy(), 0.382);
- * prettyClose(atom.getVdwRadius(), 1.2);
+ * prettyClose(atom.getCovalentRadius(), 0.3 * angstrom);
+ * prettyClose(atom.getVdwEnergy(), 0.382 * attojoule);
+ * prettyClose(atom.getVdwRadius(), 1.2 * angstrom);
  * equal(atom.getCorrectNumBonds(), 1);
  * atom.setPosition(Vector(31, 14, 16));
  * atom.move(Vector(27, 18, 28));
@@ -379,17 +349,17 @@ function makeRotator(theta, axis) {
  * equal(atom.getSymbol(), "O");
  * equal(atom.getHybridization(), Atom.SP3);
  * equal(atom.getAtomicNumber(), 8);
- * prettyClose(atom.getMass(), 16);
+ * prettyClose(atom.getMass(), 16 * protonMass);
  * colorMatch(atom.getColor(), Color.getColor("red"));
- * prettyClose(atom.getCovalentRadius(), 0.74);
- * prettyClose(atom.getVdwEnergy(), 0.406);
- * prettyClose(atom.getVdwRadius(), 1.4);
+ * prettyClose(atom.getCovalentRadius(), 0.74 * angstrom);
+ * prettyClose(atom.getVdwEnergy(), 0.406 * attojoule);
+ * prettyClose(atom.getVdwRadius(), 1.4 * angstrom);
  * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.62);
- * prettyClose(atom.getVdwEnergy(), 0.536);
+ * prettyClose(atom.getCovalentRadius(), 0.62 * angstrom);
+ * prettyClose(atom.getVdwEnergy(), 0.536 * attojoule);
  * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.55);
- * prettyClose(atom.getVdwEnergy(), 0.536);
+ * prettyClose(atom.getCovalentRadius(), 0.55 * angstrom);
+ * prettyClose(atom.getVdwEnergy(), 0.536 * attojoule);
  * equal(atom.getCorrectNumBonds(), 2);
  * atom.setPosition(Vector(31, 14, 16));
  * atom.move(Vector(27, 18, 28));
@@ -409,15 +379,15 @@ function makeRotator(theta, axis) {
  * equal(atom.getSymbol(), "N");
  * equal(atom.getHybridization(), Atom.SP3);
  * equal(atom.getAtomicNumber(), 7);
- * prettyClose(atom.getMass(), 14);
+ * prettyClose(atom.getMass(), 14 * protonMass);
  * colorMatch(atom.getColor(), Color.getColor("blue"));
- * prettyClose(atom.getCovalentRadius(), 0.74);  // IDENTICAL to oxygen???
- * prettyClose(atom.getVdwEnergy(), 0.447);
- * prettyClose(atom.getVdwRadius(), 1.5);
+ * prettyClose(atom.getCovalentRadius(), 0.74 * angstrom);  // IDENTICAL to oxygen???
+ * prettyClose(atom.getVdwEnergy(), 0.447 * attojoule);
+ * prettyClose(atom.getVdwRadius(), 1.5 * angstrom);
  * atom.setHybridization(Atom.SP2);
- * prettyClose(atom.getCovalentRadius(), 0.62); // ? ?
+ * prettyClose(atom.getCovalentRadius(), 0.62 * angstrom); // ? ?
  * atom.setHybridization(Atom.SP);
- * prettyClose(atom.getCovalentRadius(), 0.55); // ? ?
+ * prettyClose(atom.getCovalentRadius(), 0.55 * angstrom); // ? ?
  * equal(atom.getCorrectNumBonds(), 3);
  * atom.setPosition(Vector(31, 14, 16));
  * atom.move(Vector(27, 18, 28));
@@ -453,45 +423,45 @@ function Color(r,g,b) {
 }
 
 Color.getColor = function(colorname) {
-    if ("Black" == colorname || "black" == colorname)
+    if ("Black" === colorname || "black" === colorname)
         return Color(0, 0, 0);
-    else if ("Gray10" == colorname || "gray10" == colorname)
+    else if ("Gray10" === colorname || "gray10" === colorname)
         return Color(26, 26, 26);
-    else if ("Gray20" == colorname || "gray20" == colorname)
+    else if ("Gray20" === colorname || "gray20" === colorname)
         return Color(51, 51, 51);
-    else if ("Gray30" == colorname || "gray30" == colorname)
+    else if ("Gray30" === colorname || "gray30" === colorname)
         return Color(77, 77, 77);
-    else if ("Gray40" == colorname || "gray40" == colorname)
+    else if ("Gray40" === colorname || "gray40" === colorname)
         return Color(102, 102, 102);
-    else if ("Gray50" == colorname || "gray50" == colorname)
+    else if ("Gray50" === colorname || "gray50" === colorname)
         return Color(128, 128, 128);
-    else if ("Gray60" == colorname || "gray60" == colorname)
+    else if ("Gray60" === colorname || "gray60" === colorname)
         return Color(154, 154, 154);
-    else if ("Gray70" == colorname || "gray70" == colorname)
+    else if ("Gray70" === colorname || "gray70" === colorname)
         return Color(179, 179, 179);
-    else if ("Gray80" == colorname || "gray80" == colorname)
+    else if ("Gray80" === colorname || "gray80" === colorname)
         return Color(204, 204, 204);
-    else if ("Gray90" == colorname || "gray90" == colorname)
+    else if ("Gray90" === colorname || "gray90" === colorname)
         return Color(230, 230, 230);
-    else if ("White" == colorname || "white" == colorname)
+    else if ("White" === colorname || "white" === colorname)
         return Color(255, 255, 255);
 
-    else if ("Red" == colorname || "red" == colorname)
+    else if ("Red" === colorname || "red" === colorname)
         return Color(255, 0, 0);
-    else if ("Green" == colorname || "green" == colorname)
+    else if ("Green" === colorname || "green" === colorname)
         return Color(0, 255, 0);
-    else if ("Blue" == colorname || "blue" == colorname)
+    else if ("Blue" === colorname || "blue" === colorname)
         return Color(0, 0, 255);
-    else if ("Cyan" == colorname || "cyan" == colorname)
+    else if ("Cyan" === colorname || "cyan" === colorname)
         return Color(0, 255, 255);
-    else if ("Magenta" == colorname || "magenta" == colorname)
+    else if ("Magenta" === colorname || "magenta" === colorname)
         return Color(255, 0, 255);
-    else if ("Yellow" == colorname || "yellow" == colorname)
+    else if ("Yellow" === colorname || "yellow" === colorname)
         return Color(255, 255, 0);
 
-    else if ("Orange" == colorname || "orange" == colorname)
+    else if ("Orange" === colorname || "orange" === colorname)
         return Color(255, 132, 0);
-    else if ("Purple" == colorname || "purple" == colorname)
+    else if ("Purple" === colorname || "purple" === colorname)
         return Color(162, 0, 255);
 
     return null;
@@ -1452,9 +1422,10 @@ function Structure() {
 
             // are there any hydrogens that should be deleted so
             // their neighbors can be connected to the new atom?
-            var otherHs = filter(function(x) { return x !== neighbor &&
-                                               x.getSymbol() === "H"; },
-                newAtom.getNeighbors());
+            var otherHs = newAtom.getNeighbors().filter(
+                function(x) {
+                    return x !== neighbor && x.getSymbol() === "H";
+                });
             var z;
             if (otherHs !== undefined) {
                 for (var i in otherHs) {
@@ -1496,7 +1467,7 @@ function Structure() {
                 // t.scale(K).add(newAtom.getPosition()) and
                 // z.scale(-K).add(newAtom.getPosition()),
                 // for some distance K.
-                if (hydrogensNeeded == 1) {
+                if (hydrogensNeeded === 1) {
                     var newH = Hydrogen();
                     newH.setPosition(u.scale(hdist)
                                      .add(newAtom.getPosition()));
@@ -1514,7 +1485,7 @@ function Structure() {
                                      .add(newAtom.getPosition()));
                     addAtomConnectedToExisting(newH, newAtom);
                 }
-                if (hydrogensNeeded == 2) {
+                if (hydrogensNeeded === 2) {
                     var y = u.scale(0.5).add(z.scale(-sqrt3/2));
                     var newH = Hydrogen();
                     newH.setPosition(y.scale(hdist)
@@ -1539,7 +1510,7 @@ function Structure() {
                                      .add(newAtom.getPosition()));
                     addAtomConnectedToExisting(newH, newAtom);
                 }
-                if (hydrogensNeeded == 3) {
+                if (hydrogensNeeded === 3) {
                     var t2 = tperp.add(t.scale(-sqrt6/3));
                     var newH = Hydrogen();
                     newH.setPosition(t2.scale(hdist)
